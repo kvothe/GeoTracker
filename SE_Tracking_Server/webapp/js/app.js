@@ -217,7 +217,7 @@ function handleLogin(data) {
 	console.log('Handle Registration Response');
 	//success
 	if (data["message-type"] === 'response-ok') {
-		setCookie("session_id", data["session-id"], 7);
+		setCookie("session_id", data["message"], 7);
 		window.location.href = "dashboard.html";
 	} else {
 		loginAlertBox.removeAttribute('hidden');
@@ -282,9 +282,8 @@ function showPosition(position) {
 
 //send Location Update
 function sendLocationUpdate(position) {
-	console.log('Send new Location Update');
-
-	var request = {
+	console.log('Send new Location Update');	
+	var request = {		
 		"message-type" : "location-update",
 		"session-id" : getCookie("session_id"),
 		"latitude" : position.coords.latitude,
@@ -295,7 +294,7 @@ function sendLocationUpdate(position) {
 		"heading" : position.coords.heading,
 		"speed" : position.coords.speed,
 		"timestamp" : position.timestamp
-	};
+	}; 
 	socket.send(JSON.stringify(request));
 }
 
