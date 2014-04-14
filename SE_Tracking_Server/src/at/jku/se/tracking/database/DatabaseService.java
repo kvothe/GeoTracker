@@ -4,18 +4,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.List;
-
-import at.jku.se.tracking.utils.PasswordEncryptionService;
 
 public class DatabaseService {
 	private static final int MAX_RESOURCES = 16; // Number of concurrent connections
 	private static final int POOL_WAIT_TIME = 60000; // Wait at most one minute for a database connection
-	private static final String CONNECTION_STRING = "jdbc:sqlserver://localhost;database=GeoTracker;user=geo;password=tracker"; // TODO:
-	// read
-	// from
-	// config
+	private static final String CONNECTION_STRING = "jdbc:sqlserver://DEVELOPMENTVM\\SQLEXPRESS;database=GeoTracker;user=geo;password=tracker";
 	private static final ConnectionPool CONNECTION_POOL = new ConnectionPool(MAX_RESOURCES, CONNECTION_STRING);
 
 	// ------------------------------------------------------------------------
@@ -32,8 +26,7 @@ public class DatabaseService {
 		UserObject user = null;
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
 		// --
-		PreparedStatement query = con.prepareStatement("SELECT * FROM [" + UserObject.TABLE_NAME + "] WHERE "
-				+ UserObject.COLUMN_ID + "=?");
+		PreparedStatement query = con.prepareStatement("SELECT * FROM [" + UserObject.TABLE_NAME + "] WHERE " + UserObject.COLUMN_ID + "=?");
 		query.setDouble(1, id);
 		ResultSet rs = query.executeQuery();
 		// --
@@ -56,20 +49,16 @@ public class DatabaseService {
 		// --
 		return user;
 	}
+
+	// ------------------------------------------------------------------------
+
 	public static UserObject queryUser(String username) throws SQLException {
 		UserObject user = null;
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
 		// --
-		// PreparedStatement query = con.prepareStatement("SELECT * FROM " + UserObject.TABLE_NAME + " WHERE "
-		// + UserObject.COLUMN_USERNAME + "=?");
-		Statement query = con.createStatement();
-		String stmt = "SELECT * FROM [" + UserObject.TABLE_NAME + "] WHERE " + UserObject.COLUMN_USERNAME + "='"
-				+ username + "'";
-		System.out.println(stmt);
-		ResultSet rs = query.executeQuery(stmt);
-
-		// query.setString(1, username);
-		// ResultSet rs = query.executeQuery();
+		PreparedStatement query = con.prepareStatement("SELECT * FROM [" + UserObject.TABLE_NAME + "] WHERE " + UserObject.COLUMN_USERNAME + "=?");
+		query.setString(1, username);
+		ResultSet rs = query.executeQuery();
 		// --
 		try {
 			while (rs.next()) {
@@ -91,37 +80,26 @@ public class DatabaseService {
 		// --
 		return user;
 	}
-	
-	public static boolean loginUser(String username, String password) throws SQLException {
-		UserObject user = DatabaseService.queryUser(username);
-		if(user != null) {
-			try {
-				return PasswordEncryptionService.authenticate(password, user.getEncryptedPassword(), user.getSalt());
-			} catch (Exception e) {
-				e.printStackTrace();
-				return false;
-			}
-		}
-		return false;
-	}
-	
+
+	// ------------------------------------------------------------------------
+
 	public static List<UserObject> queryObservableUsers() throws SQLException {
 		return null;
 	}
+
+	// ------------------------------------------------------------------------
+
 	public static boolean insertUser(UserObject user) throws SQLException {
 		boolean result = false;
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
 		// --
-		PreparedStatement insert = con.prepareStatement("INSERT INTO [" + UserObject.TABLE_NAME + "] (["
-				+ UserObject.COLUMN_USERNAME + "],[" + UserObject.COLUMN_PASSWORD + "],[" + UserObject.COLUMN_SALT
-				+ "],[" + UserObject.COLUMN_OBSERVABLE + "]) VALUES(?,?,?,?)");
+		PreparedStatement insert = con.prepareStatement("INSERT INTO [" + UserObject.TABLE_NAME + "] ([" + UserObject.COLUMN_USERNAME + "],["
+				+ UserObject.COLUMN_PASSWORD + "],[" + UserObject.COLUMN_SALT + "],[" + UserObject.COLUMN_OBSERVABLE + "]) VALUES(?,?,?,?)");
 		// --
 		insert.setString(1, user.getName());
 		insert.setBytes(2, user.getEncryptedPassword());
 		insert.setBytes(3, user.getSalt());
-		System.out.println(insert.toString());
 		insert.setBoolean(4, user.isObservable());
-
 		// --
 		try {
 			result = insert.execute();
@@ -136,6 +114,9 @@ public class DatabaseService {
 		// --
 		return result;
 	}
+
+	// ------------------------------------------------------------------------
+
 	public static boolean changePassword(double userId, String encryptedPassword) throws SQLException {
 		return false;
 	}

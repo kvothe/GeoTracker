@@ -1,8 +1,7 @@
 package at.jku.se.tracking;
 
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
+import java.security.GeneralSecurityException;
 import java.sql.SQLException;
 import java.util.UUID;
 
@@ -15,14 +14,12 @@ import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
 import at.jku.se.tracking.database.DatabaseService;
 import at.jku.se.tracking.database.UserObject;
+import at.jku.se.tracking.messages.MsgError;
 import at.jku.se.tracking.messages.MsgLocationUpdate;
 import at.jku.se.tracking.messages.MsgLogin;
-import at.jku.se.tracking.messages.MsgLoginError;
-import at.jku.se.tracking.messages.MsgLoginOk;
 import at.jku.se.tracking.messages.MsgLogout;
+import at.jku.se.tracking.messages.MsgOk;
 import at.jku.se.tracking.messages.MsgRegister;
-import at.jku.se.tracking.messages.MsgRegisterOk;
-import at.jku.se.tracking.messages.MsgRegistrationError;
 import at.jku.se.tracking.messages.serialization.AMessage;
 import at.jku.se.tracking.messages.serialization.InvalidMessageException;
 import at.jku.se.tracking.messages.serialization.MarshallingService;
@@ -60,8 +57,7 @@ public class WebSocketSession {
 		System.out.println("Message from Client: " + message);
 		// --
 		/*
-		 * try { remote.sendString(message); } catch (IOException e) {
-		 * e.printStackTrace(); }
+		 * try { remote.sendString(message); } catch (IOException e) { e.printStackTrace(); }
 		 */
 		// --
 		try {
@@ -115,68 +111,71 @@ public class WebSocketSession {
 
 	// ------------------------------------------------------------------------
 
-	private void handleRegistration(MsgRegister registration)
-			throws IOException {
+	private void handleRegistration(MsgRegister registration) throws IOException {
 		try {
-			UserObject user = DatabaseService.queryUser(registration
-					.getUsername());
+			UserObject user = DatabaseService.queryUser(registration.getUsername());
 			if (user != null) {
-				sendMessage(new MsgRegistrationError("user already exists"));
+				sendMessage(new MsgError(registration.getConversationId(), "username already taken"));
 			} else {
 				// Encrypt password
 				byte[] salt = PasswordEncryptionService.generateSalt();
-				byte[] encryptedPassword = PasswordEncryptionService
-						.getEncryptedPassword(registration.getPassword(), salt);
+				byte[] encryptedPassword = PasswordEncryptionService.getEncryptedPassword(registration.getPassword(), salt);
 				// Instantiate User Object
-				user = new UserObject(registration.getUsername(),
-						encryptedPassword, salt, registration.isObservable());
+				user = new UserObject(registration.getUsername(), encryptedPassword, salt, registration.isObservable());
 				// Store user
 				boolean success = DatabaseService.insertUser(user);
-				// TODO: send reply
+				// TODO: perform login
 				if (success) {
-					sendMessage(new MsgRegisterOk());
+					sendMessage(new MsgOk(registration.getConversationId()));
 				} else {
-					sendMessage(new MsgRegistrationError(
-							"failed to finish registration"));
+					sendMessage(new MsgError(registration.getConversationId(), "problem adding new user"));
 				}
 			}
-		} catch (NoSuchAlgorithmException e) {
+		} catch (GeneralSecurityException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			sendMessage(new MsgRegistrationError(e));
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			sendMessage(new MsgRegistrationError(e));
+			sendMessage(new MsgError(registration.getConversationId(), e));
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			sendMessage(new MsgRegistrationError(e));
+			sendMessage(new MsgError(registration.getConversationId(), e));
 		}
 	}
+
+	// ------------------------------------------------------------------------
 
 	private void handleLogin(MsgLogin login) throws IOException {
 		try {
-			if (DatabaseService.loginUser(login.getUsername(),
-					login.getPassword())) {
-				this.sessionId = UUID.randomUUID().toString();
-				sendMessage(new MsgLoginOk(this.sessionId));
-			} else {
-				sendMessage(new MsgLoginError(
-						"User/Password comination not found"));
+			UserObject user = DatabaseService.queryUser(login.getUsername());
+			if (user != null) {
+				boolean authenticated = PasswordEncryptionService.authenticate(login.getPassword(), user.getEncryptedPassword(), user.getSalt());
+				// --
+				if (authenticated) {
+					this.sessionId = UUID.randomUUID().toString();
+					this.userId = user.getId();
+					// --
+					sendMessage(new MsgOk(login.getConversationId(), sessionId));
+				}
 			}
+			sendMessage(new MsgError(login.getConversationId(), "invalid credentials"));
+		} catch (GeneralSecurityException e) {
+			e.printStackTrace();
+			sendMessage(new MsgError(login.getConversationId(), e));
 		} catch (SQLException e) {
 			e.printStackTrace();
-			sendMessage(new MsgLoginError(e));
+			sendMessage(new MsgError(login.getConversationId(), e));
 		}
-
 	}
+
+	// ------------------------------------------------------------------------
 
 	private void handleLogout(MsgLogout logout) throws IOException {
 		this.sessionId = null;
 	}
-	
+
+	// ------------------------------------------------------------------------
+
 	private void handleLocationUpdate(MsgLocationUpdate location) throws IOException {
-		//todo
+		// todo
 	}
 }

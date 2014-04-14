@@ -11,13 +11,15 @@ public class MsgError extends AMessage {
 	public MsgError() {
 		// default constructor needed to instantiate after parsing
 	}
-	public MsgError(String message) {
+	public MsgError(double cid, String message) {
 		setType(MessageType.ERROR);
+		setConversationId(cid);
 		setValue(FIELD_MESSAGE, message);
 	}
-	public MsgError(Exception e) {
-		this(e.getClass().getSimpleName() + ": " + e.getMessage());
+	public MsgError(double cid, Exception e) {
+		this(cid, e.getClass().getSimpleName() + ": " + e.getMessage());
 	}
+
 	// ------------------------------------------------------------------------
 
 	public String getMessage() {

@@ -6,7 +6,9 @@ import java.util.Map;
 import at.jku.se.tracking.messages.MessageType;
 
 public abstract class AMessage {
+	protected static final String FIELD_CID = "cid";
 	protected static final String FIELD_MESSAGE_TYPE = "message-type";
+	protected static final String FIELD_SESSION_ID = "session-id";
 
 	// ------------------------------------------------------------------------
 
@@ -19,6 +21,32 @@ public abstract class AMessage {
 	@SuppressWarnings("unchecked")
 	protected void setMap(Map<?, ?> map) {
 		this.values = (Map<String, Object>) map;
+	}
+
+	// ------------------------------------------------------------------------
+
+	protected void setConversationId(double id) {
+		setValue(FIELD_CID, id);
+	}
+
+	public double getConversationId() {
+		if (hasValue(FIELD_CID)) {
+			return Double.parseDouble(getValue(FIELD_CID).toString());
+		}
+		return -1;
+	}
+
+	// ------------------------------------------------------------------------
+
+	protected void setSessionId(String id) {
+		setValue(FIELD_SESSION_ID, id);
+	}
+
+	public String getSessionId() {
+		if (hasValue(FIELD_SESSION_ID)) {
+			return (String) getValue(FIELD_SESSION_ID);
+		}
+		return null;
 	}
 
 	// ------------------------------------------------------------------------
@@ -42,9 +70,18 @@ public abstract class AMessage {
 	}
 
 	protected Object getValue(String name) {
-		if (values != null) {
+		if (hasValue(name)) {
 			return values.get(name);
 		}
 		return null;
+	}
+
+	// ------------------------------------------------------------------------
+
+	protected boolean hasValue(String name) {
+		if (values != null) {
+			return values.containsKey(name);
+		}
+		return false;
 	}
 }

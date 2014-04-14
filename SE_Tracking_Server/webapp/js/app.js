@@ -14,6 +14,9 @@ var dashboardAnchor = document.getElementById('dashboard_link');
 var map;
 var socket;
 
+var cid = -1;
+var conversations = {};
+
 window.onresize = function(event) {
 	var center = map.getCenter();
 	google.maps.event.trigger(map, "resize");
@@ -21,13 +24,14 @@ window.onresize = function(event) {
 };
 
 window.onload = function() {
-
+	
 	// Create a new WebSocket.
 	socket = new WebSocket('wss://localhost:8443/');
 
-	//Check if loggedIn with cooki
+	//Check if loggedIn with cookie
 	var sessionId = getCookie("session_id");
 	if (sessionId != null && sessionId.length > 5) {
+		// TODO: check if the session is still valid on the server
 		userField.setAttribute("type", "hidden");
 		passField.setAttribute("type", "hidden");
 		loginBtn.style.visibility = "hidden";
@@ -65,6 +69,7 @@ window.onload = function() {
 
 	// Show a connected message when the WebSocket is opened.
 	socket.onopen = function(event) {
+		cid = 0;
 		console.log('Connected to: ' + event.currentTarget.URL);
 	};
 
@@ -73,9 +78,13 @@ window.onload = function() {
 		event.preventDefault();
 		console.log(event.data);
 
-		var response = JSON.parse(event.data);
-
-		switch(response[0]["message-type"]) {
+		var response = JSON.parse(event.data);		
+		var mcid = response[0]["cid"];
+		// --
+		var responseTo = conversations[mcid];		
+		delete conversations[mcid];
+		// --
+		switch(responseTo) {
 			case "request-registration":
 				handleRegistration(response[0]);
 				break;
@@ -103,20 +112,21 @@ window.onload = function() {
 	if (registerFormBtn != null) {
 		registerFormBtn.onclick = function(e) {
 			e.preventDefault();
-
+			var mcid = ++cid;
 			// Retrieve username and password
 			var username = registerUsername.value;
 			var password = registerPassword.value;
 			var visible = registerVisible.checked;
-
+			
 			if (username.length > 6 && password.length > 6) {
-
 				var request = {
-					"message-type" : "request-registration",
+					"cid" : mcid,
+					"message-type" : "request-registration",					
 					"username" : username,
 					"password" : password,
 					"observable" : visible
 				};
+				conversations[mcid] = "request-registration";
 				socket.send(JSON.stringify(request));
 			} else {
 				registerAlertBox.removeAttribute('hidden');
@@ -124,7 +134,6 @@ window.onload = function() {
 				$("#register_alert_box").addClass("alert-danger");
 				registerAlertBox.innerHTML = " <b>Error!</b> Enter Username(min. length is 6) and Password(min. length is 6)";
 			}
-
 			return false;
 		};
 	}
@@ -133,7 +142,7 @@ window.onload = function() {
 	if (loginBtn != null) {
 		loginBtn.onclick = function(e) {
 			e.preventDefault();
-
+			var mcid = ++cid;
 			// Retrieve username and password
 			var username = userField.value;
 			var password = passField.value;
@@ -141,16 +150,17 @@ window.onload = function() {
 			if (username.length > 6 && password.length > 6) {
 
 				var request = {
+					"cid" : mcid,
 					"message-type" : "request-login",
 					"username" : username,
 					"password" : password
 				};
+				conversations[mcid] = "request-login";
 				socket.send(JSON.stringify(request));
 			} else {
 				loginAlertBox.removeAttribute('hidden');
 				loginAlertBox.innerHTML = " <b>Error!</b> Enter Username(min. length is 6) and Password(min. length is 6)";
 			}
-
 			return false;
 		};
 	}
@@ -159,11 +169,13 @@ window.onload = function() {
 	if (logoutBtn != null) {
 		logoutBtn.onclick = function(e) {
 			e.preventDefault();
-
+			var mcid = ++cid;
 			var request = {
+				"cid" : mcid,
 				"message-type" : "request-logout",
 				"session-id" : getCookie("session_id")
 			};
+			conversations[mcid] = "request-logout";
 			socket.send(JSON.stringify(request));
 
 			//remove cookie
@@ -179,11 +191,11 @@ window.onload = function() {
 };
 
 //handle registration response
-function handleRegistration(data) {
+function handleRegistration(data) {	
 	console.log('Handle Registration Response');
 	registerAlertBox.removeAttribute('hidden');
 	//success
-	if (data["message"] === 'Success') {
+	if (data["message-type"] === 'response-ok') {
 		$("#register_alert_box").removeClass("alert-danger");
 		$("#register_alert_box").addClass("alert-success");
 		//registerAlertBox.className.replace('alert-danger', 'alert-success');
@@ -201,10 +213,10 @@ function handleRegistration(data) {
 }
 
 //handle login response
-function handleLogin(data) {
+function handleLogin(data) {	
 	console.log('Handle Registration Response');
 	//success
-	if (data["message"] === 'Success') {
+	if (data["message-type"] === 'response-ok') {
 		setCookie("session_id", data["session-id"], 7);
 		window.location.href = "dashboard.html";
 	} else {

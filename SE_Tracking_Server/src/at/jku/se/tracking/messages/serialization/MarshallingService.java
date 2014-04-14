@@ -69,8 +69,7 @@ public class MarshallingService {
 			throw new InvalidMessageException("message type not defined");
 		}
 		// --
-		MessageType type = MessageType.parse((String) map
-				.get(AMessage.FIELD_MESSAGE_TYPE));
+		MessageType type = MessageType.parse((String) map.get(AMessage.FIELD_MESSAGE_TYPE));
 		if (type == null) {
 			throw new InvalidMessageException("invalid message type");
 		} else {
@@ -87,7 +86,6 @@ public class MarshallingService {
 				MsgLogout log = new MsgLogout();
 				log.setMap(map);
 				return log;
-
 			case LOCATION_UPDATE:
 				MsgLocationUpdate loc = new MsgLocationUpdate();
 				loc.setMap(map);
