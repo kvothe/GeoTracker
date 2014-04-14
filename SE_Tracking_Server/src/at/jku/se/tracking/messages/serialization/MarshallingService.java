@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import at.jku.se.tracking.messages.MessageType;
+import at.jku.se.tracking.messages.MsgLocationUpdate;
 import at.jku.se.tracking.messages.MsgLogin;
+import at.jku.se.tracking.messages.MsgLogout;
 import at.jku.se.tracking.messages.MsgRegister;
 
 import com.json.generators.JSONGenerator;
@@ -23,7 +25,10 @@ public class MarshallingService {
 		if (parser == null) {
 			parser = JsonParserFactory.getInstance().newJsonParser();
 		}
-		return JsonParserFactory.getInstance().newJsonParser(); // needs investigation -> reuse not possible?
+		return JsonParserFactory.getInstance().newJsonParser(); // needs
+																// investigation
+																// -> reuse not
+																// possible?
 	}
 
 	// ------------------------------------------------------------------------
@@ -32,7 +37,8 @@ public class MarshallingService {
 		if (generator == null) {
 			generator = JsonGeneratorFactory.getInstance().newJsonGenerator();
 		}
-		return JsonGeneratorFactory.getInstance().newJsonGenerator(); // see parser
+		return JsonGeneratorFactory.getInstance().newJsonGenerator(); // see
+																		// parser
 	}
 
 	// ------------------------------------------------------------------------
@@ -63,7 +69,8 @@ public class MarshallingService {
 			throw new InvalidMessageException("message type not defined");
 		}
 		// --
-		MessageType type = MessageType.parse((String) map.get(AMessage.FIELD_MESSAGE_TYPE));
+		MessageType type = MessageType.parse((String) map
+				.get(AMessage.FIELD_MESSAGE_TYPE));
 		if (type == null) {
 			throw new InvalidMessageException("invalid message type");
 		} else {
@@ -76,6 +83,15 @@ public class MarshallingService {
 				MsgRegister reg = new MsgRegister();
 				reg.setMap(map);
 				return reg;
+			case LOGOUT:
+				MsgLogout log = new MsgLogout();
+				log.setMap(map);
+				return log;
+
+			case LOCATION_UPDATE:
+				MsgLocationUpdate loc = new MsgLocationUpdate();
+				loc.setMap(map);
+				return loc;
 			default:
 				break;
 			}

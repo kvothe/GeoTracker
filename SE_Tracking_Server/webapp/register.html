@@ -3,7 +3,7 @@
 <html>
 
 	<head>
-		<title>GeoTracker - Home</title>
+		<title>GeoTracker - Register</title>
 		<meta name="viewport" content="width=device-width">
 		<link rel="stylesheet" href="css/custom.css">
 		<link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
@@ -28,7 +28,6 @@
 						<span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
 					</button>
 					<a class="navbar-brand" href="index.html">GeoTracker</a>
-					<a id="dashboard_link" class="navbar-brand" href="dashboard.html">Dashboard</a>
 				</div>
 				<div class="navbar-collapse collapse">
 					<ul class="nav navbar-nav"></ul>
@@ -53,41 +52,44 @@
 				<!--/.navbar-collapse -->
 			</div>
 		</div>
-		<div id="navbar_alert" hidden class="alert alert-dismissable alert-danger">
+		<div hidden id="navbar_alert" class="alert alert-dismissable alert-danger">
 			<b>Warning!</b> You best check yourself, you're not looking so good.
 		</div>
 		<!-- Main jumbotron for a primary marketing message or call to action -->
-		<div class="jumbotron">
-			<div class="container">
-				<h1>GeoTracker</h1>
-				<p>
-					With GeoTracker you can view the current position of your friends.....
-				</p>
-			</div>
-		</div>
 		<div class="container">
 			<!-- Example row of columns -->
-			<div class="row">
-				<div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-					<h1>Track your Friends</h1>
-					<p>
-						Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.
-					</p>
+			<div class="container">
+				<div class="row">
+					<form>
+						<div class="form-group">
+							<hr>
+							<h1>Registration</h1>
+							<input id="register_username" type="text" placeholder="Username" class="form-control">
+						</div>
+						<div class="form-group">
+							<input id="register_password" type="password" placeholder="Password" class="form-control">
+						</div>
+						<div class="checkbox">
+							<label>
+								<input id="register_visible" checked="checked" type="checkbox">
+								Make my position visible to others</label>
+						</div>
+
+						<button id="register_form_button" type="submit" class="btn btn-block btn-success">
+							Register
+						</button>
+					</form>
+
 				</div>
-				<div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-					<h2>Google Map integration</h2>
-					<img width="70%" src="http://www.simonblog.com/wordpress/wp-content/uploads/2009/05/google_maps_alternate_route_2.jpg">
+
+				<div id="register_alert_box" hidden class="alert alert-dismissable alert-success">
+					<b>Success!</b> You successfully registered for GeoTracker.
 				</div>
-				<div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-					<h2>HTML5 Websockets</h2>
-					<p>
-						Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.
-					</p>
-				</div>
+
 			</div>
 			<hr>
 			<footer>
-				<p>
+				<p style>
 					&copy; GeoTracker 2014
 				</p>
 			</footer>

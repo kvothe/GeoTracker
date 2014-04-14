@@ -14,7 +14,7 @@ public enum MessageType {
 	LIST("response-list"),	
 	OK("response-ok"),
 	ERROR("response-error"),
-	LOGOUT("");
+	LOGOUT("request-logout");
 	//@formatter:on
 
 	private String value;

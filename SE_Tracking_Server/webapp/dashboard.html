@@ -3,12 +3,13 @@
 <html>
 
 	<head>
-		<title>GeoTracker - Home</title>
+		<title>GeoTracker - Dashboard</title>
 		<meta name="viewport" content="width=device-width">
 		<link rel="stylesheet" href="css/custom.css">
 		<link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 		<script type="text/javascript" src="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCk21t6ICUW7xeQMvz0qL1jL_VNwl7sLtw&sensor=false" type="text/javascript"></script>
 		<style type="text/css">
 			body {
 				padding-top: 50px;
@@ -20,7 +21,7 @@
 
 	</head>
 
-	<body>
+	<body onload="initialize()">
 		<div class="navbar navbar-inverse navbar-fixed-top">
 			<div class="container">
 				<div class="navbar-header">
@@ -28,7 +29,6 @@
 						<span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
 					</button>
 					<a class="navbar-brand" href="index.html">GeoTracker</a>
-					<a id="dashboard_link" class="navbar-brand" href="dashboard.html">Dashboard</a>
 				</div>
 				<div class="navbar-collapse collapse">
 					<ul class="nav navbar-nav"></ul>
@@ -53,36 +53,25 @@
 				<!--/.navbar-collapse -->
 			</div>
 		</div>
-		<div id="navbar_alert" hidden class="alert alert-dismissable alert-danger">
-			<b>Warning!</b> You best check yourself, you're not looking so good.
-		</div>
 		<!-- Main jumbotron for a primary marketing message or call to action -->
-		<div class="jumbotron">
-			<div class="container">
-				<h1>GeoTracker</h1>
-				<p>
-					With GeoTracker you can view the current position of your friends.....
-				</p>
-			</div>
-		</div>
-		<div class="container">
-			<!-- Example row of columns -->
-			<div class="row">
-				<div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-					<h1>Track your Friends</h1>
-					<p>
-						Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.
-					</p>
+
+		<div class="container" style="height: 80%;">
+			<div class="row" style="height: 100%;">
+				<div class="col-md-2" style="height: 90%;">
+					<h3 class="text-center">Friendlist</h3>
+					<div class="well" style="height: 90%;">
+						<ul class="list-group checked-list-box">
+							<a class="btn btn-primary btn-block">Testfriend #1</a>
+							<a class="btn btn-primary btn-block">Testfriend #</a>
+							<a class="btn btn-primary btn-block">Testfriend #1</a>
+							<a class="btn btn-primary btn-block">Testfriend #1</a>
+							<a class="btn btn-primary btn-block">Testfriend #1</a>
+						</ul>
+					</div>
 				</div>
-				<div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-					<h2>Google Map integration</h2>
-					<img width="70%" src="http://www.simonblog.com/wordpress/wp-content/uploads/2009/05/google_maps_alternate_route_2.jpg">
-				</div>
-				<div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-					<h2>HTML5 Websockets</h2>
-					<p>
-						Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.
-					</p>
+				<div class="col-md-10" style="height: 90%;">
+					<h3 class="text-center">Mapview</h3>
+					<div id="googleMap" style="height: 90%; width: 100%; position: relative; background-color: rgb(229, 227, 223); overflow: hidden;"></div>
 				</div>
 			</div>
 			<hr>
@@ -95,6 +84,7 @@
 
 		<!-- /container -->
 		<script src="js/app.js"></script>
+
 	</body>
 
 </html>

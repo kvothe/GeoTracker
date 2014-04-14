@@ -7,10 +7,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 
+import at.jku.se.tracking.utils.PasswordEncryptionService;
+
 public class DatabaseService {
 	private static final int MAX_RESOURCES = 16; // Number of concurrent connections
 	private static final int POOL_WAIT_TIME = 60000; // Wait at most one minute for a database connection
-	private static final String CONNECTION_STRING = "jdbc:sqlserver://DEVELOPMENTVM\\SQLEXPRESS;database=GeoTracker;user=geo;password=tracker"; // TODO:
+	private static final String CONNECTION_STRING = "jdbc:sqlserver://localhost;database=GeoTracker;user=geo;password=tracker"; // TODO:
 	// read
 	// from
 	// config
@@ -89,6 +91,20 @@ public class DatabaseService {
 		// --
 		return user;
 	}
+	
+	public static boolean loginUser(String username, String password) throws SQLException {
+		UserObject user = DatabaseService.queryUser(username);
+		if(user != null) {
+			try {
+				return PasswordEncryptionService.authenticate(password, user.getEncryptedPassword(), user.getSalt());
+			} catch (Exception e) {
+				e.printStackTrace();
+				return false;
+			}
+		}
+		return false;
+	}
+	
 	public static List<UserObject> queryObservableUsers() throws SQLException {
 		return null;
 	}
