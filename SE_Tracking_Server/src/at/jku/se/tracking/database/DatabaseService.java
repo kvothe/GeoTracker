@@ -5,12 +5,35 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Properties;
 
 public class DatabaseService {
 	private static final int MAX_RESOURCES = 16; // Number of concurrent connections
 	private static final int POOL_WAIT_TIME = 60000; // Wait at most one minute for a database connection
-	private static final String CONNECTION_STRING = "jdbc:sqlserver://DEVELOPMENTVM\\SQLEXPRESS;database=GeoTracker;user=geo;password=tracker";
-	private static final ConnectionPool CONNECTION_POOL = new ConnectionPool(MAX_RESOURCES, CONNECTION_STRING);
+	private static String CONNECTION_STRING;
+	private static ConnectionPool CONNECTION_POOL;
+
+	// ------------------------------------------------------------------------
+
+	static {
+		// Initialize DB connection with settings from config file
+		Properties prop = ConfigLoader.loadConfig();
+		if (prop != null) {
+			String host = prop.getProperty("dbhost");
+			String dbname = prop.getProperty("dbname");
+			String user = prop.getProperty("dbuser");
+			String pass = prop.getProperty("dbpassword");
+			// --
+			if (!host.equals("test")) { // setting for testing purpose when no database is present
+				CONNECTION_STRING = "jdbc:sqlserver://" + host + ";";
+				CONNECTION_STRING += "database=" + dbname + ";user=" + user + ";password=" + pass;
+				// --
+				CONNECTION_POOL = new ConnectionPool(MAX_RESOURCES, CONNECTION_STRING);
+			}
+		} else {
+			// TODO
+		}
+	}
 
 	// ------------------------------------------------------------------------
 
@@ -23,10 +46,15 @@ public class DatabaseService {
 	// ------------------------------------------------------------------------
 
 	public static UserObject queryUser(double id) throws SQLException {
+		if (CONNECTION_POOL == null) {
+			return null;
+		}
+		// --
 		UserObject user = null;
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
 		// --
-		PreparedStatement query = con.prepareStatement("SELECT * FROM [" + UserObject.TABLE_NAME + "] WHERE " + UserObject.COLUMN_ID + "=?");
+		PreparedStatement query = con.prepareStatement("SELECT * FROM [" + UserObject.TABLE_NAME + "] WHERE "
+				+ UserObject.COLUMN_ID + "=?");
 		query.setDouble(1, id);
 		ResultSet rs = query.executeQuery();
 		// --
@@ -53,10 +81,15 @@ public class DatabaseService {
 	// ------------------------------------------------------------------------
 
 	public static UserObject queryUser(String username) throws SQLException {
+		if (CONNECTION_POOL == null) {
+			return null;
+		}
+		// --
 		UserObject user = null;
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
 		// --
-		PreparedStatement query = con.prepareStatement("SELECT * FROM [" + UserObject.TABLE_NAME + "] WHERE " + UserObject.COLUMN_USERNAME + "=?");
+		PreparedStatement query = con.prepareStatement("SELECT * FROM [" + UserObject.TABLE_NAME + "] WHERE "
+				+ UserObject.COLUMN_USERNAME + "=?");
 		query.setString(1, username);
 		ResultSet rs = query.executeQuery();
 		// --
@@ -90,11 +123,16 @@ public class DatabaseService {
 	// ------------------------------------------------------------------------
 
 	public static boolean insertUser(UserObject user) throws SQLException {
+		if (CONNECTION_POOL == null) {
+			return false;
+		}
+		// --
 		boolean result = false;
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
 		// --
-		PreparedStatement insert = con.prepareStatement("INSERT INTO [" + UserObject.TABLE_NAME + "] ([" + UserObject.COLUMN_USERNAME + "],["
-				+ UserObject.COLUMN_PASSWORD + "],[" + UserObject.COLUMN_SALT + "],[" + UserObject.COLUMN_OBSERVABLE + "]) VALUES(?,?,?,?)");
+		PreparedStatement insert = con.prepareStatement("INSERT INTO [" + UserObject.TABLE_NAME + "] (["
+				+ UserObject.COLUMN_USERNAME + "],[" + UserObject.COLUMN_PASSWORD + "],[" + UserObject.COLUMN_SALT
+				+ "],[" + UserObject.COLUMN_OBSERVABLE + "]) VALUES(?,?,?,?)");
 		// --
 		insert.setString(1, user.getName());
 		insert.setBytes(2, user.getEncryptedPassword());

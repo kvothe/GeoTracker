@@ -18,68 +18,29 @@
 		</style>
 
 		<link href="favicon.ico" rel="icon" type="image/x-icon" />
-
 	</head>
 
-	<body onload="initialize()">
-		<div class="navbar navbar-inverse navbar-fixed-top">
-			<div class="container">
-				<div class="navbar-header">
-					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-						<span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
-					</button>
-					<a class="navbar-brand" href="index.html">GeoTracker</a>
-				</div>
-				<div class="navbar-collapse collapse">
-					<ul class="nav navbar-nav"></ul>
-					<form class="navbar-form navbar-right">
-						<div class="form-group">
-							<input id="username" type="text" placeholder="Username" class="form-control">
-						</div>
-						<div class="form-group">
-							<input id="password" type="password" placeholder="Password" class="form-control">
-						</div>
-						<button type="submit" id="sign_in_button" class="btn btn-success">
-							Sign in
-						</button>
-						<button type="submit" id="register_button" class="btn btn-success">
-							Register now
-						</button>
-						<button type="submit" id="logout_button" class="btn btn-success">
-							Logout
-						</button>
-					</form>
-				</div>
-				<!--/.navbar-collapse -->
-			</div>
-		</div>
-		<!-- Main jumbotron for a primary marketing message or call to action -->
-
-		<div class="container" style="height: 80%;">
+	<body onload="initializeMap()">
+		<div id="content" class="container" style="height: 80%;">
 			<div class="row" style="height: 100%;">
 				<div class="col-md-2" style="height: 90%;">
 					<h3 class="text-center">Friendlist</h3>
 					<div class="well" style="height: 90%;">
 						<ul class="list-group checked-list-box">
 							<a class="btn btn-primary btn-block">Testfriend #1</a>
-							<a class="btn btn-primary btn-block">Testfriend #</a>
-							<a class="btn btn-primary btn-block">Testfriend #1</a>
-							<a class="btn btn-primary btn-block">Testfriend #1</a>
-							<a class="btn btn-primary btn-block">Testfriend #1</a>
+							<a class="btn btn-primary btn-block">Testfriend #2</a>
+							<a class="btn btn-primary btn-block">Testfriend #3</a>
+							<a class="btn btn-primary btn-block">Testfriend #4</a>
+							<a class="btn btn-primary btn-block">Testfriend #5</a>
 						</ul>
 					</div>
 				</div>
 				<div class="col-md-10" style="height: 90%;">
 					<h3 class="text-center">Mapview</h3>
-					<div id="googleMap" style="height: 90%; width: 100%; position: relative; background-color: rgb(229, 227, 223); overflow: hidden;"></div>
+					<div id="googleMap" style="height:400px;width:650px; position: relative; background-color: rgb(229, 227, 223); overflow: hidden;"></div>
 				</div>
 			</div>
-			<hr>
-			<footer>
-				<p>
-					&copy; GeoTracker 2014
-				</p>
-			</footer>
+			<hr>			
 		</div>
 
 		<!-- /container -->
