@@ -10,7 +10,9 @@ var registerVisible = document.getElementById('register_visible');
 var registerAlertBox = document.getElementById('register_alert_box');
 var loginAlertBox = document.getElementById('navbar_alert');
 var logoutBtn = document.getElementById('logout_button');
+var logoutForm = document.getElementById('navbar_form_logout');
 var dashboardAnchor = document.getElementById('dashboard_link');
+var jumbotron = document.getElementById('jumbotron');
 var map;
 var socket;
 
@@ -18,9 +20,11 @@ var cid = -1;
 var conversations = {};
 
 window.onresize = function(event) {
-	var center = map.getCenter();
-	google.maps.event.trigger(map, "resize");
-	map.setCenter(center);
+	if (map) {
+		var center = map.getCenter();
+		google.maps.event.trigger(map, "resize");
+		map.setCenter(center);
+	}
 };
 
 window.onload = function() {
@@ -32,22 +36,28 @@ window.onload = function() {
 	var sessionId = getCookie("session_id");
 	if (sessionId != null && sessionId.length > 5) {
 		// TODO: check if the session is still valid on the server
-		userField.setAttribute("type", "hidden");
-		passField.setAttribute("type", "hidden");
-		loginBtn.style.visibility = "hidden";
-		registerBtn.style.visibility = "hidden";
-		logoutBtn.style.visibility = "visible";
-		if (dashboardAnchor != null) {
-			dashboardAnchor.style.visibility = "visible";
+		//userField.setAttribute("type", "hidden");
+		//passField.setAttribute("type", "hidden");
+		//loginBtn.style.visibility = "hidden";
+		//registerBtn.style.visibility = "hidden";
+		//logoutBtn.style.visibility = "visible";
+		$('#navbar_form_logout').show();
+		$('#navbar_form_login').hide();
+		if (dashboardAnchor != null) {		
+			$('#dashboard_link').show();
+			//dashboardAnchor.style.visibility = "visible";
 		}
 	} else {
-		userField.setAttribute("type", "visible");
-		passField.setAttribute("type", "visible");
-		loginBtn.style.visibility = "visible";
-		registerBtn.style.visibility = "visible";
-		logoutBtn.style.visibility = "hidden";
+		//userField.setAttribute("type", "visible");
+		//passField.setAttribute("type", "visible");
+		//loginBtn.style.visibility = "visible";
+		//registerBtn.style.visibility = "visible";
+		//logoutBtn.style.visibility = "hidden";
+		$('#navbar_form_logout').hide();
+		$('#navbar_form_login').show();
 		if (dashboardAnchor != null) {
-			dashboardAnchor.style.visibility = "hidden";
+			$('#dashboard_link').hide();
+			//dashboardAnchor.style.visibility = "hidden";
 		}
 	}
 
@@ -103,7 +113,12 @@ window.onload = function() {
 	// Navigate to registration
 	if (registerBtn != null) {
 		registerBtn.onclick = function(e) {
-			window.location.href = "register.html";
+			//window.location.href = "register.html";			
+			$('#page_content').load('register.html #content', function() {
+				//$('#jumbotron').hide();
+				$('#navbar_form_login').hide();
+				$('#page_content').hide().fadeIn();
+			});
 			return false;
 		};
 	}
@@ -218,7 +233,14 @@ function handleLogin(data) {
 	//success
 	if (data["message-type"] === 'response-ok') {
 		setCookie("session_id", data["message"], 7);
-		window.location.href = "dashboard.html";
+		$('#page_content').load('dashboard.html #content', function() {
+			loadScript();
+			initializeMap();
+			$('#jumbotron').hide();
+			$('#navbar_form_logout').fadeIn();
+			$('#navbar_form_login').hide();
+			$('#page_content').hide().fadeIn();
+		});	
 	} else {
 		loginAlertBox.removeAttribute('hidden');
 		loginAlertBox.innerHTML = " <b>Error!</b> " + data["message"];
@@ -247,13 +269,21 @@ function eraseCookie(cname) {
 	setCookie(cname, "", -1);
 }
 
-function initialize() {
+function loadScript() {	
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyCk21t6ICUW7xeQMvz0qL1jL_VNwl7sLtw&sensor=false&' +
+      'callback=initializeMap';
+  document.body.appendChild(script);
+}
+
+function initializeMap() {
 	var mapProp = {
 		center : new google.maps.LatLng(51.508742, -0.120850),
 		zoom : 5,
 		mapTypeId : google.maps.MapTypeId.ROADMAP
 	};
-	map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
+	map = new google.maps.Map(document.getElementById("googleMap"), mapProp);	
 }
 
 function getLocation() {
