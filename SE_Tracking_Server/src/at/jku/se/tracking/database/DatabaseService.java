@@ -161,4 +161,32 @@ public class DatabaseService {
 
 	// ------------------------------------------------------------------------
 
+	public static boolean insertLocation(GeolocationObject location) throws SQLException{
+		boolean result = false;
+		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
+		// --
+		PreparedStatement insert = con.prepareStatement("INSERT INTO [" + GeolocationObject.TABLE_NAME + "] ([" + GeolocationObject.COLUMN_USER_FK + "],["
+				+ GeolocationObject.COLUMN_TIMESTAMP + "],[" + GeolocationObject.COLUMN_LONGITUDE + "],[" + GeolocationObject.COLUMN_LATITUDE + "]) VALUES(?,?,?,?)");
+		// --
+		
+		insert.setDouble(1, location.getUserFK());
+		insert.setDouble(2, location.getTimestamp());
+		
+		insert.setDouble(3, location.getLongitude());
+		insert.setDouble(4, location.getLatitude());
+
+		// --
+		try {
+			result = insert.execute();
+			if (!result) {
+				result = insert.getUpdateCount() == 1;
+			}
+		} finally {
+			insert.close();
+		}
+		// --
+		CONNECTION_POOL.returnResource(con);
+		// --
+		return result;
+	}
 }

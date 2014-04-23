@@ -21,9 +21,9 @@ public class MsgLocationUpdate extends AMessage {
 	}
 
 	public MsgLocationUpdate(String sessionId,
-			String latitude, String longitude, String accuracy,
+			double latitude, double longitude, String accuracy,
 			String altitude, String altitudeAccuracy, String heading,
-			String speed, String timestamp) {
+			String speed, double timestamp) {
 		setType(MessageType.LOCATION_UPDATE);
 		setValue(FIELD_SESSION_ID, sessionId);
 		setValue(FIELD_LATITUDE, latitude);
@@ -40,12 +40,12 @@ public class MsgLocationUpdate extends AMessage {
 		return (String) getValue(FIELD_SESSION_ID);
 	}
 
-	public String getFieldLatitude() {
-		return (String) getValue(FIELD_LATITUDE);
+	public double getFieldLatitude() {
+		return Double.parseDouble((String) getValue(FIELD_LATITUDE));
 	}
 
-	public String getFieldLongitude() {
-		return (String) getValue(FIELD_LONGITUDE);
+	public double getFieldLongitude() {
+		return Double.parseDouble((String) getValue(FIELD_LONGITUDE));
 	}
 
 	public String getFieldAccuracy() {
@@ -68,8 +68,8 @@ public class MsgLocationUpdate extends AMessage {
 		return (String) getValue(FIELD_SPEED);
 	}
 
-	public String getFieldTimestamp() {
-		return (String) getValue(FIELD_TIMESTAMP);
+	public double getFieldTimestamp() {
+		return Double.parseDouble((String) getValue(FIELD_TIMESTAMP));
 	}
 
 }

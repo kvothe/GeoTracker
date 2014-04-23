@@ -13,6 +13,7 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
 import at.jku.se.tracking.database.DatabaseService;
+import at.jku.se.tracking.database.GeolocationObject;
 import at.jku.se.tracking.database.UserObject;
 import at.jku.se.tracking.messages.MsgError;
 import at.jku.se.tracking.messages.MsgLocationUpdate;
@@ -176,6 +177,23 @@ public class WebSocketSession {
 	// ------------------------------------------------------------------------
 
 	private void handleLocationUpdate(MsgLocationUpdate location) throws IOException {
-		// todo
+		try {
+			GeolocationObject geoObject = new GeolocationObject(userId,
+					location.getFieldTimestamp(), location.getFieldLongitude(),
+					location.getFieldLatitude());
+
+			boolean success = DatabaseService.insertLocation(geoObject);
+			
+			if (success) {
+				sendMessage(new MsgOk(location.getConversationId()));
+			} else {
+				sendMessage(new MsgError(location.getConversationId(),
+						"problem inserting location"));
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			sendMessage(new MsgError(location.getConversationId(), e));
+		}
 	}
 }
