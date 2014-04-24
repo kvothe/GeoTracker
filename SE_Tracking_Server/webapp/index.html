@@ -4,9 +4,9 @@
     <meta name="generator"
     content="HTML Tidy for HTML5 (experimental) for Windows https://github.com/w3c/tidy-html5/tree/c63cc39" />
     <title>GeoTracker - Home</title>
-    <meta name="viewport" content="width=device-width" />
-    <link rel="stylesheet" href="css/custom.css" />
+    <meta name="viewport" content="width=device-width" />    
     <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/custom.css" />
     <link href="favicon.ico" rel="icon" type="image/x-icon" />
     <!-- Libraries -->
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -27,19 +27,19 @@
     <div class="navbar navbar-inverse navbar-fixed-top" id="navbar">
       <div class="container">
         <div class="navbar-header">
-        <a class="navbar-brand" href="index.html">GeoTracker</a> 
+        <a id="home_link" class="navbar-brand" href="#page_content">GeoTracker</a> 
         <a id="dashboard_link" class="navbar-brand" href="#page_content">Dashboard</a></div>
         
         <div class="navbar-collapse collapse">        
           <ul class="nav navbar-nav"></ul>
           <form class="navbar-form navbar-right" id="navbar_form_login">
           <div class="form-group">
-            <input id="username" type="text" placeholder="Username" class="form-control" />
+            <input id="login_username" type="text" placeholder="Username" class="form-control" />
           </div>
           <div class="form-group">
-            <input id="password" type="password" placeholder="Password" class="form-control" />
+            <input id="login_password" type="password" placeholder="Password" class="form-control" />
           </div>
-          <button type="submit" id="sign_in_button" class="btn btn-success">Sign in</button> 
+          <button type="submit" id="login_button" class="btn btn-success">Sign in</button> 
           <button type="submit" id="register_button" class="btn btn-success">Register now</button></form>
           <form class="navbar-form navbar-right" id="navbar_form_logout">
             <button type="submit" id="logout_button" class="btn btn-success">Logout</button>

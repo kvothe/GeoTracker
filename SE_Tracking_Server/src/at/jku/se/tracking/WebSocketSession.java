@@ -26,10 +26,12 @@ import at.jku.se.tracking.messages.MsgLogin;
 import at.jku.se.tracking.messages.MsgLogout;
 import at.jku.se.tracking.messages.MsgOk;
 import at.jku.se.tracking.messages.MsgRegister;
-import at.jku.se.tracking.messages.MsgRequestTrackingSessions;
+import at.jku.se.tracking.messages.MsgRequestSessionList;
 import at.jku.se.tracking.messages.MsgRequestUserList;
 import at.jku.se.tracking.messages.MsgResponseList;
 import at.jku.se.tracking.messages.MsgSession;
+import at.jku.se.tracking.messages.MsgStartObservation;
+import at.jku.se.tracking.messages.MsgStopObservation;
 import at.jku.se.tracking.messages.serialization.AMessage;
 import at.jku.se.tracking.messages.serialization.InvalidMessageException;
 import at.jku.se.tracking.messages.serialization.MarshallingService;
@@ -97,8 +99,16 @@ public class WebSocketSession {
 				handleUserList(userList);
 				break;
 			case SESSION_LIST:
-				MsgRequestTrackingSessions requestTrackingSessions = (MsgRequestTrackingSessions) m;
-				handleTrackingSessions(requestTrackingSessions);
+				MsgRequestSessionList requestTrackingSessions = (MsgRequestSessionList) m;
+				handleSessionList(requestTrackingSessions);
+				break;
+			case START_OBSERVATION:
+				MsgStartObservation startObservation = (MsgStartObservation) m;
+				handleStartObservation(startObservation);
+				break;
+			case STOP_OBSERVATION:
+				MsgStopObservation stopObservation = (MsgStopObservation) m;
+				handleStopObservation(stopObservation);
 				break;
 			default:
 				break;
@@ -252,13 +262,15 @@ public class WebSocketSession {
 				List<UserObject> users = DatabaseService.queryUsers(request.getOnlyObservable());
 				// --
 				for (UserObject u : users) {
-					// crude implementation due to workaround for quick-json bug with trailing commas
-					Map<String, Object> user = new HashMap<String, Object>();
-					user.put("name", u.getName());
-					user.put("observable", u.isObservable());
-					user.put("online", false);
-					// --
-					userList.add(user);
+					if (u.getId() != session.getUserId()) {
+						// crude implementation due to workaround for quick-json bug with trailing commas
+						Map<String, Object> user = new HashMap<String, Object>();
+						user.put("name", u.getName());
+						user.put("observable", u.isObservable());
+						user.put("online", false);
+						// --
+						userList.add(user);
+					}
 				}
 				// --
 				sendMessage(new MsgResponseList(request.getConversationId(), userList));
@@ -272,26 +284,19 @@ public class WebSocketSession {
 
 	// ------------------------------------------------------------------------
 
-	private void handleTrackingSessions(MsgRequestTrackingSessions request) throws IOException {
+	private void handleSessionList(MsgRequestSessionList request) throws IOException {
 		if (checkSession(request)) {
 			try {
 				List<Map<String, Object>> sessionList = new ArrayList<Map<String, Object>>();
 				// --
-				List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(session.getUserId(), request.isObserver());
+				List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(session.getUserId(), true, false);
 				// --
 				for (TrackingSessionObject s : sessions) {
 					// crude implementation due to workaround for quick-json bug with trailing commas
 					Map<String, Object> session = new HashMap<String, Object>();
-					if (request.isObserver()) {
-						UserObject u = DatabaseService.queryUser(s.getObserved());
-						if (u != null) {
-							session.put("observed", u.getName());
-						}
-					} else {
-						UserObject u = DatabaseService.queryUser(s.getObserver());
-						if (u != null) {
-							session.put("observer", u.getName());
-						}
+					UserObject u = DatabaseService.queryUser(s.getObserved());
+					if (u != null) {
+						session.put("observed", u.getName());
 					}
 					session.put("starttime", s.getStarttime());
 					session.put("endtime", s.getEndtime());
@@ -307,6 +312,82 @@ public class WebSocketSession {
 			}
 		}
 	}
+
+	// ------------------------------------------------------------------------
+
+	private void handleStartObservation(MsgStartObservation request) throws IOException {
+		if (checkSession(request)) {
+			try {
+				UserObject observed = DatabaseService.queryUser(request.getObservedUser());
+				if (observed != null) {
+					if (!observed.isObservable()) {
+						sendMessage(new MsgError(request.getConversationId(), observed.getName() + " is not observable"));
+						return;
+					}
+					// check if this user already observes the requested user
+					List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(session.getUserId(), observed.getId(), true);
+					if (sessions.size() > 0) {
+						sendMessage(new MsgError(request.getConversationId(), "You are already observing " + observed.getName()));
+						return;
+					}
+					// --
+					DatabaseService.startTrackingSession(session.getUserId(), observed.getId(), System.currentTimeMillis());
+					// --
+					sendMessage(new MsgOk(request.getConversationId(), observed.getName()));
+				} else {
+					sendMessage(new MsgError(request.getConversationId(), "User doesn't exist"));
+				}
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				sendMessage(new MsgError(request.getConversationId(), e));
+			}
+		}
+	}
+
+	// ------------------------------------------------------------------------
+
+	private void handleStopObservation(MsgStopObservation request) throws IOException {
+		if (checkSession(request)) {
+			try {
+				long endtime = System.currentTimeMillis();
+				// --
+				UserObject user = DatabaseService.queryUser(request.getUser());
+				if (user != null) {
+					long sessionId = 0;
+					long observed = request.userIsObserver() ? session.getUserId() : user.getId();
+					long observer = request.userIsObserver() ? user.getId() : session.getUserId();
+					// check if this observer already observes the requested user
+					List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(observer, observed, true);
+					if (sessions.size() == 1) {
+						sessionId = sessions.get(0).getId();
+					} else {
+						if (request.userIsObserver()) {
+							sendMessage(new MsgError(request.getConversationId(), "You are not being observed by " + user.getName()));
+						} else {
+							sendMessage(new MsgError(request.getConversationId(), "You are not observing " + user.getName()));
+						}
+						return;
+					}
+					// --
+					boolean success = DatabaseService.stopTrackingSession(sessionId, endtime, session.getUserId());
+					// --
+					if (success) {
+						sendMessage(new MsgOk(request.getConversationId(), user.getName()));
+					} else {
+						sendMessage(new MsgError(request.getConversationId(), "Error while stopping session"));
+					}
+				} else {
+					sendMessage(new MsgError(request.getConversationId(), "User doesn't exist"));
+				}
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				sendMessage(new MsgError(request.getConversationId(), e));
+			}
+		}
+	}
+	
 	// ------------------------------------------------------------------------
 
 	private boolean checkSession(AMessage message) throws IOException {

@@ -44,8 +44,8 @@ CREATE TABLE [dbo].[trackingsession](
 	[observed] [bigint] NOT NULL,
 	[observer] [bigint] NOT NULL,
 	[starttime] [bigint] NOT NULL,
-	[endtime] [bigint] NOT NULL,
-	[canceled_by] [bigint] NOT NULL,
+	[endtime] [bigint] NULL,
+	[canceled_by] [bigint] NULL,
  CONSTRAINT [PK_trackingsession] PRIMARY KEY CLUSTERED 
 (
 	[id] ASC
