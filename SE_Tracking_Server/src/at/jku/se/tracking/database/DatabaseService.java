@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 import java.util.Properties;
 
@@ -45,7 +46,7 @@ public class DatabaseService {
 
 	// ------------------------------------------------------------------------
 
-	public static UserObject queryUser(double id) throws SQLException {
+	public static UserObject queryUser(long id) throws SQLException {
 		if (CONNECTION_POOL == null) {
 			return null;
 		}
@@ -53,8 +54,7 @@ public class DatabaseService {
 		UserObject user = null;
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
 		// --
-		PreparedStatement query = con.prepareStatement("SELECT * FROM [" + UserObject.TABLE_NAME + "] WHERE "
-				+ UserObject.COLUMN_ID + "=?");
+		PreparedStatement query = con.prepareStatement("SELECT * FROM [" + UserObject.TABLE_NAME + "] WHERE " + UserObject.COLUMN_ID + "=?");
 		query.setDouble(1, id);
 		ResultSet rs = query.executeQuery();
 		// --
@@ -88,15 +88,14 @@ public class DatabaseService {
 		UserObject user = null;
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
 		// --
-		PreparedStatement query = con.prepareStatement("SELECT * FROM [" + UserObject.TABLE_NAME + "] WHERE "
-				+ UserObject.COLUMN_USERNAME + "=?");
+		PreparedStatement query = con.prepareStatement("SELECT * FROM [" + UserObject.TABLE_NAME + "] WHERE " + UserObject.COLUMN_USERNAME + "=?");
 		query.setString(1, username);
 		ResultSet rs = query.executeQuery();
 		// --
 		try {
 			while (rs.next()) {
 				// TODO normalize username (case-insenstivie?)
-				double id = rs.getDouble(UserObject.COLUMN_ID);
+				long id = rs.getLong(UserObject.COLUMN_ID);
 				byte[] password = rs.getBytes(UserObject.COLUMN_PASSWORD);
 				byte[] salt = rs.getBytes(UserObject.COLUMN_SALT);
 				boolean observable = rs.getBoolean(UserObject.COLUMN_OBSERVABLE);
@@ -122,17 +121,17 @@ public class DatabaseService {
 
 	// ------------------------------------------------------------------------
 
-	public static boolean insertUser(UserObject user) throws SQLException {
+	public static long insertUser(UserObject user) throws SQLException {
+		long result = -1;
 		if (CONNECTION_POOL == null) {
-			return false;
+			return result;
 		}
 		// --
-		boolean result = false;
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
 		// --
-		PreparedStatement insert = con.prepareStatement("INSERT INTO [" + UserObject.TABLE_NAME + "] (["
-				+ UserObject.COLUMN_USERNAME + "],[" + UserObject.COLUMN_PASSWORD + "],[" + UserObject.COLUMN_SALT
-				+ "],[" + UserObject.COLUMN_OBSERVABLE + "]) VALUES(?,?,?,?)");
+		PreparedStatement insert = con.prepareStatement("INSERT INTO [" + UserObject.TABLE_NAME + "] ([" + UserObject.COLUMN_USERNAME + "],["
+				+ UserObject.COLUMN_PASSWORD + "],[" + UserObject.COLUMN_SALT + "],[" + UserObject.COLUMN_OBSERVABLE + "]) VALUES(?,?,?,?)",
+				Statement.RETURN_GENERATED_KEYS);
 		// --
 		insert.setString(1, user.getName());
 		insert.setBytes(2, user.getEncryptedPassword());
@@ -140,9 +139,11 @@ public class DatabaseService {
 		insert.setBoolean(4, user.isObservable());
 		// --
 		try {
-			result = insert.execute();
-			if (!result) {
-				result = insert.getUpdateCount() == 1;
+			result = insert.executeUpdate();
+			if (result == 1) {
+				ResultSet key = insert.getGeneratedKeys();
+				key.next();
+				result = key.getLong(1);
 			}
 		} finally {
 			insert.close();
@@ -161,20 +162,31 @@ public class DatabaseService {
 
 	// ------------------------------------------------------------------------
 
-	public static boolean insertLocation(GeolocationObject location) throws SQLException{
+	public static boolean insertLocation(GeolocationObject location) throws SQLException {
 		boolean result = false;
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
+
+		//@formatter:off
+		PreparedStatement insert = 
+				con.prepareStatement("INSERT INTO [" + GeolocationObject.TABLE_NAME + "] "
+				+ "([" + GeolocationObject.COLUMN_USER_FK + "],[" + GeolocationObject.COLUMN_TIMESTAMP + "],"
+				+ "[" + GeolocationObject.COLUMN_LONGITUDE + "],[" + GeolocationObject.COLUMN_LATITUDE + "],"
+				+ "[" + GeolocationObject.COLUMN_ACCURACY + "],[" + GeolocationObject.COLUMN_ALTITUDE + "],"
+				+ "[" + GeolocationObject.COLUMN_ALTITUDE_ACCURACCY + "],[" + GeolocationObject.COLUMN_HEADING + "],"
+				+ "[" + GeolocationObject.COLUMN_SPEED + "]) "
+				+ "VALUES(?,?,?,?,?,?,?,?,?)");
+		//@formatter:on
+
+		insert.setLong(1, location.getUserFK());
+		insert.setLong(2, location.getTimestamp());
 		// --
-		PreparedStatement insert = con.prepareStatement("INSERT INTO [" + GeolocationObject.TABLE_NAME + "] ([" + GeolocationObject.COLUMN_USER_FK + "],["
-				+ GeolocationObject.COLUMN_TIMESTAMP + "],[" + GeolocationObject.COLUMN_LONGITUDE + "],[" + GeolocationObject.COLUMN_LATITUDE + "]) VALUES(?,?,?,?)");
-		// --
-		
-		insert.setDouble(1, location.getUserFK());
-		insert.setDouble(2, location.getTimestamp());
-		
 		insert.setDouble(3, location.getLongitude());
 		insert.setDouble(4, location.getLatitude());
-
+		insert.setDouble(5, location.getAccuracy());
+		insert.setFloat(6, location.getAltitude());
+		insert.setDouble(7, location.getAltitudeAccuracy());
+		insert.setDouble(8, location.getHeading());
+		insert.setFloat(9, location.getSpeed());
 		// --
 		try {
 			result = insert.execute();

@@ -84,4 +84,46 @@ public abstract class AMessage {
 		}
 		return false;
 	}
+
+	// ------------------------------------------------------------------------
+
+	protected double returnDouble(String field, double defaultValue) {
+		if (hasValue(field)) {
+			Object f = getValue(field);
+			if (f instanceof Double) {
+				return (Double) f;
+			} else if (f instanceof String) {
+				return Double.parseDouble((String) f);
+			}
+		}
+		return defaultValue;
+	}
+
+	// ------------------------------------------------------------------------
+
+	protected long returnLong(String field, long defaultValue) {
+		if (hasValue(field)) {
+			Object f = getValue(field);
+			if (f instanceof Long) {
+				return (Long) f;
+			} else if (f instanceof String) {
+				return Long.parseLong((String) f);
+			}
+		}
+		return defaultValue;
+	}
+
+	// ------------------------------------------------------------------------
+
+	protected float returnFloat(String field, float defaultValue) {
+		if (hasValue(field)) {
+			Object f = getValue(field);
+			if (f instanceof Float) {
+				return (Float) f;
+			} else if (f instanceof String) {
+				return Float.parseFloat((String) f);
+			}
+		}
+		return defaultValue;
+	}
 }

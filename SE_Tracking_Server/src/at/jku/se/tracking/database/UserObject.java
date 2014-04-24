@@ -11,7 +11,7 @@ public class UserObject {
 
 	// ------------------------------------------------------------------------
 
-	private double id;
+	private long id;
 	private String name;
 	private byte[] encryptedPassword;
 	private byte[] salt;
@@ -22,7 +22,7 @@ public class UserObject {
 	public UserObject(String name, byte[] encryptedPassword, byte[] salt, boolean observable) {
 		this(-1, name, encryptedPassword, salt, observable);
 	}
-	public UserObject(double id, String name, byte[] encryptedPassword, byte[] salt, boolean observable) {
+	public UserObject(long id, String name, byte[] encryptedPassword, byte[] salt, boolean observable) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -33,7 +33,7 @@ public class UserObject {
 
 	// ------------------------------------------------------------------------
 
-	public double getId() {
+	public long getId() {
 		return id;
 	}
 	public String getName() {

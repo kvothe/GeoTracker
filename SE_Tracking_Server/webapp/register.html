@@ -1,59 +1,33 @@
-<!doctype html>
-
-<html>
-
-	<head>
-		<title>GeoTracker - Register</title>
-		<meta name="viewport" content="width=device-width">
-		<link rel="stylesheet" href="css/custom.css">
-		<link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
-		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
-		<script type="text/javascript" src="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
-		<style type="text/css">
-			body {
-				padding-top: 50px;
-				padding-bottom: 20px;
-			}
-		</style>
-
-		<link href="favicon.ico" rel="icon" type="image/x-icon" />
-
-	</head>
-
-	<body>	
-		<div class="container" id="content">
-			<!-- Example row of columns -->
-			<div class="container">
-				<div class="row">
-					<form>
-						<div class="form-group">
-							<hr>
-							<h1>Registration</h1>
-							<input id="register_username" type="text" placeholder="Username" class="form-control">
-						</div>
-						<div class="form-group">
-							<input id="register_password" type="password" placeholder="Password" class="form-control">
-						</div>
-						<div class="checkbox">
-							<label>
-								<input id="register_visible" checked="checked" type="checkbox">
-								Make my position visible to others</label>
-						</div>
-
-						<button id="register_form_button" type="submit" class="btn btn-block btn-success">
-							Register
-						</button>
-					</form>
-				</div>
-
-				<div id="register_alert_box" hidden class="alert alert-dismissable alert-success">
-					<b>Success!</b> You successfully registered for GeoTracker.
-				</div>
-
-			</div>
-			<hr>
-			
-		</div>		
-	</body>
-
+<!DOCTYPE html>
+<html>  
+    <link href="favicon.ico" rel="icon" type="image/x-icon" />
+  </head>
+  <body>
+    <div class="container" id="content">
+      <!-- Example row of columns -->
+      <div class="container">
+        <div class="row">
+          <form>
+            <div class="form-group">
+              <hr />
+              <h1>Registration</h1>
+              <input id="register_username" type="text" placeholder="Username" class="form-control" />
+            </div>
+            <div class="form-group">
+              <input id="register_password" type="password" placeholder="Password" class="form-control" />
+            </div>
+            <div class="form-group">
+              <input id="register_password_repeat" type="password" placeholder="Repeat Password" class="form-control" />
+            </div>
+            <div class="checkbox">
+              <label>
+              <input id="register_observable" checked="checked" type="checkbox" /> Make my position visible to others</label>
+            </div>
+            <button id="register_submit" type="submit" class="btn btn-block btn-success">Register</button>
+          </form>
+        </div>
+        <hr />
+      </div>
+    </div>
+  </body>
 </html>

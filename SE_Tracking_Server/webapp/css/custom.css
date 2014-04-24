@@ -1,3 +1,7 @@
+.alert {
+  text-align: center;
+}
+
 .alert-success {
 	margin-top: 20px;
 }
