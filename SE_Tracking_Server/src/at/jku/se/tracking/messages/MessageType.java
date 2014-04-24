@@ -4,6 +4,7 @@ public enum MessageType {
 	//@formatter:off
 	REGISTRATION("request-registration"),
 	LOGIN("request-login"),
+	SESSION("request-session-check"),
 	LIST_USERS("request-list-users"),
 	LIST_TRACKING_SESSIONS("request-list-tracking-sessions"),
 	START_OBSERVATION("request-start-observation"),

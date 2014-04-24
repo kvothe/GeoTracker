@@ -18,23 +18,15 @@ window.onload = function () {
   // Create a new WebSocket.
   socket = new WebSocket('wss://localhost:8443/');
 
-  //Check if loggedIn with cookie
-  var sessionId = getCookie("session_id");
-  if (sessionId != null && sessionId.length > 5) {
-    // TODO: check if the session is still valid on the server
-    $('#navbar_form_logout').show();
-    $('#navbar_form_login').hide();
-    $('#dashboard_link').show();
-  } else {
-    $('#dashboard_link').hide();
-    $('#navbar_form_logout').hide();
-    $('#navbar_form_login').show();    
+  //check if allowed to view dashboard
+  if (document.URL.indexOf('index.html') == -1) {
+    window.location.href = "index.html";
   }
 
-  //check if allowed to view dashboard
-  if (document.URL.indexOf('index.html') == -1) {    
-      window.location.href = "index.html";
-  }
+  // Initialize UI for anonymous user
+  $('#dashboard_link').hide();
+  $('#navbar_form_logout').hide();
+  $('#navbar_form_login').show();
 
   // Handle any errors that occur.
   socket.onerror = function (error) {
@@ -45,6 +37,8 @@ window.onload = function () {
   socket.onopen = function (event) {
     cid = 0;
     console.log('Connected to: ' + event.currentTarget.URL);
+    // check if the session cookie is still valid and act accordingly
+    sendSessionCheck();
   };
 
   // Handle messages sent by the server.
@@ -60,10 +54,13 @@ window.onload = function () {
     // --
     switch (responseTo) {
     case "request-registration":
-      handleRegistration(response[0]);
+      handleResponseRegistration(response[0]);
       break;
     case "request-login":
-      handleLogin(response[0]);
+      handleResponseLogin(response[0]);
+      break;
+    case "request-session-check":
+      handleResponseSessionCheck(response[0]);
       break;
     }
     return false;
@@ -90,7 +87,7 @@ window.onload = function () {
       // load page
       $('#page_content').load('register.html #content', function () {
         $('#register_submit').click(buttonHandlerRegister);
-        // $('#navbar_form_login').hide();        
+        // $('#navbar_form_login').hide();
         $('#page_content').hide().fadeIn();
       });
     };
@@ -101,27 +98,19 @@ window.onload = function () {
     loginBtn.onclick = function (e) {
       console.log("login handler");
       e.preventDefault ? e.preventDefault() : e.returnValue = false;
-      // --
-      var mcid = ++cid;
+
       // Retrieve username and password
       var username = $('#username').val();
       var password = $('#password').val();
 
       if (username.length > 4 && password.length > 6) {
-        var request = {
-          "cid" : mcid,
-          "message-type" : "request-login",
-          "username" : username,
-          "password" : password
-        };
-        conversations[mcid] = "request-login";
-        socket.send(JSON.stringify(request));
+        sendLoginRequest(username, password);
         hideMessage();
       } else {
         console.log("login error");
         $('#username').val('');
         $('#password').val('');
-        showErrorMessage("<b>Error!</b> Enter Username(min. length is 4) and Password(min. length is 6)");        
+        showErrorMessage("<b>Error!</b> Enter Username(min. length is 4) and Password(min. length is 6)");
       }
     };
   }
@@ -131,21 +120,14 @@ window.onload = function () {
     logoutBtn.onclick = function (e) {
       e.preventDefault ? e.preventDefault() : e.returnValue = false;
       // --
-      var mcid = ++cid;
-      var request = {
-        "cid" : mcid,
-        "message-type" : "request-logout",
-        "session-id" : getCookie("session_id")
-      };
-      conversations[mcid] = "request-logout";
-      socket.send(JSON.stringify(request));
-      
+      sendLogout();
+
       //remove cookie
       eraseCookie("session_id");
-      
+
       //navigate to home
       window.location.href = "index.html";
-      showSuccessMessage("You have been logged out");      
+      showSuccessMessage("You have been logged out");
     };
   }
 
@@ -164,28 +146,17 @@ Functions for onClick handlers that have to be set after the page has been
 loaded dynamically via jQuery.
 --------------------------------------------------------------------------- */
 function buttonHandlerRegister(e) {
-  console.log("register on click");
   e.preventDefault ? e.preventDefault() : e.returnValue = false;
-  // --
-  var mcid = ++cid;
+
   // Retrieve username and password
   var username = $("#register_username").val();
   var password = $("#register_password").val();
   var passwordRepeat = $("#register_password_repeat").val();
-  var visible = $("#register_observable").is(':checked');
+  var observable = $("#register_observable").is(':checked');
   // --
   if (username.length > 4 && password.length > 6) {
     if (password == passwordRepeat) {
-      console.log("passwords match");
-      var request = {
-        "cid" : mcid,
-        "message-type" : "request-registration",
-        "username" : username,
-        "password" : password,
-        "observable" : visible
-      };
-      conversations[mcid] = "request-registration";
-      socket.send(JSON.stringify(request));
+      sendRegistrationRequest(username, password, observable);
       console.log("registration request sent");
     } else {
       showErrorMessage("Entered passwords do not match.");
@@ -218,7 +189,7 @@ Handler functions for messages received from the server
 --------------------------------------------------------------------------- */
 
 //handle registration response
-function handleRegistration(data) {
+function handleResponseRegistration(data) {
   console.log('Handle Registration Response');
   //success
   if (data["message-type"] === 'response-ok') {
@@ -242,7 +213,7 @@ function handleRegistration(data) {
 // ----------------------------------------------------------------------------
 
 //handle login response
-function handleLogin(data) {
+function handleResponseLogin(data) {
   console.log('Handle Login Response');
   //success
   if (data["message-type"] === 'response-ok') {
@@ -253,9 +224,79 @@ function handleLogin(data) {
   }
 }
 
+// ----------------------------------------------------------------------------
+
+function handleResponseSessionCheck(data) {
+  console.log('Handle Session Check Response');
+  // --
+  if (data["message-type"] === 'response-ok') {
+    $('#navbar_form_logout').show();
+    $('#navbar_form_login').hide();
+    $('#dashboard_link').show();
+  } else {
+    //remove invalid session id
+    eraseCookie("session_id");
+    // --
+    $('#dashboard_link').hide();
+    $('#navbar_form_logout').hide();
+    $('#navbar_form_login').show();
+  }
+}
+
 /* ----------------------------------------------------------------------------
 Messages sent to the server go here
 --------------------------------------------------------------------------- */
+
+function sendRegistrationRequest(username, password, observable) {
+  var mcid = ++cid;
+  var request = {
+    "cid" : mcid,
+    "message-type" : "request-registration",
+    "username" : username,
+    "password" : password,
+    "observable" : observable
+  };
+  conversations[mcid] = "request-registration";
+  socket.send(JSON.stringify(request));
+}
+
+function sendLoginRequest(username, password) {
+  var mcid = ++cid;
+  var request = {
+    "cid" : mcid,
+    "message-type" : "request-login",
+    "username" : username,
+    "password" : password
+  };
+  conversations[mcid] = "request-login";
+  socket.send(JSON.stringify(request));
+}
+
+function sendSessionCheck() {
+  var mcid = ++cid;
+  var sessionId = getCookie("session_id");
+  if (!sessionId) {
+    sessionId = "not_init"; // workaround for quick-json bug that makes it unable to handle empty fields
+  }
+  var request = {
+    "cid" : mcid,
+    "message-type" : "request-session-check",
+    "session-id" : sessionId
+  };
+  conversations[mcid] = "request-session-check";
+  socket.send(JSON.stringify(request));
+}
+
+function sendLogout() {
+  var mcid = ++cid;
+  var request = {
+    "cid" : mcid,
+    "message-type" : "request-logout",
+    "session-id" : getCookie("session_id")
+  };
+  conversations[mcid] = "request-logout";
+  socket.send(JSON.stringify(request));
+}
 
 //send Location Update
 function sendLocationUpdate(position) {
@@ -291,7 +332,7 @@ function showErrorMessage(message) {
   $("#page_alert").html(message);
   $("#page_alert").fadeIn();
 }
-function hideMessage() {  
+function hideMessage() {
   $("#page_alert").fadeOut();
 }
 
@@ -341,7 +382,7 @@ function initializeMap() {
 
 function getLocation() {
   if (navigator.geolocation) {
-   console.log("showPosition");
+    console.log("showPosition");
     navigator.geolocation.watchPosition(showPosition);
   }
 }
