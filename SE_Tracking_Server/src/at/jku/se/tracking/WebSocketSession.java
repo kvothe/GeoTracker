@@ -21,6 +21,7 @@ import at.jku.se.tracking.messages.MsgLogin;
 import at.jku.se.tracking.messages.MsgLogout;
 import at.jku.se.tracking.messages.MsgOk;
 import at.jku.se.tracking.messages.MsgRegister;
+import at.jku.se.tracking.messages.MsgSession;
 import at.jku.se.tracking.messages.serialization.AMessage;
 import at.jku.se.tracking.messages.serialization.InvalidMessageException;
 import at.jku.se.tracking.messages.serialization.MarshallingService;
@@ -31,8 +32,7 @@ import com.json.exceptions.JSONParsingException;
 @WebSocket
 public class WebSocketSession {
 	private RemoteEndpoint remote;
-	private long userId = -1;
-	private String sessionId = null;
+	private UserSession session;
 
 	// ------------------------------------------------------------------------
 
@@ -55,7 +55,7 @@ public class WebSocketSession {
 		// 6) Show tracking sessions
 		// ------------------------------
 		// Store authenticated users remote session for push messages
-		System.out.println("Message from Client: " + message);
+		System.out.println("--> " + message);
 		// --
 		/*
 		 * try { remote.sendString(message); } catch (IOException e) { e.printStackTrace(); }
@@ -71,6 +71,10 @@ public class WebSocketSession {
 			case LOGIN:
 				MsgLogin login = (MsgLogin) m;
 				handleLogin(login);
+				break;
+			case SESSION:
+				MsgSession sessionCheck = (MsgSession) m;
+				handleSessionCheck(sessionCheck);
 				break;
 			case LOGOUT:
 				MsgLogout logout = (MsgLogout) m;
@@ -100,14 +104,15 @@ public class WebSocketSession {
 
 	@OnWebSocketClose
 	public void onClose(int statusCode, String reason) {
-		SessionObserver.unregisterSession(userId);
 		System.out.println("WebSocket Closed. Code:" + statusCode);
 	}
 
 	// ------------------------------------------------------------------------
 
 	public void sendMessage(AMessage message) throws IOException {
-		remote.sendString(MarshallingService.toJSON(message));
+		String jsonString = MarshallingService.toJSON(message);
+		System.out.println("<-- " + jsonString);
+		remote.sendString(jsonString);
 	}
 
 	// ------------------------------------------------------------------------
@@ -127,10 +132,11 @@ public class WebSocketSession {
 				long userId = DatabaseService.insertUser(user);
 				// TODO: perform login
 				if (userId != -1) {
-					this.sessionId = UUID.randomUUID().toString();
-					this.userId = userId;
+					String sessionId = UUID.randomUUID().toString();
+					this.session = new UserSession(sessionId, userId, System.currentTimeMillis());
 					// --
 					System.out.println("User <" + userId + "> registered session <" + sessionId + ">");
+					SessionObserver.registerSession(this.session, this);
 					// --
 					sendMessage(new MsgOk(registration.getConversationId(), sessionId));
 				} else {
@@ -157,15 +163,17 @@ public class WebSocketSession {
 				boolean authenticated = PasswordEncryptionService.authenticate(login.getPassword(), user.getEncryptedPassword(), user.getSalt());
 				// --
 				if (authenticated) {
-					this.sessionId = UUID.randomUUID().toString();
-					this.userId = user.getId();
+					String sessionId = UUID.randomUUID().toString();
+					this.session = new UserSession(sessionId, user.getId(), System.currentTimeMillis());
 					// --
-					System.out.println("User <" + userId + "> registered session <" + sessionId + ">");
+					System.out.println("User <" + user.getId() + "> registered session <" + sessionId + ">");
+					SessionObserver.registerSession(this.session, this);
 					// --
 					sendMessage(new MsgOk(login.getConversationId(), sessionId));
 				}
+			} else {
+				sendMessage(new MsgError(login.getConversationId(), "invalid credentials"));
 			}
-			sendMessage(new MsgError(login.getConversationId(), "invalid credentials"));
 		} catch (GeneralSecurityException e) {
 			e.printStackTrace();
 			sendMessage(new MsgError(login.getConversationId(), e));
@@ -177,26 +185,66 @@ public class WebSocketSession {
 
 	// ------------------------------------------------------------------------
 
+	private void handleSessionCheck(MsgSession sessionCheck) throws IOException {
+		if (checkSession(sessionCheck)) {
+			sendMessage(new MsgOk(sessionCheck.getConversationId()));
+		}
+	}
+
+	// ------------------------------------------------------------------------
+
 	private void handleLogout(MsgLogout logout) throws IOException {
-		this.sessionId = null;
+		SessionObserver.unregisterSession(this.session);
+		this.session = null;
 	}
 
 	// ------------------------------------------------------------------------
 
 	private void handleLocationUpdate(MsgLocationUpdate location) throws IOException {
-		try {
-			long timestamp = System.currentTimeMillis(); // use server time for timestamps to avoid out of sync issues
-			GeolocationObject geoObject = new GeolocationObject(userId, timestamp, location);
-			// --
-			if (DatabaseService.insertLocation(geoObject)) {
-				sendMessage(new MsgOk(location.getConversationId()));
-			} else {
-				sendMessage(new MsgError(location.getConversationId(), "problem inserting location"));
+		if (checkSession(location)) {
+			try {
+				long timestamp = System.currentTimeMillis(); // use server time for timestamps to avoid out of sync
+																// issues
+				GeolocationObject geoObject = new GeolocationObject(session.getUserId(), timestamp, location);
+				// --
+				if (DatabaseService.insertLocation(geoObject)) {
+					sendMessage(new MsgOk(location.getConversationId()));
+				} else {
+					sendMessage(new MsgError(location.getConversationId(), "problem inserting location"));
+				}
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				sendMessage(new MsgError(location.getConversationId(), e));
 			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			sendMessage(new MsgError(location.getConversationId(), e));
 		}
+	}
+
+	// ------------------------------------------------------------------------
+
+	private boolean checkSession(AMessage message) throws IOException {
+		String sessionId = message.getSessionId();
+		if (sessionId == null || sessionId.length() == 0) {
+			sendMessage(new MsgError(message.getConversationId(), "invalid session-id"));
+			return false;
+		}
+		// --
+		if (session == null) {
+			if (SessionObserver.hasSession(sessionId)) {
+				this.session = SessionObserver.getSession(sessionId);
+			} else {
+				sendMessage(new MsgError(message.getConversationId(), "invalid session"));
+				return false;
+			}
+		} else if (!session.isSession(sessionId)) {
+			sendMessage(new MsgError(message.getConversationId(), "invalid session"));
+			return false;
+		} else if (session.isExpired()) {
+			sendMessage(new MsgError(message.getConversationId(), "session expired"));
+			return false;
+		} else {
+			session.renew();
+		}
+		return true;
 	}
 }

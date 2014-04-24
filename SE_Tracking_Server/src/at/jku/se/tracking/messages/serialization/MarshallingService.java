@@ -8,6 +8,7 @@ import at.jku.se.tracking.messages.MsgLocationUpdate;
 import at.jku.se.tracking.messages.MsgLogin;
 import at.jku.se.tracking.messages.MsgLogout;
 import at.jku.se.tracking.messages.MsgRegister;
+import at.jku.se.tracking.messages.MsgSession;
 
 import com.json.generators.JSONGenerator;
 import com.json.generators.JsonGeneratorFactory;
@@ -82,6 +83,10 @@ public class MarshallingService {
 				MsgRegister reg = new MsgRegister();
 				reg.setMap(map);
 				return reg;
+			case SESSION:
+				MsgSession session = new MsgSession();
+				session.setMap(map);
+				return session;
 			case LOGOUT:
 				MsgLogout log = new MsgLogout();
 				log.setMap(map);
