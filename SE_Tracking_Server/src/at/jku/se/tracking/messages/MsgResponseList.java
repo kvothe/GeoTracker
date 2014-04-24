@@ -1,20 +1,20 @@
 package at.jku.se.tracking.messages;
 
-import java.util.Map;
+import java.util.List;
 
 import at.jku.se.tracking.messages.serialization.AMessage;
 
 public class MsgResponseList extends AMessage {
-	private static final String FIELD_USER_LIST = "user-list";
+	private static final String FIELD_USER_LIST = "list";
 
 	// ------------------------------------------------------------------------
 
 	public MsgResponseList() {
 		// default constructor needed to instantiate after parsing
 	}
-	public MsgResponseList(double cid, Map<String, String> users) {
+	public MsgResponseList(double cid, List<?> list) {
 		setType(MessageType.LIST);
 		setConversationId(cid);
-		setValue(FIELD_USER_LIST, users);
+		setValue(FIELD_USER_LIST, list);
 	}
 }

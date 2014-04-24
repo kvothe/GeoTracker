@@ -23,7 +23,7 @@ public class TrackingSessionObject {
 
 	public TrackingSessionObject(long observed, long observer, long starttime, long endtime, long canceledBy) {
 		this(-1, observed, observer, starttime, endtime, canceledBy);
-	}
+	}	
 	public TrackingSessionObject(long id, long observed, long observer, long starttime, long endtime, long canceledBy) {
 		super();
 		this.id = id;

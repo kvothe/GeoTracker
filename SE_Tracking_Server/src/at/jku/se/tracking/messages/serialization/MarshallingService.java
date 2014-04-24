@@ -8,6 +8,7 @@ import at.jku.se.tracking.messages.MsgLocationUpdate;
 import at.jku.se.tracking.messages.MsgLogin;
 import at.jku.se.tracking.messages.MsgLogout;
 import at.jku.se.tracking.messages.MsgRegister;
+import at.jku.se.tracking.messages.MsgRequestTrackingSessions;
 import at.jku.se.tracking.messages.MsgRequestUserList;
 import at.jku.se.tracking.messages.MsgSession;
 
@@ -88,6 +89,8 @@ public class MarshallingService {
 				return new MsgRequestUserList(map);
 			case LOCATION_UPDATE:
 				return new MsgLocationUpdate(map);
+			case SESSION_LIST:
+				return new MsgRequestTrackingSessions(map);
 			default:
 				break;
 			}
