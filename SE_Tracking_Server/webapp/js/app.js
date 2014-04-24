@@ -1,16 +1,6 @@
-// Get references to elements on the page.
-var userField = document.getElementById('username');
-var passField = document.getElementById('password');
-var registerBtn = document.getElementById('register_button');
-var registerFormBtn = document.getElementById('register_form_button');
-var loginBtn = document.getElementById('sign_in_button');
-var logoutBtn = document.getElementById('logout_button');
-var logoutForm = document.getElementById('navbar_form_logout');
-var dashboardLink = document.getElementById('dashboard_link');
-var jumbotron = document.getElementById('jumbotron');
 var map;
 var socket;
-
+// --
 var cid = -1;
 var conversations = {};
 
@@ -18,7 +8,7 @@ window.onload = function () {
   // Create a new WebSocket.
   socket = new WebSocket('wss://localhost:443/');
 
-  //check if allowed to view dashboard
+  // always redirect to index.html
   if (document.URL.indexOf('index.html') == -1) {
     window.location.href = "index.html";
   }
@@ -28,10 +18,9 @@ window.onload = function () {
   $('#navbar_form_logout').hide();
   $('#navbar_form_login').show();
 
-  // Handle any errors that occur.
-  socket.onerror = function (error) {
-    console.log('WebSocket Error: ' + error);
-  };
+  /* --------------------------------------------------------------------------
+  WebSocket callbacks
+  --------------------------------------------------------------------------- */
 
   // Show a connected message when the WebSocket is opened.
   socket.onopen = function (event) {
@@ -70,11 +59,23 @@ window.onload = function () {
       break;
     case "request-user-list":
       handleResponseUserList(response[0]);
+      break;
     case "request-session-list":
       handleResponseSessionList(response[0]);
       break;
+    case "request-start-observation":
+      handleResponseStartObservation(response[0]);
+      break;
+    case "request-stop-observation":
+      handleResponseStopObservation(response[0]);
+      break;
     }
     return false;
+  };
+
+  // Handle any errors that occur.
+  socket.onerror = function (error) {
+    console.log('WebSocket Error: ' + error);
   };
 
   // Show a disconnected message when the WebSocket is closed.
@@ -82,17 +83,32 @@ window.onload = function () {
     console.log('Disconnected from WebSocket.');
   };
 
-  if (dashboardLink != null) {
-    dashboardLink.onclick = function (e) {
+  /* --------------------------------------------------------------------------
+  Click handler for elements on index.html
+  --------------------------------------------------------------------------- */
+
+  if ($('#home_link')) {
+    $('#home_link').click(function (e) {
+      e.preventDefault ? e.preventDefault() : e.returnValue = false;
+      // --
+      $('#page_content').load('index.html #page_content', function () {
+        $('#jumbotron').fadeIn();
+        $('#page_content').hide().fadeIn();
+      });
+    });
+  }
+
+  if ($('#dashboard_link')) {
+    $('#dashboard_link').click(function (e) {
       e.preventDefault ? e.preventDefault() : e.returnValue = false;
       // --
       showDashboard();
-    }
+    });
   }
 
   // Navigate to registration
-  if (registerBtn != null) {
-    registerBtn.onclick = function (e) {
+  if ($('#register_button')) {
+    $('#register_button').click(function (e) {
       e.preventDefault ? e.preventDefault() : e.returnValue = false;
       hideMessage();
       // load page
@@ -101,34 +117,34 @@ window.onload = function () {
         // $('#navbar_form_login').hide();
         $('#page_content').hide().fadeIn();
       });
-    };
+    });
   }
 
   // Send login request
-  if (loginBtn != null) {
-    loginBtn.onclick = function (e) {
+  if ($('#login_button')) {
+    $('#login_button').click(function (e) {
       console.log("login handler");
       e.preventDefault ? e.preventDefault() : e.returnValue = false;
 
       // Retrieve username and password
-      var username = $('#username').val();
-      var password = $('#password').val();
+      var username = $('#login_username').val();
+      var password = $('#login_password').val();
 
       if (username.length > 4 && password.length > 6) {
         sendLoginRequest(username, password);
         hideMessage();
       } else {
         console.log("login error");
-        $('#username').val('');
-        $('#password').val('');
+        $('#login_username').val('');
+        $('#login_password').val('');
         showErrorMessage("<b>Error!</b> Enter Username(min. length is 4) and Password(min. length is 6)");
       }
-    };
+    });
   }
 
   // Send logout request
-  if (logoutBtn != null) {
-    logoutBtn.onclick = function (e) {
+  if ($('#logout_button')) {
+    $('#logout_button').click(function (e) {
       e.preventDefault ? e.preventDefault() : e.returnValue = false;
       // --
       sendLogout();
@@ -147,9 +163,8 @@ window.onload = function () {
         $('#page_content').hide().fadeIn();
         showSuccessMessage("You have been logged out");
       });
-    };
+    });
   }
-
 };
 
 window.onresize = function (event) {
@@ -197,7 +212,27 @@ function buttonHandlerRefreshUserList(e) {
 
 function buttonHandlerRefreshSessionList(e) {
   e.preventDefault ? e.preventDefault() : e.returnValue = false;
-  sendRequestSessionList(false);
+  sendRequestSessionList(true, false);
+}
+
+function listItemHandlerStartObservation(name, observable) {
+  console.log("clicked link for user " + name + " (" + observable + ")");
+  hideMessage();
+  if (observable) {
+    sendRequestStartObservation(name);
+  } else {
+    showErrorMessage(name + " is not observable.");
+  }
+}
+
+function listItemHandlerStopObservation(name, starttime, endtime) {
+  console.log("clicked link for user " + name + " (" + starttime + "-" + endtime + ")");
+  hideMessage();
+  if (!endtime) {
+    sendRequestStopObservation(name, false);
+  } else {
+    showErrorMessage("Session already stopped.");
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -287,18 +322,30 @@ function handleResponseUserList(data) {
   console.log('Handle User List Response');
   // --
   if (data["message-type"] === 'response-list') {
-    var htmlList = "";
+    var i = 1;
+    $('#dashboard_list_users').html("");
     for (var user in data["list"]) {
       var name = data["list"][user]["name"];
       var observable = data["list"][user]["observable"];
+      var linkId = "dashboard_list_user_" + i;
       // --
-      htmlList += "<li class=\"list-group-item\">" + name;
+      var html = "<a href=\"#\" id=\"" + linkId + "\" class=\"list-group-item\">" + name;
       if (observable === true) {
-        htmlList += "<span class=\"badge\">&#x2713;</span>";
+        html += "<span class=\"badge\">&#x2713;</span>";
       }
-      htmlList += "</li>";
+      html += "</a>";
+      // --
+      $('#dashboard_list_users').append(html);
+      // --
+      $('#' + linkId).click({
+        user : name,
+        observable : observable
+      }, function (event) {
+        listItemHandlerStartObservation(event.data.user, event.data.observable);
+      });
+      // --
+      i++;
     }
-    $('#dashboard_list_users').html(htmlList);
   }
 }
 
@@ -307,17 +354,61 @@ function handleResponseUserList(data) {
 function handleResponseSessionList(data) {
   console.log('Handle Session List Response');
   // --
-
+  console.log(data);
   if (data["message-type"] === 'response-list') {
-    var htmlList = "";
-    console.log(data["list"]);
+    var i = 1;
+    $('#dashboard_list_sessions').html("");
     for (var session in data["list"]) {
-      var observed = data["list"][session]["observed"];
+      var name = data["list"][session]["observed"];
+      var starttime = data["list"][session]["starttime"];
+      var endtime = data["list"][session]["endtime"];
       // --
-      htmlList += "<li class=\"list-group-item\">" + observed;
-      htmlList += "</li>";
+      var linkId = "dashboard_list_session_observed_" + i;
+      // --
+      var html = "<a href=\"#\" id=\"" + linkId + "\" class=\"list-group-item\">" + name + " (" + starttime + ")";
+      if (endtime) {
+        html += "<span class=\"badge\">&#x2713;</span>";
+      }
+      html += "</a>";
+      // --
+      $('#dashboard_list_sessions').append(html);
+      // --
+      $('#' + linkId).click({
+        user : name,
+        starttime : starttime,
+        endtime : endtime
+      }, function (event) {
+        listItemHandlerStopObservation(event.data.user, event.data.starttime, event.data.endtime);
+      });
+      // --
+      i++;
     }
-    $('#dashboard_list_sessions').html(htmlList);
+  }
+}
+
+// ----------------------------------------------------------------------------
+
+function handleResponseStartObservation(data) {
+  console.log('Handle Start Observation Response');
+  //success
+  if (data["message-type"] === 'response-ok') {
+    showSuccessMessage("You are now observing " + data["message"]);
+    sendRequestSessionList(true, false);
+  } else {
+    showErrorMessage("<b>Error!</b> " + data["message"]);
+  }
+}
+
+// ----------------------------------------------------------------------------
+
+function handleResponseStopObservation(data) {
+  console.log('Handle Stop Observation Response');
+  //success
+  if (data["message-type"] === 'response-ok') {
+    showSuccessMessage("You have stopped observing " + data["message"]); // TODO improve message if observation of oneself was stopped
+    sendRequestSessionList(true, false);
+  } else {
+    showErrorMessage("<b>Error!</b> " + data["message"]);
   }
 }
 
@@ -406,15 +497,41 @@ function sendRequestUserList(observableOnly) {
   socket.send(JSON.stringify(request));
 }
 
-function sendRequestSessionList(isObserver) {
+function sendRequestSessionList(listObserved, listObservers) {
   var mcid = ++cid;
   var request = {
     "cid" : mcid,
     "message-type" : "request-session-list",
     "session-id" : getCookie("session_id"),
-    "is-observer" : isObserver
+    "list-observed" : listObserved,
+    "list-observers" : listObservers
   };
   conversations[mcid] = "request-session-list";
+  socket.send(JSON.stringify(request));
+}
+
+function sendRequestStartObservation(name) {
+  var mcid = ++cid;
+  var request = {
+    "cid" : mcid,
+    "message-type" : "request-start-observation",
+    "session-id" : getCookie("session_id"),
+    "user" : name
+  };
+  conversations[mcid] = "request-start-observation";
+  socket.send(JSON.stringify(request));
+}
+
+function sendRequestStopObservation(name, userIsObserver) {
+  var mcid = ++cid;
+  var request = {
+    "cid" : mcid,
+    "message-type" : "request-stop-observation",
+    "session-id" : getCookie("session_id"),
+    "user" : name,
+    "user-is-observer" : userIsObserver
+  };
+  conversations[mcid] = "request-stop-observation";
   socket.send(JSON.stringify(request));
 }
 

@@ -126,22 +126,23 @@ public class DatabaseService {
 		// --
 		PreparedStatement query = null;
 		if (onlyObservable) {
-			query = con.prepareStatement("SELECT [" + UserObject.COLUMN_USERNAME + "],[" + UserObject.COLUMN_OBSERVABLE + "] FROM ["
-					+ UserObject.TABLE_NAME + "] WHERE " + UserObject.COLUMN_OBSERVABLE + "=?");
+			query = con.prepareStatement("SELECT [" + UserObject.COLUMN_ID + "],[" + UserObject.COLUMN_USERNAME + "],["
+					+ UserObject.COLUMN_OBSERVABLE + "] FROM [" + UserObject.TABLE_NAME + "] WHERE " + UserObject.COLUMN_OBSERVABLE + "=?");
 			query.setBoolean(1, true);
 		} else {
-			query = con.prepareStatement("SELECT [" + UserObject.COLUMN_USERNAME + "],[" + UserObject.COLUMN_OBSERVABLE + "] FROM ["
-					+ UserObject.TABLE_NAME + "]");
+			query = con.prepareStatement("SELECT [" + UserObject.COLUMN_ID + "],[" + UserObject.COLUMN_USERNAME + "],["
+					+ UserObject.COLUMN_OBSERVABLE + "] FROM [" + UserObject.TABLE_NAME + "]");
 		}
 		// --
 		ResultSet rs = query.executeQuery();
 		// --
 		try {
 			while (rs.next()) {
+				long id = rs.getLong(UserObject.COLUMN_ID);
 				String username = rs.getString(UserObject.COLUMN_USERNAME);
 				boolean observable = rs.getBoolean(UserObject.COLUMN_OBSERVABLE);
 				// --
-				users.add(new UserObject(username, observable));
+				users.add(new UserObject(id, username, observable));
 			}
 		} finally {
 			rs.close();
@@ -202,13 +203,13 @@ public class DatabaseService {
 
 		//@formatter:off
 		PreparedStatement insert = 
-				con.prepareStatement("INSERT INTO [" + GeolocationObject.TABLE_NAME + "] "
-				+ "([" + GeolocationObject.COLUMN_USER_FK + "],[" + GeolocationObject.COLUMN_TIMESTAMP + "],"
-				+ "[" + GeolocationObject.COLUMN_LONGITUDE + "],[" + GeolocationObject.COLUMN_LATITUDE + "],"
-				+ "[" + GeolocationObject.COLUMN_ACCURACY + "],[" + GeolocationObject.COLUMN_ALTITUDE + "],"
-				+ "[" + GeolocationObject.COLUMN_ALTITUDE_ACCURACCY + "],[" + GeolocationObject.COLUMN_HEADING + "],"
-				+ "[" + GeolocationObject.COLUMN_SPEED + "]) "
-				+ "VALUES(?,?,?,?,?,?,?,?,?)");
+			con.prepareStatement("INSERT INTO [" + GeolocationObject.TABLE_NAME + "] "
+			+ "([" + GeolocationObject.COLUMN_USER_FK + "],[" + GeolocationObject.COLUMN_TIMESTAMP + "],"
+			+ "[" + GeolocationObject.COLUMN_LONGITUDE + "],[" + GeolocationObject.COLUMN_LATITUDE + "],"
+			+ "[" + GeolocationObject.COLUMN_ACCURACY + "],[" + GeolocationObject.COLUMN_ALTITUDE + "],"
+			+ "[" + GeolocationObject.COLUMN_ALTITUDE_ACCURACCY + "],[" + GeolocationObject.COLUMN_HEADING + "],"
+			+ "[" + GeolocationObject.COLUMN_SPEED + "]) "
+			+ "VALUES(?,?,?,?,?,?,?,?,?)");
 		//@formatter:on
 
 		insert.setLong(1, location.getUserFK());
@@ -223,10 +224,7 @@ public class DatabaseService {
 		insert.setFloat(9, location.getSpeed());
 		// --
 		try {
-			result = insert.execute();
-			if (!result) {
-				result = insert.getUpdateCount() == 1;
-			}
+			result = insert.executeUpdate() == 1;
 		} finally {
 			insert.close();
 		}
@@ -238,22 +236,88 @@ public class DatabaseService {
 
 	// ------------------------------------------------------------------------
 
-	public static List<TrackingSessionObject> queryTrackingSessions(long userId, boolean isObserver) throws SQLException {
+	public static boolean startTrackingSession(long observer, long observed, long starttime) throws SQLException {
+		boolean result = false;
+		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
+
+		//@formatter:off
+		PreparedStatement insert = 
+			con.prepareStatement("INSERT INTO [" + TrackingSessionObject.TABLE_NAME + "] "
+			+ "([" + TrackingSessionObject.COLUMN_OBSERVER + "],[" + TrackingSessionObject.COLUMN_OBSERVED  + "],"
+			+ "[" + TrackingSessionObject.COLUMN_STARTTIME + "]) "
+			+ "VALUES(?,?,?)");
+		//@formatter:on
+
+		insert.setLong(1, observer);
+		insert.setLong(2, observed);
+		insert.setLong(3, starttime);
+		// --
+		try {
+			result = insert.executeUpdate() == 1;
+		} finally {
+			insert.close();
+		}
+		// --
+		CONNECTION_POOL.returnResource(con);
+		// --
+		return result;
+	}
+
+	// ------------------------------------------------------------------------
+
+	public static boolean stopTrackingSession(long id, long endtime, long canceledBy) throws SQLException {
+		boolean result = false;
+		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
+
+		//@formatter:off
+		PreparedStatement insert = 
+			con.prepareStatement("UPDATE [" + TrackingSessionObject.TABLE_NAME + "] SET "
+			+ "[" + TrackingSessionObject.COLUMN_ENDTIME + "] = ?,[" + TrackingSessionObject.COLUMN_CANCELED_BY  + "] = ? "
+			+ "WHERE " +TrackingSessionObject.COLUMN_ID + " = ?");			
+		//@formatter:on
+
+		insert.setLong(1, endtime);
+		insert.setLong(2, canceledBy);
+		insert.setLong(3, id);
+		// --
+		try {
+			result = insert.executeUpdate() == 1;
+		} finally {
+			insert.close();
+		}
+		// --
+		CONNECTION_POOL.returnResource(con);
+		// --
+		return result;
+	}
+
+	// ------------------------------------------------------------------------
+
+	public static List<TrackingSessionObject> queryTrackingSessions(long userId, boolean listObserved, boolean listObservers) throws SQLException {
 		if (CONNECTION_POOL == null) {
 			return null;
 		}
 		// --
 		List<TrackingSessionObject> sessions = new ArrayList<TrackingSessionObject>();
+		if (!listObserved && !listObservers) {
+			return sessions;
+		}
+		// --
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
 		// --
 		PreparedStatement query = null;
-		if (isObserver) {
-			query = con.prepareStatement("SELECT * FROM [" + TrackingSessionObject.TABLE_NAME + "] WHERE " + TrackingSessionObject.COLUMN_OBSERVER
-					+ "=?");
+		if (listObserved && listObservers) {
+			query = con.prepareStatement("SELECT * FROM [" + TrackingSessionObject.TABLE_NAME + "] WHERE [" + TrackingSessionObject.COLUMN_OBSERVER
+					+ "] = ? OR [" + TrackingSessionObject.COLUMN_OBSERVED + "] = ?");
 			query.setLong(1, userId);
-		} else {
+			query.setLong(2, userId);
+		} else if (listObserved) {
+			query = con.prepareStatement("SELECT * FROM [" + TrackingSessionObject.TABLE_NAME + "] WHERE " + TrackingSessionObject.COLUMN_OBSERVER
+					+ " = ?");
+			query.setLong(1, userId);
+		} else if (listObservers) {
 			query = con.prepareStatement("SELECT * FROM [" + TrackingSessionObject.TABLE_NAME + "] WHERE " + TrackingSessionObject.COLUMN_OBSERVED
-					+ "=?");
+					+ " = ?");
 			query.setLong(1, userId);
 		}
 		// --
@@ -261,20 +325,57 @@ public class DatabaseService {
 		// --
 		try {
 			while (rs.next()) {
-				long observer = -1;
-				long observed = -1;
-				if (isObserver) {
-					observer = userId;
-					observed = rs.getLong(TrackingSessionObject.COLUMN_OBSERVED);
-				} else {
-					observed = userId;
-					observer = rs.getLong(TrackingSessionObject.COLUMN_OBSERVER);
-				}
+				long observed = rs.getLong(TrackingSessionObject.COLUMN_OBSERVED);
+				long observer = rs.getLong(TrackingSessionObject.COLUMN_OBSERVER);
+				long starttime = rs.getLong(TrackingSessionObject.COLUMN_STARTTIME);
+				long endtime = rs.getLong(TrackingSessionObject.COLUMN_ENDTIME);
+				long canceledBy = rs.getLong(TrackingSessionObject.COLUMN_CANCELED_BY);
+				long id = rs.getLong(TrackingSessionObject.COLUMN_ID);
+				// --
+				sessions.add(new TrackingSessionObject(id, observed, observer, starttime, endtime, canceledBy));
+			}
+		} finally {
+			rs.close();
+			query.close();
+		}
+		// --
+		CONNECTION_POOL.returnResource(con);
+		// --
+		return sessions;
+	}
+
+	// ------------------------------------------------------------------------
+
+	public static List<TrackingSessionObject> queryTrackingSessions(long observer, long observed, boolean activeOnly) throws SQLException {
+		if (CONNECTION_POOL == null) {
+			return null;
+		}
+		// --
+		List<TrackingSessionObject> sessions = new ArrayList<TrackingSessionObject>();
+		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
+		// --
+		String stmt = "SELECT * FROM [" + TrackingSessionObject.TABLE_NAME + "] WHERE [" + TrackingSessionObject.COLUMN_OBSERVER + "] = ? AND ["
+				+ TrackingSessionObject.COLUMN_OBSERVED + "] = ?";
+		// --
+		if (activeOnly) {
+			stmt += " AND [" + TrackingSessionObject.COLUMN_ENDTIME + "] IS NULL";
+		}
+		// --
+		PreparedStatement query = con.prepareStatement(stmt);
+		// --
+		query.setLong(1, observer);
+		query.setLong(2, observed);
+		// --
+		ResultSet rs = query.executeQuery();
+		// --
+		try {
+			while (rs.next()) {
+				long id = rs.getLong(TrackingSessionObject.COLUMN_ID);
 				long starttime = rs.getLong(TrackingSessionObject.COLUMN_STARTTIME);
 				long endtime = rs.getLong(TrackingSessionObject.COLUMN_ENDTIME);
 				long canceledBy = rs.getLong(TrackingSessionObject.COLUMN_CANCELED_BY);
 				// --
-				sessions.add(new TrackingSessionObject(observed, observer, starttime, endtime, canceledBy));
+				sessions.add(new TrackingSessionObject(id, observed, observer, starttime, endtime, canceledBy));
 			}
 		} finally {
 			rs.close();

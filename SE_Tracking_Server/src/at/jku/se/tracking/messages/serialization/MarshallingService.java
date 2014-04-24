@@ -8,9 +8,11 @@ import at.jku.se.tracking.messages.MsgLocationUpdate;
 import at.jku.se.tracking.messages.MsgLogin;
 import at.jku.se.tracking.messages.MsgLogout;
 import at.jku.se.tracking.messages.MsgRegister;
-import at.jku.se.tracking.messages.MsgRequestTrackingSessions;
+import at.jku.se.tracking.messages.MsgRequestSessionList;
 import at.jku.se.tracking.messages.MsgRequestUserList;
 import at.jku.se.tracking.messages.MsgSession;
+import at.jku.se.tracking.messages.MsgStartObservation;
+import at.jku.se.tracking.messages.MsgStopObservation;
 
 import com.json.generators.JSONGenerator;
 import com.json.generators.JsonGeneratorFactory;
@@ -90,7 +92,11 @@ public class MarshallingService {
 			case LOCATION_UPDATE:
 				return new MsgLocationUpdate(map);
 			case SESSION_LIST:
-				return new MsgRequestTrackingSessions(map);
+				return new MsgRequestSessionList(map);
+			case START_OBSERVATION:
+				return new MsgStartObservation(map);
+			case STOP_OBSERVATION:
+				return new MsgStopObservation(map);
 			default:
 				break;
 			}

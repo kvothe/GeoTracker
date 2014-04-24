@@ -22,8 +22,8 @@ public class UserObject {
 	public UserObject(String name, byte[] encryptedPassword, byte[] salt, boolean observable) {
 		this(-1, name, encryptedPassword, salt, observable);
 	}
-	public UserObject(String name, boolean observable) {
-		this(-1, name, null, null, observable);
+	public UserObject(long id, String name, boolean observable) {
+		this(id, name, null, null, observable);
 	}
 	public UserObject(long id, String name, byte[] encryptedPassword, byte[] salt, boolean observable) {
 		super();
