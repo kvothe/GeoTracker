@@ -16,7 +16,7 @@ window.onload = function () {
   // Initialize UI for anonymous user
   $('#dashboard_link').hide();
   $('#navbar_form_logout').hide();
-  $('#navbar_form_login').show();
+  $('#navbar_form_login').hide();
 
   /* --------------------------------------------------------------------------
   WebSocket callbacks
@@ -36,39 +36,50 @@ window.onload = function () {
     console.log(event.data);
 
     try {
-      var response = JSON.parse(event.data);
+      var message = JSON.parse(event.data);
     } catch (err) {
       console.log(err.message);
       return false;
     }
 
-    var mcid = response[0]["cid"];
-    // --
-    var responseTo = conversations[mcid];
-    delete conversations[mcid];
-    // --
-    switch (responseTo) {
-    case "request-registration":
-      handleResponseRegistration(response[0]);
-      break;
-    case "request-login":
-      handleResponseLogin(response[0]);
-      break;
-    case "request-session-check":
-      handleResponseSessionCheck(response[0]);
-      break;
-    case "request-user-list":
-      handleResponseUserList(response[0]);
-      break;
-    case "request-session-list":
-      handleResponseSessionList(response[0]);
-      break;
-    case "request-start-observation":
-      handleResponseStartObservation(response[0]);
-      break;
-    case "request-stop-observation":
-      handleResponseStopObservation(response[0]);
-      break;
+    if (message[0]["cid"]) {
+      var mcid = message[0]["cid"];
+      // --
+      var responseTo = conversations[mcid];
+      delete conversations[mcid];
+      // --
+      switch (responseTo) {
+      case "request-registration":
+        handleResponseRegistration(message[0]);
+        break;
+      case "request-login":
+        handleResponseLogin(message[0]);
+        break;
+      case "request-session-check":
+        handleResponseSessionCheck(message[0]);
+        break;
+      case "request-user-list":
+        handleResponseUserList(message[0]);
+        break;
+      case "request-session-list":
+        handleResponseSessionList(message[0]);
+        break;
+      case "request-start-observation":
+        handleResponseStartObservation(message[0]);
+        break;
+      case "request-stop-observation":
+        handleResponseStopObservation(message[0]);
+        break;
+      }
+    } else {
+      console.log(message[0]);
+      var type = message[0]["message-type"];
+      // --
+      switch (type) {
+      case "notification":
+        handleNotification(message[0]);
+        break;
+      }
     }
     return false;
   };
@@ -81,6 +92,7 @@ window.onload = function () {
   // Show a disconnected message when the WebSocket is closed.
   socket.onclose = function (event) {
     console.log('Disconnected from WebSocket.');
+    showErrorMessage("You have lost the connection to the server");
   };
 
   /* --------------------------------------------------------------------------
@@ -305,14 +317,14 @@ function handleResponseSessionCheck(data) {
   if (data["message-type"] === 'response-ok') {
     $('#navbar_form_logout').show();
     $('#navbar_form_login').hide();
-    $('#dashboard_link').show();
+    $('#dashboard_link').fadeIn();
   } else {
     //remove invalid session id
     eraseCookie("session_id");
     // --
     $('#dashboard_link').hide();
     $('#navbar_form_logout').hide();
-    $('#navbar_form_login').show();
+    $('#navbar_form_login').fadeIn();
   }
 }
 
@@ -410,6 +422,14 @@ function handleResponseStopObservation(data) {
   } else {
     showErrorMessage("<b>Error!</b> " + data["message"]);
   }
+}
+
+// ----------------------------------------------------------------------------
+
+function handleNotification(data) {
+  console.log('Handle Notification');
+  var message = data["message"];
+  showInfoMessage(message);
 }
 
 /* ----------------------------------------------------------------------------
@@ -541,13 +561,22 @@ Utilities
 
 function showSuccessMessage(message) {
   $("#page_alert").removeClass("alert-danger");
+  $("#page_alert").removeClass("alert-info");
   $("#page_alert").addClass("alert-success");
   $("#page_alert").html(message);
   $("#page_alert").fadeIn();
 }
 function showErrorMessage(message) {
   $("#page_alert").removeClass("alert-success");
+  $("#page_alert").removeClass("alert-info");
   $("#page_alert").addClass("alert-danger");
+  $("#page_alert").html(message);
+  $("#page_alert").fadeIn();
+}
+function showInfoMessage(message) {
+  $("#page_alert").removeClass("alert-success");
+  $("#page_alert").removeClass("alert-danger");
+  $("#page_alert").addClass("alert-info");
   $("#page_alert").html(message);
   $("#page_alert").fadeIn();
 }

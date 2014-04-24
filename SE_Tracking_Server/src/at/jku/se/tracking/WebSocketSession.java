@@ -49,6 +49,8 @@ public class WebSocketSession {
 	@OnWebSocketConnect
 	public void onConnect(Session session) {
 		System.out.println("WebSocket Opened");
+		session.setIdleTimeout(SessionObserver.SESSION_EXPIRATION_DURATION);
+		// --
 		this.remote = session.getRemote();
 	}
 
@@ -131,6 +133,7 @@ public class WebSocketSession {
 	@OnWebSocketClose
 	public void onClose(int statusCode, String reason) {
 		System.out.println("WebSocket Closed. Code:" + statusCode);
+		SessionObserver.closeSession(session);
 	}
 
 	// ------------------------------------------------------------------------
@@ -334,6 +337,8 @@ public class WebSocketSession {
 					DatabaseService.startTrackingSession(session.getUserId(), observed.getId(), System.currentTimeMillis());
 					// --
 					sendMessage(new MsgOk(request.getConversationId(), observed.getName()));
+					// --
+					SessionObserver.pushNotifyStartObservation(observed, DatabaseService.queryUser(session.getUserId()));
 				} else {
 					sendMessage(new MsgError(request.getConversationId(), "User doesn't exist"));
 				}
@@ -374,6 +379,7 @@ public class WebSocketSession {
 					// --
 					if (success) {
 						sendMessage(new MsgOk(request.getConversationId(), user.getName()));
+						SessionObserver.pushNotifyStopObservation(DatabaseService.queryUser(observed), DatabaseService.queryUser(observer));
 					} else {
 						sendMessage(new MsgError(request.getConversationId(), "Error while stopping session"));
 					}
@@ -387,7 +393,7 @@ public class WebSocketSession {
 			}
 		}
 	}
-	
+
 	// ------------------------------------------------------------------------
 
 	private boolean checkSession(AMessage message) throws IOException {

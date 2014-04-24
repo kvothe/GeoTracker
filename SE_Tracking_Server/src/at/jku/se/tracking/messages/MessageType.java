@@ -11,10 +11,12 @@ public enum MessageType {
 	START_OBSERVATION("request-start-observation"),
 	STOP_OBSERVATION("request-stop-observation"),
 	SET_OBSERVABLE("request-set-observable"),
-	LOCATION_UPDATE("location-update"),	
+	LOCATION_UPDATE("location-update"),
+	NOTIFICATION("notification"),
 	OK("response-ok"),
 	ERROR("response-error"),
 	LOGOUT("request-logout");
+	
 	//@formatter:on
 
 	private String value;
