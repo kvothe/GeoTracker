@@ -1,5 +1,7 @@
 package at.jku.se.tracking.messages;
 
+import java.util.Map;
+
 import at.jku.se.tracking.messages.serialization.AMessage;
 
 public class MsgRegister extends AMessage {
@@ -10,8 +12,8 @@ public class MsgRegister extends AMessage {
 
 	// ------------------------------------------------------------------------
 
-	public MsgRegister() {
-		// default constructor needed to instantiate after parsing
+	public MsgRegister(Map<?, ?> map) {
+		setMap(map);
 	}
 	public MsgRegister(String username, String password, boolean observable) {
 		setType(MessageType.REGISTRATION);

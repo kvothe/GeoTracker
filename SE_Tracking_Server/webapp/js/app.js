@@ -62,6 +62,9 @@ window.onload = function () {
     case "request-session-check":
       handleResponseSessionCheck(response[0]);
       break;
+    case "request-user-list":
+      handleResponseUserList(response[0]);
+      break;
     }
     return false;
   };
@@ -126,7 +129,7 @@ window.onload = function () {
       eraseCookie("session_id");
 
       //navigate to home
-      window.location.href = "index.html";
+      window.location.href = "index.html"; // TODO: improve
       showSuccessMessage("You have been logged out");
     };
   }
@@ -134,6 +137,10 @@ window.onload = function () {
 };
 
 window.onresize = function (event) {
+  if ($('#googleMap')) {
+    $('#googleMap').width($('#dashboard_map_container').width());
+    $('#googleMap').height($('#dashboard_map_container').height());
+  }
   if (map) {
     var center = map.getCenter();
     google.maps.event.trigger(map, "resize");
@@ -167,6 +174,11 @@ function buttonHandlerRegister(e) {
   return false;
 };
 
+function buttonHandlerRefreshUserList(e) {
+  e.preventDefault ? e.preventDefault() : e.returnValue = false;
+  sendRequestUserList(false);
+}
+
 // ----------------------------------------------------------------------------
 
 function showDashboard() {
@@ -176,6 +188,9 @@ function showDashboard() {
     // loadScript();
     initializeMap();
     getLocation();
+    // --
+    $('#dashboard_user_refresh').click(buttonHandlerRefreshUserList);
+    sendRequestUserList(false);
     // --
     $('#jumbotron').hide();
     $('#navbar_form_logout').fadeIn();
@@ -241,6 +256,30 @@ function handleResponseSessionCheck(data) {
     $('#navbar_form_logout').hide();
     $('#navbar_form_login').show();
   }
+}
+
+// ----------------------------------------------------------------------------
+
+function handleResponseUserList(data) {
+  console.log('Handle User List Response');
+  // --
+  
+  if (data["message-type"] === 'response-list') {
+    var htmlList = "";  
+    console.log(data["user-list"]);
+    for(var user in data["user-list"]) {
+      var name = user;
+      var observable = data["user-list"][user];
+      // --
+      htmlList += "<li class=\"list-group-item\">" + name;
+      if(observable === "true") {
+        htmlList += "<span class=\"badge\">&#x2713;</span>";
+      }
+      htmlList += "</li>";
+    }    
+    $('#dashboard_list_users').html(htmlList);
+  }
+  
 }
 
 /* ----------------------------------------------------------------------------
@@ -316,6 +355,18 @@ function sendLocationUpdate(position) {
   socket.send(JSON.stringify(request));
 }
 
+function sendRequestUserList(observableOnly) {
+  var mcid = ++cid;
+  var request = {
+    "cid" : mcid,
+    "message-type" : "request-user-list",
+    "session-id" : getCookie("session_id"),
+    "observable-only" : observableOnly
+  };
+  conversations[mcid] = "request-user-list";
+  socket.send(JSON.stringify(request));
+}
+
 /* ----------------------------------------------------------------------------
 Utilities
 --------------------------------------------------------------------------- */
@@ -378,6 +429,17 @@ function initializeMap() {
     mapTypeId : google.maps.MapTypeId.ROADMAP
   };
   map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
+  $('#googleMap').width($('#dashboard_map_container').width());
+  $('#googleMap').height($('#page_content').height());
+
+  $(window).resize(function () {
+
+    google.maps.event.trigger(map, "resize");
+  });
+
+  google.maps.event.addListener(map, 'tilesloaded', function () {
+    google.maps.event.trigger(map, "resize");
+  });
 }
 
 function getLocation() {

@@ -1,5 +1,7 @@
 package at.jku.se.tracking.messages;
 
+import java.util.Map;
+
 import at.jku.se.tracking.messages.serialization.AMessage;
 
 public class MsgLogout extends AMessage {
@@ -8,8 +10,8 @@ public class MsgLogout extends AMessage {
 
 	// ------------------------------------------------------------------------
 
-	public MsgLogout() {
-		// default constructor needed to instantiate after parsing
+	public MsgLogout(Map<?, ?> map) {
+		setMap(map);
 	}
 	public MsgLogout(String session_id) {
 		setType(MessageType.LOGOUT);
@@ -17,7 +19,6 @@ public class MsgLogout extends AMessage {
 	}
 
 	// ------------------------------------------------------------------------
-
 
 	public String getSessionId() {
 		return (String) getValue(FIELD_SESSION_ID);

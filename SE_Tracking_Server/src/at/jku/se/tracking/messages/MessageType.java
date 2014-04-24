@@ -5,7 +5,7 @@ public enum MessageType {
 	REGISTRATION("request-registration"),
 	LOGIN("request-login"),
 	SESSION("request-session-check"),
-	LIST_USERS("request-list-users"),
+	USER_LIST("request-user-list"),
 	LIST_TRACKING_SESSIONS("request-list-tracking-sessions"),
 	START_OBSERVATION("request-start-observation"),
 	STOP_OBSERVATION("request-stop-observation"),
