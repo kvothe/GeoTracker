@@ -1,7 +1,14 @@
 package at.jku.se.tracking;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+
+import at.jku.se.tracking.database.UserObject;
+import at.jku.se.tracking.messages.MsgNotification;
 
 public class SessionObserver {
 	static final long SESSION_EXPIRATION_DURATION = 1 * 60 * 60 * 1000; // 1 hour of inactivity
@@ -29,10 +36,28 @@ public class SessionObserver {
 
 	// ------------------------------------------------------------------------
 
+	/**
+	 * Completely unregister this session, invalidating its session id.
+	 * 
+	 * @param session
+	 */
 	public static void unregisterSession(UserSession session) {
 		synchronized (SESSIONS) {
 			if (SESSIONS.containsKey(session)) {
 				SESSIONS.remove(session);
+			}
+		}
+	}
+
+	/**
+	 * Signal that this sessions socket is closed but the session id is still valid.
+	 * 
+	 * @param session
+	 */
+	public static void closeSession(UserSession session) {
+		synchronized (SESSIONS) {
+			if (SESSIONS.containsKey(session)) {
+				SESSIONS.put(session, null);
 			}
 		}
 	}
@@ -69,9 +94,53 @@ public class SessionObserver {
 
 	// ------------------------------------------------------------------------
 
-	public static void pushLocationUpdate(double userId, double newLong, double newLat) {
+	public static void pushLocationUpdate(long userId, double newLong, double newLat) {
 		// TODO:
 		// 1) query database for users currently observing "userId"
 		// 2) push new location to these users
+	}
+
+	// ------------------------------------------------------------------------
+
+	public static void pushNotifyStartObservation(UserObject observed, UserObject observer) {		
+		List<WebSocketSession> notifySessions = new ArrayList<WebSocketSession>();
+		// collect relevant sessions
+		synchronized (SESSIONS) {
+			for (Entry<UserSession, WebSocketSession> s : SESSIONS.entrySet()) {
+				if (s.getKey().getUserId() == observed.getId() && s.getValue() != null) {
+					notifySessions.add(s.getValue());
+				}
+			}
+		}
+		// --
+		for (WebSocketSession s : notifySessions) {
+			try {
+				s.sendMessage(new MsgNotification(observer.getName() + " is now observing you"));
+			} catch (IOException e) {
+				System.err.println(e.getMessage());
+			}
+		}
+	}
+
+	// ------------------------------------------------------------------------
+
+	public static void pushNotifyStopObservation(UserObject observed, UserObject observer) {
+		List<WebSocketSession> notifySessions = new ArrayList<WebSocketSession>();
+		// collect relevant sessions
+		synchronized (SESSIONS) {
+			for (Entry<UserSession, WebSocketSession> s : SESSIONS.entrySet()) {
+				if (s.getKey().getUserId() == observed.getId() && s.getValue() != null) {
+					notifySessions.add(s.getValue());
+				}
+			}
+		}
+		// --
+		for (WebSocketSession s : notifySessions) {
+			try {
+				s.sendMessage(new MsgNotification(observer.getName() + " has stopped observing you"));
+			} catch (IOException e) {
+				System.err.println(e.getMessage());
+			}
+		}
 	}
 }

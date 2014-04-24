@@ -32,16 +32,17 @@
         
         <div class="navbar-collapse collapse">        
           <ul class="nav navbar-nav"></ul>
-          <form class="navbar-form navbar-right" id="navbar_form_login">
-          <div class="form-group">
-            <input id="login_username" type="text" placeholder="Username" class="form-control" />
-          </div>
-          <div class="form-group">
-            <input id="login_password" type="password" placeholder="Password" class="form-control" />
-          </div>
-          <button type="submit" id="login_button" class="btn btn-success">Sign in</button> 
-          <button type="submit" id="register_button" class="btn btn-success">Register now</button></form>
-          <form class="navbar-form navbar-right" id="navbar_form_logout">
+          <form hidden class="navbar-form navbar-right" id="navbar_form_login">
+            <div class="form-group">
+              <input id="login_username" type="text" placeholder="Username" class="form-control" />
+            </div>
+            <div class="form-group">
+              <input id="login_password" type="password" placeholder="Password" class="form-control" />
+            </div>
+            <button type="submit" id="login_button" class="btn btn-success">Sign in</button> 
+            <button type="submit" id="register_button" class="btn btn-success">Register now</button>
+          </form>
+          <form hidden class="navbar-form navbar-right" id="navbar_form_logout">
             <button type="submit" id="logout_button" class="btn btn-success">Logout</button>
           </form>
         </div>
