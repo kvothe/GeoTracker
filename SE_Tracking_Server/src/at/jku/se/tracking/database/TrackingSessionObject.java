@@ -12,20 +12,19 @@ public class TrackingSessionObject {
 
 	// ------------------------------------------------------------------------
 
-	private double id;
-	private double observed;
-	private double observer;
-	private double starttime;
-	private double endtime;
-	private double canceledBy;
+	private long id;
+	private long observed;
+	private long observer;
+	private long starttime;
+	private long endtime;
+	private long canceledBy;
 
 	// ------------------------------------------------------------------------
 
-	public TrackingSessionObject(double observed, double observer, double starttime, double endtime, double canceledBy) {
+	public TrackingSessionObject(long observed, long observer, long starttime, long endtime, long canceledBy) {
 		this(-1, observed, observer, starttime, endtime, canceledBy);
 	}
-	public TrackingSessionObject(double id, double observed, double observer, double starttime, double endtime,
-			double canceledBy) {
+	public TrackingSessionObject(long id, long observed, long observer, long starttime, long endtime, long canceledBy) {
 		super();
 		this.id = id;
 		this.observed = observed;
@@ -37,22 +36,22 @@ public class TrackingSessionObject {
 
 	// ------------------------------------------------------------------------
 
-	public double getId() {
+	public long getId() {
 		return id;
 	}
-	public double getObserved() {
+	public long getObserved() {
 		return observed;
 	}
-	public double getObserver() {
+	public long getObserver() {
 		return observer;
 	}
-	public double getStarttime() {
+	public long getStarttime() {
 		return starttime;
 	}
-	public double getEndtime() {
+	public long getEndtime() {
 		return endtime;
 	}
-	public double getCanceledBy() {
+	public long getCanceledBy() {
 		return canceledBy;
 	}
 

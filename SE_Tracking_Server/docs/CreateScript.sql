@@ -1,6 +1,6 @@
 USE [GeoTracker]
 GO
-/****** Object:  User [geo]    Script Date: 23.04.2014 16:29:08 ******/
+/****** Object:  User [geo]    Script Date: 24.04.2014 12:47:09 ******/
 CREATE USER [geo] FOR LOGIN [geo] WITH DEFAULT_SCHEMA=[dbo]
 GO
 ALTER ROLE [db_owner] ADD MEMBER [geo]
@@ -11,7 +11,7 @@ ALTER ROLE [db_datareader] ADD MEMBER [geo]
 GO
 ALTER ROLE [db_datawriter] ADD MEMBER [geo]
 GO
-/****** Object:  Table [dbo].[geolocation]    Script Date: 23.04.2014 16:29:08 ******/
+/****** Object:  Table [dbo].[geolocation]    Script Date: 24.04.2014 12:47:10 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -22,6 +22,11 @@ CREATE TABLE [dbo].[geolocation](
 	[timestamp] [bigint] NOT NULL,
 	[longitude] [float] NOT NULL,
 	[latitude] [float] NOT NULL,
+	[accuracy] [float] NULL,
+	[altitude] [float] NULL,
+	[altitude-accuracy] [float] NULL,
+	[heading] [float] NULL,
+	[speed] [float] NULL,
  CONSTRAINT [PK_geolocation] PRIMARY KEY CLUSTERED 
 (
 	[id] ASC
@@ -29,7 +34,7 @@ CREATE TABLE [dbo].[geolocation](
 ) ON [PRIMARY]
 
 GO
-/****** Object:  Table [dbo].[trackingsession]    Script Date: 23.04.2014 16:29:08 ******/
+/****** Object:  Table [dbo].[trackingsession]    Script Date: 24.04.2014 12:47:10 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -48,7 +53,7 @@ CREATE TABLE [dbo].[trackingsession](
 ) ON [PRIMARY]
 
 GO
-/****** Object:  Table [dbo].[user]    Script Date: 23.04.2014 16:29:08 ******/
+/****** Object:  Table [dbo].[user]    Script Date: 24.04.2014 12:47:10 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON

@@ -1,5 +1,6 @@
 package at.jku.se.tracking.messages;
 
+import at.jku.se.tracking.database.LocationConstants;
 import at.jku.se.tracking.messages.serialization.AMessage;
 
 public class MsgLocationUpdate extends AMessage {
@@ -20,10 +21,8 @@ public class MsgLocationUpdate extends AMessage {
 		// default constructor needed to instantiate after parsing
 	}
 
-	public MsgLocationUpdate(String sessionId,
-			double latitude, double longitude, String accuracy,
-			String altitude, String altitudeAccuracy, String heading,
-			String speed, double timestamp) {
+	public MsgLocationUpdate(String sessionId, double latitude, double longitude, double accuracy, float altitude, float altitudeAccuracy,
+			double heading, float speed, long timestamp) {
 		setType(MessageType.LOCATION_UPDATE);
 		setValue(FIELD_SESSION_ID, sessionId);
 		setValue(FIELD_LATITUDE, latitude);
@@ -36,40 +35,40 @@ public class MsgLocationUpdate extends AMessage {
 		setValue(FIELD_TIMESTAMP, timestamp);
 	}
 
-	public String getFieldSessionId() {
-		return (String) getValue(FIELD_SESSION_ID);
+	// ------------------------------------------------------------------------
+
+	public double getLatitude() {
+		return returnDouble(FIELD_LATITUDE, LocationConstants.LONG_LAT_NULL);
 	}
 
-	public double getFieldLatitude() {
-		return Double.parseDouble((String) getValue(FIELD_LATITUDE));
+	public double getLongitude() {
+		return returnDouble(FIELD_LONGITUDE, LocationConstants.LONG_LAT_NULL);
 	}
 
-	public double getFieldLongitude() {
-		return Double.parseDouble((String) getValue(FIELD_LONGITUDE));
+	public double getAccuracy() {
+		return returnDouble(FIELD_ACCURACY, LocationConstants.ACCURACY_NULL);
+	}
+	public float getAltitude() {
+		return returnFloat(FIELD_LATITUDE, LocationConstants.ALTITUDE_NULL);
+	}
+	public double getAltitudeAccuraccy() {
+		return returnDouble(FIELD_ALTITUDE_ACCURACCY, LocationConstants.ACCURACY_NULL);
 	}
 
-	public String getFieldAccuracy() {
-		return (String) getValue(FIELD_ACCURACY);
+	public double getHeading() {
+		float speed = getSpeed();
+		if (speed == LocationConstants.SPEED_NULL || speed == 0) {
+			return LocationConstants.HEADING_NAN;
+		} else {
+			return returnDouble(FIELD_HEADING, LocationConstants.HEADING_NULL);
+		}
 	}
 
-	public String getFieldAltitude() {
-		return (String) getValue(FIELD_ALTITUDE);
+	public float getSpeed() {
+		return returnFloat(FIELD_SPEED, LocationConstants.SPEED_NULL);
 	}
 
-	public String getFieldAltitudeAccuraccy() {
-		return (String) getValue(FIELD_ALTITUDE_ACCURACCY);
+	public long getTimestamp() {
+		return returnLong(FIELD_TIMESTAMP, 0);
 	}
-
-	public String getFieldHeading() {
-		return (String) getValue(FIELD_HEADING);
-	}
-
-	public String getFieldSpeed() {
-		return (String) getValue(FIELD_SPEED);
-	}
-
-	public double getFieldTimestamp() {
-		return Double.parseDouble((String) getValue(FIELD_TIMESTAMP));
-	}
-
 }

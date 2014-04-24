@@ -1,108 +1,92 @@
-<!doctype html>
-
+<!DOCTYPE html>
 <html>
-
-	<head>
-		<title>GeoTracker - Home</title>
-		<meta name="viewport" content="width=device-width">		
-		<link rel="stylesheet" href="css/custom.css">		
-		<link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
-		<link href="favicon.ico" rel="icon" type="image/x-icon" />
-		<!-- Libraries -->
-		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
-		<script type="text/javascript" src="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
-		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCk21t6ICUW7xeQMvz0qL1jL_VNwl7sLtw&sensor=false" type="text/javascript"></script>
-		<!-- Style -->
-		<style type="text/css">
-			body {
-				padding-top: 50px;
-				padding-bottom: 20px;
-			}
-		</style>
-	</head>
-
-	<body>
-		<!-- Navigation Bar -->
-		<div class="navbar navbar-inverse navbar-fixed-top" id="navbar">
-			<div class="container">
-				<div class="navbar-header">
-					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-						<span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
-					</button>
-					<a class="navbar-brand" href="index.html">GeoTracker</a>
-					<a id="dashboard_link" class="navbar-brand" href="dashboard.html">Dashboard</a>
-				</div>
-				<div class="navbar-collapse collapse">
-					<ul class="nav navbar-nav"></ul>
-					<form class="navbar-form navbar-right" id="navbar_form_login">
-						<div class="form-group">
-							<input id="username" type="text" placeholder="Username" class="form-control">
-						</div>
-						<div class="form-group">
-							<input id="password" type="password" placeholder="Password" class="form-control">
-						</div>
-						<button type="submit" id="sign_in_button" class="btn btn-success">
-							Sign in
-						</button>	
-						<button type="submit" id="register_button" class="btn btn-success">
-							Register now
-						</button>						
-					</form>
-					<form class="navbar-form navbar-right" id="navbar_form_logout">
-						<button type="submit" id="logout_button" class="btn btn-success">Logout</button>
-					</form>
-					
-				</div>
-				<!--/.navbar-collapse -->
-			</div>
-		</div>
-		<div id="navbar_alert" hidden class="alert alert-dismissable alert-danger">
-			<b>Warning!</b> You best check yourself, you're not looking so good.
-		</div>
-		<!-- Main jumbotron for a primary marketing message or call to action -->
-		<div class="jumbotron" id="jumbotron">
-			<div class="container">
-				<h1>GeoTracker</h1>
-				<p>
-					With GeoTracker you can view the current position of your friends.....
-				</p>
-			</div>
-		</div>
-		
-		<!-- Main Page Content -> load content into this div via jquery -->
-		<div class="container" id="page_content">
-			<!-- Example row of columns -->
-			<div class="row">
-				<div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-					<h1>Track your Friends</h1>
-					<p>
-						Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.
-					</p>
-				</div>
-				<div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-					<h2>Google Map integration</h2>
-					<img width="70%" src="http://www.simonblog.com/wordpress/wp-content/uploads/2009/05/google_maps_alternate_route_2.jpg">
-				</div>
-				<div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-					<h2>HTML5 Websockets</h2>
-					<p>
-						Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.
-					</p>
-				</div>
-			</div>
-			<hr>		
-		</div>
-	
-		<!-- Footer -->
-		<div class="container" id="page_footer">
-			<footer>
-				<p style>
-					&copy; GeoTracker 2014
-				</p>
-			</footer>
-		</div>
-		<!-- /container -->
-		<script src="js/app.js"></script>
-	</body>
-
+  <head>
+    <meta name="generator"
+    content="HTML Tidy for HTML5 (experimental) for Windows https://github.com/w3c/tidy-html5/tree/c63cc39" />
+    <title>GeoTracker - Home</title>
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" href="css/custom.css" />
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+    <link href="favicon.ico" rel="icon" type="image/x-icon" />
+    <!-- Libraries -->
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script type="text/javascript" src="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCk21t6ICUW7xeQMvz0qL1jL_VNwl7sLtw&amp;sensor=false"
+    type="text/javascript"></script>
+    <!-- Style -->
+    <style type="text/css">
+      body {
+        padding-top: 50px;
+        padding-bottom: 20px;
+      }                
+    </style>
+  </head>
+  <body>
+    <!-- Navigation Bar -->
+    <div class="navbar navbar-inverse navbar-fixed-top" id="navbar">
+      <div class="container">
+        <div class="navbar-header">
+        <a class="navbar-brand" href="index.html">GeoTracker</a> 
+        <a id="dashboard_link" class="navbar-brand" href="dashboard.html">Dashboard</a></div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav"></ul>
+          <form class="navbar-form navbar-right" id="navbar_form_login">
+          <div class="form-group">
+            <input id="username" type="text" placeholder="Username" class="form-control" />
+          </div>
+          <div class="form-group">
+            <input id="password" type="password" placeholder="Password" class="form-control" />
+          </div>
+          <button type="submit" id="sign_in_button" class="btn btn-success">Sign in</button> 
+          <button type="submit" id="register_button" class="btn btn-success">Register now</button></form>
+          <form class="navbar-form navbar-right" id="navbar_form_logout">
+            <button type="submit" id="logout_button" class="btn btn-success">Logout</button>
+          </form>
+        </div>
+        <!--/.navbar-collapse -->
+      </div>
+    </div>
+    
+    <!-- Alert Box -->
+    <div id="page_alert" hidden="" class="alert alert-dismissable alert-danger">
+      <b>Warning!</b> You best check yourself, you&#39;re not looking so good.
+    </div>
+    
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="jumbotron" id="jumbotron">
+      <div class="container">
+        <h1>GeoTracker</h1>
+        <p>With GeoTracker you can view the current position of your friends.....</p>
+      </div>
+    </div>
+    <!-- Main Page Content -> load content into this div via jquery -->
+    <div class="container" id="page_content">
+      <!-- Example row of columns -->
+      <div class="row">
+        <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+          <h1>Track your Friends</h1>
+          <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum
+          nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.</p>
+        </div>
+        <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+          <h2>Google Map integration</h2>
+          <img width="70%" src="http://www.simonblog.com/wordpress/wp-content/uploads/2009/05/google_maps_alternate_route_2.jpg" />
+        </div>
+        <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+          <h2>HTML5 Websockets</h2>
+          <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum
+          nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.</p>
+        </div>
+      </div>
+      <hr />
+    </div>
+    <!-- Footer -->
+    <div class="container" id="page_footer">
+      <footer>
+        <p style="">© GeoTracker 2014</p>
+      </footer>
+    </div>
+    <!-- /container -->
+    <script src="js/app.js"></script>
+  </body>
 </html>

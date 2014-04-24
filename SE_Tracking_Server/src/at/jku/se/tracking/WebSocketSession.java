@@ -31,7 +31,7 @@ import com.json.exceptions.JSONParsingException;
 @WebSocket
 public class WebSocketSession {
 	private RemoteEndpoint remote;
-	private double userId = -1;
+	private long userId = -1;
 	private String sessionId = null;
 
 	// ------------------------------------------------------------------------
@@ -124,10 +124,15 @@ public class WebSocketSession {
 				// Instantiate User Object
 				user = new UserObject(registration.getUsername(), encryptedPassword, salt, registration.isObservable());
 				// Store user
-				boolean success = DatabaseService.insertUser(user);
+				long userId = DatabaseService.insertUser(user);
 				// TODO: perform login
-				if (success) {
-					sendMessage(new MsgOk(registration.getConversationId()));
+				if (userId != -1) {
+					this.sessionId = UUID.randomUUID().toString();
+					this.userId = userId;
+					// --
+					System.out.println("User <" + userId + "> registered session <" + sessionId + ">");
+					// --
+					sendMessage(new MsgOk(registration.getConversationId(), sessionId));
 				} else {
 					sendMessage(new MsgError(registration.getConversationId(), "problem adding new user"));
 				}
@@ -155,6 +160,8 @@ public class WebSocketSession {
 					this.sessionId = UUID.randomUUID().toString();
 					this.userId = user.getId();
 					// --
+					System.out.println("User <" + userId + "> registered session <" + sessionId + ">");
+					// --
 					sendMessage(new MsgOk(login.getConversationId(), sessionId));
 				}
 			}
@@ -178,17 +185,13 @@ public class WebSocketSession {
 
 	private void handleLocationUpdate(MsgLocationUpdate location) throws IOException {
 		try {
-			GeolocationObject geoObject = new GeolocationObject(userId,
-					location.getFieldTimestamp(), location.getFieldLongitude(),
-					location.getFieldLatitude());
-
-			boolean success = DatabaseService.insertLocation(geoObject);
-			
-			if (success) {
+			long timestamp = System.currentTimeMillis(); // use server time for timestamps to avoid out of sync issues
+			GeolocationObject geoObject = new GeolocationObject(userId, timestamp, location);
+			// --
+			if (DatabaseService.insertLocation(geoObject)) {
 				sendMessage(new MsgOk(location.getConversationId()));
 			} else {
-				sendMessage(new MsgError(location.getConversationId(),
-						"problem inserting location"));
+				sendMessage(new MsgError(location.getConversationId(), "problem inserting location"));
 			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block

@@ -4,14 +4,9 @@ var passField = document.getElementById('password');
 var registerBtn = document.getElementById('register_button');
 var registerFormBtn = document.getElementById('register_form_button');
 var loginBtn = document.getElementById('sign_in_button');
-var registerUsername = document.getElementById('register_username');
-var registerPassword = document.getElementById('register_password');
-var registerVisible = document.getElementById('register_visible');
-var registerAlertBox = document.getElementById('register_alert_box');
-var loginAlertBox = document.getElementById('navbar_alert');
 var logoutBtn = document.getElementById('logout_button');
 var logoutForm = document.getElementById('navbar_form_logout');
-var dashboardAnchor = document.getElementById('dashboard_link');
+var dashboardLink = document.getElementById('dashboard_link');
 var jumbotron = document.getElementById('jumbotron');
 var map;
 var socket;
@@ -19,312 +14,354 @@ var socket;
 var cid = -1;
 var conversations = {};
 
-window.onresize = function(event) {
-	if (map) {
-		var center = map.getCenter();
-		google.maps.event.trigger(map, "resize");
-		map.setCenter(center);
-	}
-};
+window.onload = function () {
+  // Create a new WebSocket.
+  socket = new WebSocket('wss://localhost:8443/');
 
-window.onload = function() {
-	
-	// Create a new WebSocket.
-	socket = new WebSocket('wss://localhost:8443/');
+  //Check if loggedIn with cookie
+  var sessionId = getCookie("session_id");
+  if (sessionId != null && sessionId.length > 5) {
+    // TODO: check if the session is still valid on the server
+    $('#navbar_form_logout').show();
+    $('#navbar_form_login').hide();
+    $('#dashboard_link').show();
+  } else {
+    $('#dashboard_link').hide();
+    $('#navbar_form_logout').hide();
+    $('#navbar_form_login').show();    
+  }
 
-	//Check if loggedIn with cookie
-	var sessionId = getCookie("session_id");
-	if (sessionId != null && sessionId.length > 5) {
-		// TODO: check if the session is still valid on the server
-		//userField.setAttribute("type", "hidden");
-		//passField.setAttribute("type", "hidden");
-		//loginBtn.style.visibility = "hidden";
-		//registerBtn.style.visibility = "hidden";
-		//logoutBtn.style.visibility = "visible";
-		$('#navbar_form_logout').show();
-		$('#navbar_form_login').hide();
-		if (dashboardAnchor != null) {		
-			$('#dashboard_link').show();
-			//dashboardAnchor.style.visibility = "visible";
-		}
-	} else {
-		//userField.setAttribute("type", "visible");
-		//passField.setAttribute("type", "visible");
-		//loginBtn.style.visibility = "visible";
-		//registerBtn.style.visibility = "visible";
-		//logoutBtn.style.visibility = "hidden";
-		$('#navbar_form_logout').hide();
-		$('#navbar_form_login').show();
-		if (dashboardAnchor != null) {
-			$('#dashboard_link').hide();
-			//dashboardAnchor.style.visibility = "hidden";
-		}
-	}
+  //check if allowed to view dashboard
+  if (document.URL.indexOf('index.html') == -1) {    
+      window.location.href = "index.html";
+  }
 
-	//check if allowed to view dashboard
-	if (document.URL.indexOf('dashboard') > -1) {
-		if (sessionId == null || sessionId.length < 5) {
-			window.location.href = "index.html";
+  // Handle any errors that occur.
+  socket.onerror = function (error) {
+    console.log('WebSocket Error: ' + error);
+  };
 
-		} else {
-			initialize();
-			getLocation();
-		}
-	}
+  // Show a connected message when the WebSocket is opened.
+  socket.onopen = function (event) {
+    cid = 0;
+    console.log('Connected to: ' + event.currentTarget.URL);
+  };
 
-	// Handle any errors that occur.
-	socket.onerror = function(error) {
-		console.log('WebSocket Error: ' + error);
-	};
+  // Handle messages sent by the server.
+  socket.onmessage = function (event) {
+    event.preventDefault();
+    console.log(event.data);
 
-	// Show a connected message when the WebSocket is opened.
-	socket.onopen = function(event) {
-		cid = 0;
-		console.log('Connected to: ' + event.currentTarget.URL);
-	};
+    var response = JSON.parse(event.data);
+    var mcid = response[0]["cid"];
+    // --
+    var responseTo = conversations[mcid];
+    delete conversations[mcid];
+    // --
+    switch (responseTo) {
+    case "request-registration":
+      handleRegistration(response[0]);
+      break;
+    case "request-login":
+      handleLogin(response[0]);
+      break;
+    }
+    return false;
+  };
 
-	// Handle messages sent by the server.
-	socket.onmessage = function(event) {
-		event.preventDefault();
-		console.log(event.data);
+  // Show a disconnected message when the WebSocket is closed.
+  socket.onclose = function (event) {
+    console.log('Disconnected from WebSocket.');
+  };
 
-		var response = JSON.parse(event.data);		
-		var mcid = response[0]["cid"];
-		// --
-		var responseTo = conversations[mcid];		
-		delete conversations[mcid];
-		// --
-		switch(responseTo) {
-			case "request-registration":
-				handleRegistration(response[0]);
-				break;
-			case "request-login":
-				handleLogin(response[0]);
-				break;
-		}
-		return false;
-	};
+  if (dashboardLink != null) {
+    dashboardLink.onclick = function (e) {
+      e.preventDefault ? e.preventDefault() : e.returnValue = false;
+      // --
+      showDashboard();
+    }
+  }
 
-	// Show a disconnected message when the WebSocket is closed.
-	socket.onclose = function(event) {
-		console.log('Disconnected from WebSocket.');
-	};
+  // Navigate to registration
+  if (registerBtn != null) {
+    registerBtn.onclick = function (e) {
+      e.preventDefault ? e.preventDefault() : e.returnValue = false;
+      hideMessage();
+      // load page
+      $('#page_content').load('register.html #content', function () {
+        $('#register_submit').click(buttonHandlerRegister);
+        // $('#navbar_form_login').hide();        
+        $('#page_content').hide().fadeIn();
+      });
+    };
+  }
 
-	// Navigate to registration
-	if (registerBtn != null) {
-		registerBtn.onclick = function(e) {
-			//window.location.href = "register.html";			
-			$('#page_content').load('register.html #content', function() {
-				//$('#jumbotron').hide();
-				$('#navbar_form_login').hide();
-				$('#page_content').hide().fadeIn();
-			});
-			return false;
-		};
-	}
+  // Send login request
+  if (loginBtn != null) {
+    loginBtn.onclick = function (e) {
+      console.log("login handler");
+      e.preventDefault ? e.preventDefault() : e.returnValue = false;
+      // --
+      var mcid = ++cid;
+      // Retrieve username and password
+      var username = $('#username').val();
+      var password = $('#password').val();
 
-	// Send registration request
-	if (registerFormBtn != null) {
-		registerFormBtn.onclick = function(e) {
-			e.preventDefault();
-			var mcid = ++cid;
-			// Retrieve username and password
-			var username = registerUsername.value;
-			var password = registerPassword.value;
-			var visible = registerVisible.checked;
-			
-			if (username.length > 6 && password.length > 6) {
-				var request = {
-					"cid" : mcid,
-					"message-type" : "request-registration",					
-					"username" : username,
-					"password" : password,
-					"observable" : visible
-				};
-				conversations[mcid] = "request-registration";
-				socket.send(JSON.stringify(request));
-			} else {
-				registerAlertBox.removeAttribute('hidden');
-				$("#register_alert_box").removeClass("alert-success");
-				$("#register_alert_box").addClass("alert-danger");
-				registerAlertBox.innerHTML = " <b>Error!</b> Enter Username(min. length is 6) and Password(min. length is 6)";
-			}
-			return false;
-		};
-	}
+      if (username.length > 4 && password.length > 6) {
+        var request = {
+          "cid" : mcid,
+          "message-type" : "request-login",
+          "username" : username,
+          "password" : password
+        };
+        conversations[mcid] = "request-login";
+        socket.send(JSON.stringify(request));
+        hideMessage();
+      } else {
+        console.log("login error");
+        $('#username').val('');
+        $('#password').val('');
+        showErrorMessage("<b>Error!</b> Enter Username(min. length is 4) and Password(min. length is 6)");        
+      }
+    };
+  }
 
-	// Send login request
-	if (loginBtn != null) {
-		loginBtn.onclick = function(e) {
-			e.preventDefault();
-			var mcid = ++cid;
-			// Retrieve username and password
-			var username = userField.value;
-			var password = passField.value;
-
-			if (username.length > 6 && password.length > 6) {
-
-				var request = {
-					"cid" : mcid,
-					"message-type" : "request-login",
-					"username" : username,
-					"password" : password
-				};
-				conversations[mcid] = "request-login";
-				socket.send(JSON.stringify(request));
-			} else {
-				loginAlertBox.removeAttribute('hidden');
-				loginAlertBox.innerHTML = " <b>Error!</b> Enter Username(min. length is 6) and Password(min. length is 6)";
-			}
-			return false;
-		};
-	}
-
-	// Send logout request
-	if (logoutBtn != null) {
-		logoutBtn.onclick = function(e) {
-			e.preventDefault();
-			var mcid = ++cid;
-			var request = {
-				"cid" : mcid,
-				"message-type" : "request-logout",
-				"session-id" : getCookie("session_id")
-			};
-			conversations[mcid] = "request-logout";
-			socket.send(JSON.stringify(request));
-
-			//remove cookie
-			eraseCookie("session_id");
-
-			//navigate to home
-			window.location.href = "index.html";
-
-			return false;
-		};
-	}
+  // Send logout request
+  if (logoutBtn != null) {
+    logoutBtn.onclick = function (e) {
+      e.preventDefault ? e.preventDefault() : e.returnValue = false;
+      // --
+      var mcid = ++cid;
+      var request = {
+        "cid" : mcid,
+        "message-type" : "request-logout",
+        "session-id" : getCookie("session_id")
+      };
+      conversations[mcid] = "request-logout";
+      socket.send(JSON.stringify(request));
+      
+      //remove cookie
+      eraseCookie("session_id");
+      
+      //navigate to home
+      window.location.href = "index.html";
+      showSuccessMessage("You have been logged out");      
+    };
+  }
 
 };
+
+window.onresize = function (event) {
+  if (map) {
+    var center = map.getCenter();
+    google.maps.event.trigger(map, "resize");
+    map.setCenter(center);
+  }
+};
+
+/* ----------------------------------------------------------------------------
+Functions for onClick handlers that have to be set after the page has been
+loaded dynamically via jQuery.
+--------------------------------------------------------------------------- */
+function buttonHandlerRegister(e) {
+  console.log("register on click");
+  e.preventDefault ? e.preventDefault() : e.returnValue = false;
+  // --
+  var mcid = ++cid;
+  // Retrieve username and password
+  var username = $("#register_username").val();
+  var password = $("#register_password").val();
+  var passwordRepeat = $("#register_password_repeat").val();
+  var visible = $("#register_observable").is(':checked');
+  // --
+  if (username.length > 4 && password.length > 6) {
+    if (password == passwordRepeat) {
+      console.log("passwords match");
+      var request = {
+        "cid" : mcid,
+        "message-type" : "request-registration",
+        "username" : username,
+        "password" : password,
+        "observable" : visible
+      };
+      conversations[mcid] = "request-registration";
+      socket.send(JSON.stringify(request));
+      console.log("registration request sent");
+    } else {
+      showErrorMessage("Entered passwords do not match.");
+    }
+  } else {
+    showErrorMessage("<b>Error!</b> Enter Username(min. length is 4) and Password(min. length is 6)");
+  }
+  return false;
+};
+
+// ----------------------------------------------------------------------------
+
+function showDashboard() {
+  $('#dashboard_link').fadeIn();
+  hideMessage();
+  $('#page_content').load('dashboard.html #content', function () {
+    // loadScript();
+    initializeMap();
+    getLocation();
+    // --
+    $('#jumbotron').hide();
+    $('#navbar_form_logout').fadeIn();
+    $('#navbar_form_login').hide();
+    $('#page_content').hide().fadeIn();
+  });
+}
+
+/* ----------------------------------------------------------------------------
+Handler functions for messages received from the server
+--------------------------------------------------------------------------- */
 
 //handle registration response
-function handleRegistration(data) {	
-	console.log('Handle Registration Response');
-	registerAlertBox.removeAttribute('hidden');
-	//success
-	if (data["message-type"] === 'response-ok') {
-		$("#register_alert_box").removeClass("alert-danger");
-		$("#register_alert_box").addClass("alert-success");
-		//registerAlertBox.className.replace('alert-danger', 'alert-success');
-		registerAlertBox.innerHTML = "<b>Success!</b> You successfully registered for GeoTracker.";
-		registerUsername.value = '';
-		registerPassword.value = '';
-		registerVisible.checked = false;
-	} else {
-		//registerAlertBox.className.replace('alert-success', 'alert-danger');
-		registerAlertBox.innerHTML = " <b>Error!</b> " + data["message"];
-		$("#register_alert_box").removeClass("alert-success");
-		$("#register_alert_box").addClass("alert-danger");
-	}
-	//alert(data["message"]);
+function handleRegistration(data) {
+  console.log('Handle Registration Response');
+  //success
+  if (data["message-type"] === 'response-ok') {
+    // Perform auto login
+    setCookie("session_id", data["message"], 7);
+    $('#dashboard_link').fadeIn();
+    $('#navbar_form_logout').fadeIn();
+    $('#navbar_form_login').hide();
+    // --
+    showSuccessMessage("<b>Success!</b> You successfully registered for GeoTracker.");
+    // reset values
+    $("#register_username").val('');
+    $("#register_password").val('');
+    $("#register_password_repeat").val('');
+    $("#register_observable").prop("checked", true);
+  } else {
+    showErrorMessage(" <b>Error!</b> " + data["message"]);
+  }
 }
+
+// ----------------------------------------------------------------------------
 
 //handle login response
-function handleLogin(data) {	
-	console.log('Handle Registration Response');
-	//success
-	if (data["message-type"] === 'response-ok') {
-		setCookie("session_id", data["message"], 7);
-		$('#page_content').load('dashboard.html #content', function() {
-			loadScript();
-			initializeMap();
-			$('#jumbotron').hide();
-			$('#navbar_form_logout').fadeIn();
-			$('#navbar_form_login').hide();
-			$('#page_content').hide().fadeIn();
-		});	
-	} else {
-		loginAlertBox.removeAttribute('hidden');
-		loginAlertBox.innerHTML = " <b>Error!</b> " + data["message"];
-	}
+function handleLogin(data) {
+  console.log('Handle Login Response');
+  //success
+  if (data["message-type"] === 'response-ok') {
+    setCookie("session_id", data["message"], 7);
+    showDashboard();
+  } else {
+    showErrorMessage("<b>Error!</b> " + data["message"]);
+  }
 }
 
-function setCookie(cname, cvalue, exdays) {
-	var d = new Date();
-	d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
-	var expires = "expires=" + d.toGMTString();
-	document.cookie = cname + "=" + cvalue + "; " + expires;
+/* ----------------------------------------------------------------------------
+Messages sent to the server go here
+--------------------------------------------------------------------------- */
+
+//send Location Update
+function sendLocationUpdate(position) {
+  console.log('Send new Location Update');
+  var request = {
+    "message-type" : "location-update",
+    "session-id" : getCookie("session_id"),
+    "latitude" : position.coords.latitude,
+    "logitude" : position.coords.longitude,
+    "accuracy" : position.coords.accuracy,
+    "altitude" : position.coords.altitude,
+    "altitude-accuracy" : position.coords.altitudeAccuracy,
+    "heading" : position.coords.heading,
+    "speed" : position.coords.speed,
+    "timestamp" : position.timestamp
+  };
+  socket.send(JSON.stringify(request));
+}
+
+/* ----------------------------------------------------------------------------
+Utilities
+--------------------------------------------------------------------------- */
+
+function showSuccessMessage(message) {
+  $("#page_alert").removeClass("alert-danger");
+  $("#page_alert").addClass("alert-success");
+  $("#page_alert").html(message);
+  $("#page_alert").fadeIn();
+}
+function showErrorMessage(message) {
+  $("#page_alert").removeClass("alert-success");
+  $("#page_alert").addClass("alert-danger");
+  $("#page_alert").html(message);
+  $("#page_alert").fadeIn();
+}
+function hideMessage() {  
+  $("#page_alert").fadeOut();
+}
+
+// ----------------------------------------------------------------------------
+
+
+function setCookie(cname, cvalue, exhours) {
+  var d = new Date();
+  d.setTime(d.getTime() + (exhours * 60 * 60 * 1000));
+  var expires = "expires=" + d.toGMTString();
+  document.cookie = cname + "=" + cvalue + "; " + expires;
 }
 
 function getCookie(cname) {
-	var name = cname + "=";
-	var ca = document.cookie.split(';');
-	for (var i = 0; i < ca.length; i++) {
-		var c = ca[i].trim();
-		if (c.indexOf(name) == 0)
-			return c.substring(name.length, c.length);
-	}
-	return "";
+  var name = cname + "=";
+  var ca = document.cookie.split(';');
+  for (var i = 0; i < ca.length; i++) {
+    var c = ca[i].trim();
+    if (c.indexOf(name) == 0)
+      return c.substring(name.length, c.length);
+  }
+  return "";
 }
 
 function eraseCookie(cname) {
-	setCookie(cname, "", -1);
+  setCookie(cname, "", -1);
 }
 
-function loadScript() {	
+// ----------------------------------------------------------------------------
+
+function loadScript() {
   var script = document.createElement('script');
   script.type = 'text/javascript';
   script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyCk21t6ICUW7xeQMvz0qL1jL_VNwl7sLtw&sensor=false&' +
-      'callback=initializeMap';
+    'callback=initializeMap';
   document.body.appendChild(script);
 }
 
 function initializeMap() {
-	var mapProp = {
-		center : new google.maps.LatLng(51.508742, -0.120850),
-		zoom : 5,
-		mapTypeId : google.maps.MapTypeId.ROADMAP
-	};
-	map = new google.maps.Map(document.getElementById("googleMap"), mapProp);	
+  var mapProp = {
+    center : new google.maps.LatLng(51.508742, -0.120850),
+    zoom : 5,
+    mapTypeId : google.maps.MapTypeId.ROADMAP
+  };
+  map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
 }
 
 function getLocation() {
-	if (navigator.geolocation) {
-		navigator.geolocation.watchPosition(showPosition);
-	}
+  if (navigator.geolocation) {
+   console.log("showPosition");
+    navigator.geolocation.watchPosition(showPosition);
+  }
 }
+
+// ----------------------------------------------------------------------------
 
 function showPosition(position) {
-	var mapProp = {
-		center : new google.maps.LatLng(position.coords.latitude, position.coords.longitude),
-		zoom : 11,
-		mapTypeId : google.maps.MapTypeId.ROADMAP
-	};
-	map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
+  var mapProp = {
+    center : new google.maps.LatLng(position.coords.latitude, position.coords.longitude),
+    zoom : 11,
+    mapTypeId : google.maps.MapTypeId.ROADMAP
+  };
+  map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
 
-	var myLatlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+  var myLatlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
 
-	var marker = new google.maps.Marker({
-		position : myLatlng,
-		map : map
-	});
-	
-	sendLocationUpdate(position);
+  var marker = new google.maps.Marker({
+      position : myLatlng,
+      map : map
+    });
+
+  sendLocationUpdate(position);
 }
-
-//send Location Update
-function sendLocationUpdate(position) {
-	console.log('Send new Location Update');	
-	var request = {		
-		"message-type" : "location-update",
-		"session-id" : getCookie("session_id"),
-		"latitude" : position.coords.latitude,
-		"logitude" : position.coords.longitude,
-		"accuracy" : position.coords.accuracy,
-		"altitude" : position.coords.altitude,
-		"altitude-accuracy" : position.coords.altitudeAccuracy,
-		"heading" : position.coords.heading,
-		"speed" : position.coords.speed,
-		"timestamp" : position.timestamp
-	}; 
-	socket.send(JSON.stringify(request));
-}
-
