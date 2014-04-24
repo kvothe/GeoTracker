@@ -38,7 +38,7 @@ public class WebSocketServer {
 		WebSocketServer webSocketServer = new WebSocketServer();
 		// Host / Port
 		webSocketServer.setHost("localhost");
-		webSocketServer.setPort(8443);
+		webSocketServer.setPort(443);
 		// SSL Keystore
 		webSocketServer.setKeyStoreResource(new FileResource(WebSocketServer.class.getClassLoader().getResource(
 				"resources/keystore.jks")));

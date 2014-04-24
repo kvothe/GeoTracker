@@ -16,7 +16,7 @@ var conversations = {};
 
 window.onload = function () {
   // Create a new WebSocket.
-  socket = new WebSocket('wss://localhost:8443/');
+  socket = new WebSocket('wss://localhost:443/');
 
   //check if allowed to view dashboard
   if (document.URL.indexOf('index.html') == -1) {
@@ -46,7 +46,13 @@ window.onload = function () {
     event.preventDefault();
     console.log(event.data);
 
-    var response = JSON.parse(event.data);
+    try {
+      var response = JSON.parse(event.data);
+    } catch (err) {
+      console.log(err.message);
+      return false;
+    }
+
     var mcid = response[0]["cid"];
     // --
     var responseTo = conversations[mcid];
@@ -64,6 +70,8 @@ window.onload = function () {
       break;
     case "request-user-list":
       handleResponseUserList(response[0]);
+    case "request-session-list":
+      handleResponseSessionList(response[0]);
       break;
     }
     return false;
@@ -129,8 +137,16 @@ window.onload = function () {
       eraseCookie("session_id");
 
       //navigate to home
-      window.location.href = "index.html"; // TODO: improve
-      showSuccessMessage("You have been logged out");
+      // window.location.href = "index.html"; // TODO: improve
+
+      $('#dashboard_link').hide();
+      $('#navbar_form_logout').hide();
+      $('#navbar_form_login').show();
+
+      $('#page_content').load('index.html #page_content', function () {
+        $('#page_content').hide().fadeIn();
+        showSuccessMessage("You have been logged out");
+      });
     };
   }
 
@@ -179,6 +195,11 @@ function buttonHandlerRefreshUserList(e) {
   sendRequestUserList(false);
 }
 
+function buttonHandlerRefreshSessionList(e) {
+  e.preventDefault ? e.preventDefault() : e.returnValue = false;
+  sendRequestSessionList(false);
+}
+
 // ----------------------------------------------------------------------------
 
 function showDashboard() {
@@ -190,7 +211,9 @@ function showDashboard() {
     getLocation();
     // --
     $('#dashboard_user_refresh').click(buttonHandlerRefreshUserList);
+    $('#dashboard_session_refresh').click(buttonHandlerRefreshSessionList);
     sendRequestUserList(false);
+    sendRequestSessionList(true);
     // --
     $('#jumbotron').hide();
     $('#navbar_form_logout').fadeIn();
@@ -263,23 +286,39 @@ function handleResponseSessionCheck(data) {
 function handleResponseUserList(data) {
   console.log('Handle User List Response');
   // --
-  
   if (data["message-type"] === 'response-list') {
-    var htmlList = "";  
-    console.log(data["user-list"]);
-    for(var user in data["user-list"]) {
-      var name = user;
-      var observable = data["user-list"][user];
+    var htmlList = "";
+    for (var user in data["list"]) {
+      var name = data["list"][user]["name"];
+      var observable = data["list"][user]["observable"];
       // --
       htmlList += "<li class=\"list-group-item\">" + name;
-      if(observable === "true") {
+      if (observable === true) {
         htmlList += "<span class=\"badge\">&#x2713;</span>";
       }
       htmlList += "</li>";
-    }    
+    }
     $('#dashboard_list_users').html(htmlList);
   }
-  
+}
+
+// ----------------------------------------------------------------------------
+
+function handleResponseSessionList(data) {
+  console.log('Handle Session List Response');
+  // --
+
+  if (data["message-type"] === 'response-list') {
+    var htmlList = "";
+    console.log(data["list"]);
+    for (var session in data["list"]) {
+      var observed = data["list"][session]["observed"];
+      // --
+      htmlList += "<li class=\"list-group-item\">" + observed;
+      htmlList += "</li>";
+    }
+    $('#dashboard_list_sessions').html(htmlList);
+  }
 }
 
 /* ----------------------------------------------------------------------------
@@ -364,6 +403,18 @@ function sendRequestUserList(observableOnly) {
     "observable-only" : observableOnly
   };
   conversations[mcid] = "request-user-list";
+  socket.send(JSON.stringify(request));
+}
+
+function sendRequestSessionList(isObserver) {
+  var mcid = ++cid;
+  var request = {
+    "cid" : mcid,
+    "message-type" : "request-session-list",
+    "session-id" : getCookie("session_id"),
+    "is-observer" : isObserver
+  };
+  conversations[mcid] = "request-session-list";
   socket.send(JSON.stringify(request));
 }
 

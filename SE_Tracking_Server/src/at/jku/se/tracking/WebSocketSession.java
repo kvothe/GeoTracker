@@ -3,6 +3,7 @@ package at.jku.se.tracking;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,7 @@ import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
 import at.jku.se.tracking.database.DatabaseService;
 import at.jku.se.tracking.database.GeolocationObject;
+import at.jku.se.tracking.database.TrackingSessionObject;
 import at.jku.se.tracking.database.UserObject;
 import at.jku.se.tracking.messages.MsgError;
 import at.jku.se.tracking.messages.MsgLocationUpdate;
@@ -24,6 +26,7 @@ import at.jku.se.tracking.messages.MsgLogin;
 import at.jku.se.tracking.messages.MsgLogout;
 import at.jku.se.tracking.messages.MsgOk;
 import at.jku.se.tracking.messages.MsgRegister;
+import at.jku.se.tracking.messages.MsgRequestTrackingSessions;
 import at.jku.se.tracking.messages.MsgRequestUserList;
 import at.jku.se.tracking.messages.MsgResponseList;
 import at.jku.se.tracking.messages.MsgSession;
@@ -92,6 +95,10 @@ public class WebSocketSession {
 			case USER_LIST:
 				MsgRequestUserList userList = (MsgRequestUserList) m;
 				handleUserList(userList);
+				break;
+			case SESSION_LIST:
+				MsgRequestTrackingSessions requestTrackingSessions = (MsgRequestTrackingSessions) m;
+				handleTrackingSessions(requestTrackingSessions);
 				break;
 			default:
 				break;
@@ -240,12 +247,18 @@ public class WebSocketSession {
 	private void handleUserList(MsgRequestUserList request) throws IOException {
 		if (checkSession(request)) {
 			try {
-				Map<String, String> userList = new HashMap<String, String>();
+				List<Map<String, Object>> userList = new ArrayList<Map<String, Object>>();
 				// --
 				List<UserObject> users = DatabaseService.queryUsers(request.getOnlyObservable());
 				// --
 				for (UserObject u : users) {
-					userList.put(u.getName(), String.valueOf(u.isObservable()));
+					// crude implementation due to workaround for quick-json bug with trailing commas
+					Map<String, Object> user = new HashMap<String, Object>();
+					user.put("name", u.getName());
+					user.put("observable", u.isObservable());
+					user.put("online", false);
+					// --
+					userList.add(user);
 				}
 				// --
 				sendMessage(new MsgResponseList(request.getConversationId(), userList));
@@ -257,6 +270,43 @@ public class WebSocketSession {
 		}
 	}
 
+	// ------------------------------------------------------------------------
+
+	private void handleTrackingSessions(MsgRequestTrackingSessions request) throws IOException {
+		if (checkSession(request)) {
+			try {
+				List<Map<String, Object>> sessionList = new ArrayList<Map<String, Object>>();
+				// --
+				List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(session.getUserId(), request.isObserver());
+				// --
+				for (TrackingSessionObject s : sessions) {
+					// crude implementation due to workaround for quick-json bug with trailing commas
+					Map<String, Object> session = new HashMap<String, Object>();
+					if (request.isObserver()) {
+						UserObject u = DatabaseService.queryUser(s.getObserved());
+						if (u != null) {
+							session.put("observed", u.getName());
+						}
+					} else {
+						UserObject u = DatabaseService.queryUser(s.getObserver());
+						if (u != null) {
+							session.put("observer", u.getName());
+						}
+					}
+					session.put("starttime", s.getStarttime());
+					session.put("endtime", s.getEndtime());
+					// --
+					sessionList.add(session);
+				}
+				// --
+				sendMessage(new MsgResponseList(request.getConversationId(), sessionList));
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				sendMessage(new MsgError(request.getConversationId(), e));
+			}
+		}
+	}
 	// ------------------------------------------------------------------------
 
 	private boolean checkSession(AMessage message) throws IOException {

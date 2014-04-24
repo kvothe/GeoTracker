@@ -152,6 +152,7 @@ public class DatabaseService {
 		// --
 		return users;
 	}
+
 	// ------------------------------------------------------------------------
 
 	public static long insertUser(UserObject user) throws SQLException {
@@ -233,5 +234,55 @@ public class DatabaseService {
 		CONNECTION_POOL.returnResource(con);
 		// --
 		return result;
+	}
+
+	// ------------------------------------------------------------------------
+
+	public static List<TrackingSessionObject> queryTrackingSessions(long userId, boolean isObserver) throws SQLException {
+		if (CONNECTION_POOL == null) {
+			return null;
+		}
+		// --
+		List<TrackingSessionObject> sessions = new ArrayList<TrackingSessionObject>();
+		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
+		// --
+		PreparedStatement query = null;
+		if (isObserver) {
+			query = con.prepareStatement("SELECT * FROM [" + TrackingSessionObject.TABLE_NAME + "] WHERE " + TrackingSessionObject.COLUMN_OBSERVER
+					+ "=?");
+			query.setLong(1, userId);
+		} else {
+			query = con.prepareStatement("SELECT * FROM [" + TrackingSessionObject.TABLE_NAME + "] WHERE " + TrackingSessionObject.COLUMN_OBSERVED
+					+ "=?");
+			query.setLong(1, userId);
+		}
+		// --
+		ResultSet rs = query.executeQuery();
+		// --
+		try {
+			while (rs.next()) {
+				long observer = -1;
+				long observed = -1;
+				if (isObserver) {
+					observer = userId;
+					observed = rs.getLong(TrackingSessionObject.COLUMN_OBSERVED);
+				} else {
+					observed = userId;
+					observer = rs.getLong(TrackingSessionObject.COLUMN_OBSERVER);
+				}
+				long starttime = rs.getLong(TrackingSessionObject.COLUMN_STARTTIME);
+				long endtime = rs.getLong(TrackingSessionObject.COLUMN_ENDTIME);
+				long canceledBy = rs.getLong(TrackingSessionObject.COLUMN_CANCELED_BY);
+				// --
+				sessions.add(new TrackingSessionObject(observed, observer, starttime, endtime, canceledBy));
+			}
+		} finally {
+			rs.close();
+			query.close();
+		}
+		// --
+		CONNECTION_POOL.returnResource(con);
+		// --
+		return sessions;
 	}
 }
