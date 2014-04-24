@@ -3,6 +3,9 @@ package at.jku.se.tracking;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.eclipse.jetty.websocket.api.RemoteEndpoint;
@@ -21,6 +24,8 @@ import at.jku.se.tracking.messages.MsgLogin;
 import at.jku.se.tracking.messages.MsgLogout;
 import at.jku.se.tracking.messages.MsgOk;
 import at.jku.se.tracking.messages.MsgRegister;
+import at.jku.se.tracking.messages.MsgRequestUserList;
+import at.jku.se.tracking.messages.MsgResponseList;
 import at.jku.se.tracking.messages.MsgSession;
 import at.jku.se.tracking.messages.serialization.AMessage;
 import at.jku.se.tracking.messages.serialization.InvalidMessageException;
@@ -84,6 +89,10 @@ public class WebSocketSession {
 				MsgLocationUpdate locUpdate = (MsgLocationUpdate) m;
 				handleLocationUpdate(locUpdate);
 				break;
+			case USER_LIST:
+				MsgRequestUserList userList = (MsgRequestUserList) m;
+				handleUserList(userList);
+				break;
 			default:
 				break;
 			}
@@ -119,15 +128,18 @@ public class WebSocketSession {
 
 	private void handleRegistration(MsgRegister registration) throws IOException {
 		try {
-			UserObject user = DatabaseService.queryUser(registration.getUsername());
+			String username = registration.getUsername().trim();
+			String password = registration.getPassword().trim();
+			// --
+			UserObject user = DatabaseService.queryUser(username);
 			if (user != null) {
 				sendMessage(new MsgError(registration.getConversationId(), "username already taken"));
 			} else {
 				// Encrypt password
 				byte[] salt = PasswordEncryptionService.generateSalt();
-				byte[] encryptedPassword = PasswordEncryptionService.getEncryptedPassword(registration.getPassword(), salt);
+				byte[] encryptedPassword = PasswordEncryptionService.getEncryptedPassword(password, salt);
 				// Instantiate User Object
-				user = new UserObject(registration.getUsername(), encryptedPassword, salt, registration.isObservable());
+				user = new UserObject(username, encryptedPassword, salt, registration.isObservable());
 				// Store user
 				long userId = DatabaseService.insertUser(user);
 				// TODO: perform login
@@ -158,9 +170,12 @@ public class WebSocketSession {
 
 	private void handleLogin(MsgLogin login) throws IOException {
 		try {
-			UserObject user = DatabaseService.queryUser(login.getUsername());
+			String username = login.getUsername().trim();
+			String password = login.getPassword().trim();
+			// --
+			UserObject user = DatabaseService.queryUser(username);
 			if (user != null) {
-				boolean authenticated = PasswordEncryptionService.authenticate(login.getPassword(), user.getEncryptedPassword(), user.getSalt());
+				boolean authenticated = PasswordEncryptionService.authenticate(password, user.getEncryptedPassword(), user.getSalt());
 				// --
 				if (authenticated) {
 					String sessionId = UUID.randomUUID().toString();
@@ -216,6 +231,28 @@ public class WebSocketSession {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 				sendMessage(new MsgError(location.getConversationId(), e));
+			}
+		}
+	}
+
+	// ------------------------------------------------------------------------
+
+	private void handleUserList(MsgRequestUserList request) throws IOException {
+		if (checkSession(request)) {
+			try {
+				Map<String, String> userList = new HashMap<String, String>();
+				// --
+				List<UserObject> users = DatabaseService.queryUsers(request.getOnlyObservable());
+				// --
+				for (UserObject u : users) {
+					userList.put(u.getName(), String.valueOf(u.isObservable()));
+				}
+				// --
+				sendMessage(new MsgResponseList(request.getConversationId(), userList));
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				sendMessage(new MsgError(request.getConversationId(), e));
 			}
 		}
 	}

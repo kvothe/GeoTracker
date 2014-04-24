@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -115,10 +116,42 @@ public class DatabaseService {
 
 	// ------------------------------------------------------------------------
 
-	public static List<UserObject> queryObservableUsers() throws SQLException {
-		return null;
+	public static List<UserObject> queryUsers(boolean onlyObservable) throws SQLException {
+		if (CONNECTION_POOL == null) {
+			return null;
+		}
+		// --
+		List<UserObject> users = new ArrayList<UserObject>();
+		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
+		// --
+		PreparedStatement query = null;
+		if (onlyObservable) {
+			query = con.prepareStatement("SELECT [" + UserObject.COLUMN_USERNAME + "],[" + UserObject.COLUMN_OBSERVABLE + "] FROM ["
+					+ UserObject.TABLE_NAME + "] WHERE " + UserObject.COLUMN_OBSERVABLE + "=?");
+			query.setBoolean(1, true);
+		} else {
+			query = con.prepareStatement("SELECT [" + UserObject.COLUMN_USERNAME + "],[" + UserObject.COLUMN_OBSERVABLE + "] FROM ["
+					+ UserObject.TABLE_NAME + "]");
+		}
+		// --
+		ResultSet rs = query.executeQuery();
+		// --
+		try {
+			while (rs.next()) {
+				String username = rs.getString(UserObject.COLUMN_USERNAME);
+				boolean observable = rs.getBoolean(UserObject.COLUMN_OBSERVABLE);
+				// --
+				users.add(new UserObject(username, observable));
+			}
+		} finally {
+			rs.close();
+			query.close();
+		}
+		// --
+		CONNECTION_POOL.returnResource(con);
+		// --
+		return users;
 	}
-
 	// ------------------------------------------------------------------------
 
 	public static long insertUser(UserObject user) throws SQLException {

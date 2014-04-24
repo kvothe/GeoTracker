@@ -8,6 +8,7 @@ import at.jku.se.tracking.messages.MsgLocationUpdate;
 import at.jku.se.tracking.messages.MsgLogin;
 import at.jku.se.tracking.messages.MsgLogout;
 import at.jku.se.tracking.messages.MsgRegister;
+import at.jku.se.tracking.messages.MsgRequestUserList;
 import at.jku.se.tracking.messages.MsgSession;
 
 import com.json.generators.JSONGenerator;
@@ -76,25 +77,17 @@ public class MarshallingService {
 		} else {
 			switch (type) {
 			case LOGIN:
-				MsgLogin m = new MsgLogin();
-				m.setMap(map);
-				return m;
+				return new MsgLogin(map);
 			case REGISTRATION:
-				MsgRegister reg = new MsgRegister();
-				reg.setMap(map);
-				return reg;
+				return new MsgRegister(map);
 			case SESSION:
-				MsgSession session = new MsgSession();
-				session.setMap(map);
-				return session;
+				return new MsgSession(map);
 			case LOGOUT:
-				MsgLogout log = new MsgLogout();
-				log.setMap(map);
-				return log;
+				return new MsgLogout(map);
+			case USER_LIST:
+				return new MsgRequestUserList(map);
 			case LOCATION_UPDATE:
-				MsgLocationUpdate loc = new MsgLocationUpdate();
-				loc.setMap(map);
-				return loc;
+				return new MsgLocationUpdate(map);
 			default:
 				break;
 			}

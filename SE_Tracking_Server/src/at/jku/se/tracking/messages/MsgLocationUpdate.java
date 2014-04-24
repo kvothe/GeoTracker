@@ -1,5 +1,7 @@
 package at.jku.se.tracking.messages;
 
+import java.util.Map;
+
 import at.jku.se.tracking.database.LocationConstants;
 import at.jku.se.tracking.messages.serialization.AMessage;
 
@@ -17,8 +19,8 @@ public class MsgLocationUpdate extends AMessage {
 
 	// ------------------------------------------------------------------------
 
-	public MsgLocationUpdate() {
-		// default constructor needed to instantiate after parsing
+	public MsgLocationUpdate(Map<?, ?> map) {
+		setMap(map);
 	}
 
 	public MsgLocationUpdate(String sessionId, double latitude, double longitude, double accuracy, float altitude, float altitudeAccuracy,
