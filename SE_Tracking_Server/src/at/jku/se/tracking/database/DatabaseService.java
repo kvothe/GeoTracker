@@ -274,7 +274,7 @@ public class DatabaseService {
 		PreparedStatement insert = 
 			con.prepareStatement("UPDATE [" + TrackingSessionObject.TABLE_NAME + "] SET "
 			+ "[" + TrackingSessionObject.COLUMN_ENDTIME + "] = ?,[" + TrackingSessionObject.COLUMN_CANCELED_BY  + "] = ? "
-			+ "WHERE " +TrackingSessionObject.COLUMN_ID + " = ?");			
+			+ "WHERE " + TrackingSessionObject.COLUMN_ID + " = ?");			
 		//@formatter:on
 
 		insert.setLong(1, endtime);
@@ -343,6 +343,56 @@ public class DatabaseService {
 		CONNECTION_POOL.returnResource(con);
 		// --
 		return sessions;
+	}
+
+	// ------------------------------------------------------------------------
+
+	public static List<GeolocationObject> getTrackingSessionPoints(long sessionId) throws SQLException {
+		if (CONNECTION_POOL == null) {
+			return null;
+		}
+		// --
+		List<GeolocationObject> points = new ArrayList<GeolocationObject>();
+		// --
+		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
+		// --
+		/*
+		 * select l.[timestamp], l.longitude, l.latitude, l.accuracy from [trackingsession] s, [geolocation] l where
+		 * s.id = 17 and l.[timestamp] >= s.starttime and l.[timestamp] <= s.[endtime] order by l.timestamp
+		 */
+		//@formatter:off
+		PreparedStatement query = con.prepareStatement(
+			"SELECT l.[" + GeolocationObject.COLUMN_TIMESTAMP + "], "
+			+ "l.["	+ GeolocationObject.COLUMN_LONGITUDE + "], "
+			+ "l.[" + GeolocationObject.COLUMN_LATITUDE + "], "
+			+ "l.[" + GeolocationObject.COLUMN_ACCURACY	+ "] "
+			+ "FROM [" + TrackingSessionObject.TABLE_NAME + "] s, [" + GeolocationObject.TABLE_NAME + "] l "
+			+ "WHERE s.[" + TrackingSessionObject.COLUMN_ID + "] = ? " 
+			+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] >= s.[" + TrackingSessionObject.COLUMN_STARTTIME + "] "
+			+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] <= s.[" + TrackingSessionObject.COLUMN_ENDTIME + "] "
+			+ "ORDER BY l.[" + GeolocationObject.COLUMN_TIMESTAMP + "]");
+		//@formatter:on
+		query.setLong(1, sessionId);
+		// --
+		ResultSet rs = query.executeQuery();
+		// --
+		try {
+			while (rs.next()) {
+				long timestamp = rs.getLong(GeolocationObject.COLUMN_TIMESTAMP);
+				double longitude = rs.getDouble(GeolocationObject.COLUMN_LONGITUDE);
+				double latitude = rs.getDouble(GeolocationObject.COLUMN_LATITUDE);
+				double accuracy = rs.getDouble(GeolocationObject.COLUMN_ACCURACY);
+				// --
+				points.add(new GeolocationObject(-1, -1, timestamp, longitude, latitude, accuracy, Float.NaN, Double.NaN, Double.NaN, Float.NaN));
+			}
+		} finally {
+			rs.close();
+			query.close();
+		}
+		// --
+		CONNECTION_POOL.returnResource(con);
+		// --
+		return points;
 	}
 
 	// ------------------------------------------------------------------------

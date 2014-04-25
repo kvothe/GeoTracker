@@ -15,6 +15,8 @@ public class MsgResponseList extends AMessage {
 	public MsgResponseList(double cid, List<?> list) {
 		setType(MessageType.LIST);
 		setConversationId(cid);
-		setValue(FIELD_USER_LIST, list);
+		if (list.size() > 0) { // workaround for bug in quick-json (trailing comma after empty entry)
+			setValue(FIELD_USER_LIST, list);
+		}
 	}
 }

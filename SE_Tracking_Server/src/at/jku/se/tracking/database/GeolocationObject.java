@@ -31,12 +31,8 @@ public class GeolocationObject {
 	// ------------------------------------------------------------------------
 
 	public GeolocationObject(long user, long timestamp, MsgLocationUpdate location) {
-		this(user, timestamp, location.getLongitude(), location.getLatitude(), location.getAccuracy(), location.getAltitude(), location
+		this(-1, user, timestamp, location.getLongitude(), location.getLatitude(), location.getAccuracy(), location.getAltitude(), location
 				.getAltitudeAccuraccy(), location.getHeading(), location.getSpeed());
-	}
-	public GeolocationObject(long userFK, long timestamp, double longitude, double latitude, double accuracy, float altitude,
-			double altitudeAccuracy, double heading, float speed) {
-		this(-1, userFK, timestamp, longitude, latitude, accuracy, altitude, altitudeAccuracy, heading, speed);
 	}
 
 	public GeolocationObject(long id, long userFK, long timestamp, double longitude, double latitude, double accuracy, float altitude,

@@ -27,6 +27,7 @@ import at.jku.se.tracking.messages.MsgLogout;
 import at.jku.se.tracking.messages.MsgOk;
 import at.jku.se.tracking.messages.MsgRegister;
 import at.jku.se.tracking.messages.MsgRequestSessionList;
+import at.jku.se.tracking.messages.MsgRequestSessionTrack;
 import at.jku.se.tracking.messages.MsgRequestUserList;
 import at.jku.se.tracking.messages.MsgResponseList;
 import at.jku.se.tracking.messages.MsgSession;
@@ -103,6 +104,10 @@ public class WebSocketSession {
 			case SESSION_LIST:
 				MsgRequestSessionList requestTrackingSessions = (MsgRequestSessionList) m;
 				handleSessionList(requestTrackingSessions);
+				break;
+			case SESSION_POINTS:
+				MsgRequestSessionTrack requestSessionTrack = (MsgRequestSessionTrack) m;
+				handleSessionPoints(requestSessionTrack);
 				break;
 			case START_OBSERVATION:
 				MsgStartObservation startObservation = (MsgStartObservation) m;
@@ -298,7 +303,7 @@ public class WebSocketSession {
 					// crude implementation due to workaround for quick-json bug with trailing commas
 					Map<String, Object> session = new HashMap<String, Object>();
 					UserObject u = DatabaseService.queryUser(s.getObserved());
-					session.put("id", s.getId());
+					session.put("observation-id", s.getId());
 					if (u != null) {
 						session.put("observed", u.getName());
 					}
@@ -309,6 +314,35 @@ public class WebSocketSession {
 				}
 				// --
 				sendMessage(new MsgResponseList(request.getConversationId(), sessionList));
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				sendMessage(new MsgError(request.getConversationId(), e));
+			}
+		}
+	}
+
+	// ------------------------------------------------------------------------
+
+	private void handleSessionPoints(MsgRequestSessionTrack request) throws IOException {
+		if (checkSession(request)) {
+			try {
+				List<Map<String, Object>> pointList = new ArrayList<Map<String, Object>>();
+				// --
+				List<GeolocationObject> points = DatabaseService.getTrackingSessionPoints(request.getObservationId());
+				// --
+				for (GeolocationObject p : points) {
+					// crude implementation due to workaround for quick-json bug with trailing commas
+					Map<String, Object> point = new HashMap<String, Object>();
+					point.put("timestamp", p.getTimestamp());
+					point.put("longitude", p.getLongitude());
+					point.put("latitude", p.getLatitude());
+					point.put("accuracy", p.getAccuracy());
+					// --
+					pointList.add(point);
+				}
+				// --
+				sendMessage(new MsgResponseList(request.getConversationId(), pointList));
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -360,23 +394,26 @@ public class WebSocketSession {
 				// --
 				UserObject user = DatabaseService.queryUser(request.getUser());
 				if (user != null) {
-					long sessionId = 0;
+					long observationId = request.getObservationId();
 					long observed = request.userIsObserver() ? session.getUserId() : user.getId();
 					long observer = request.userIsObserver() ? user.getId() : session.getUserId();
-					// check if this observer already observes the requested user
-					List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(observer, observed, true);
-					if (sessions.size() == 1) {
-						sessionId = sessions.get(0).getId();
-					} else {
-						if (request.userIsObserver()) {
-							sendMessage(new MsgError(request.getConversationId(), "You are not being observed by " + user.getName()));
+					// --
+					if (observationId == -1) {
+						// check if this observer observes the requested user
+						List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(observer, observed, true);
+						if (sessions.size() == 1) {
+							observationId = sessions.get(0).getId();
 						} else {
-							sendMessage(new MsgError(request.getConversationId(), "You are not observing " + user.getName()));
+							if (request.userIsObserver()) {
+								sendMessage(new MsgError(request.getConversationId(), "You are not being observed by " + user.getName()));
+							} else {
+								sendMessage(new MsgError(request.getConversationId(), "You are not observing " + user.getName()));
+							}
+							return;
 						}
-						return;
 					}
 					// --
-					boolean success = DatabaseService.stopTrackingSession(sessionId, endtime, session.getUserId());
+					boolean success = DatabaseService.stopTrackingSession(observationId, endtime, session.getUserId());
 					// --
 					if (success) {
 						sendMessage(new MsgOk(request.getConversationId(), user.getName()));
