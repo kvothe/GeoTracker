@@ -1,15 +1,18 @@
 .alert {
   text-align: center;
+  margin-top: 20px;
+  margin-left: 20px;
+  margin-right: 20px;
 }
 
-.alert-success {
-	margin-top: 20px;
+html, body, .container, .row, .col-xs-6 , .col-md-9 { height: 100% }
+
+#googleMap {
+	width:100%;
+ 	height:100%;
 }
 
-.alert-danger {
-	margin-top: 20px;
-}
-
+/*
 html, body, #googleMap {
     width: 100%;
     height: 100%;
@@ -19,3 +22,4 @@ html, body, #googleMap {
 #googleMap {
     position: relative;
 }
+*/

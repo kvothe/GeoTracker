@@ -93,7 +93,11 @@ public abstract class AMessage {
 			if (f instanceof Double) {
 				return (Double) f;
 			} else if (f instanceof String) {
-				return Double.parseDouble((String) f);
+				try {
+					return Double.parseDouble((String) f);
+				} catch (NumberFormatException e) {
+					return defaultValue;
+				}
 			}
 		}
 		return defaultValue;
@@ -107,7 +111,11 @@ public abstract class AMessage {
 			if (f instanceof Long) {
 				return (Long) f;
 			} else if (f instanceof String) {
-				return Long.parseLong((String) f);
+				try {
+					return Long.parseLong((String) f);
+				} catch (NumberFormatException e) {
+					return defaultValue;
+				}
 			}
 		}
 		return defaultValue;
@@ -121,7 +129,11 @@ public abstract class AMessage {
 			if (f instanceof Float) {
 				return (Float) f;
 			} else if (f instanceof String) {
-				return Float.parseFloat((String) f);
+				try {
+					return Float.parseFloat((String) f);
+				} catch (NumberFormatException e) {
+					return defaultValue;
+				}
 			}
 		}
 		return defaultValue;
