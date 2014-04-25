@@ -102,12 +102,12 @@ public class SessionObserver {
 
 	// ------------------------------------------------------------------------
 
-	public static void pushNotifyStartObservation(UserObject observed, UserObject observer) {		
+	public static void pushNotifyStartObservation(long observedId, String observerName) {
 		List<WebSocketSession> notifySessions = new ArrayList<WebSocketSession>();
 		// collect relevant sessions
 		synchronized (SESSIONS) {
 			for (Entry<UserSession, WebSocketSession> s : SESSIONS.entrySet()) {
-				if (s.getKey().getUserId() == observed.getId() && s.getValue() != null) {
+				if (s.getKey().getUserId() == observedId && s.getValue() != null) {
 					notifySessions.add(s.getValue());
 				}
 			}
@@ -115,7 +115,7 @@ public class SessionObserver {
 		// --
 		for (WebSocketSession s : notifySessions) {
 			try {
-				s.sendMessage(new MsgNotification(observer.getName() + " is now observing you"));
+				s.sendMessage(new MsgNotification(observerName + " is now observing you"));
 			} catch (IOException e) {
 				System.err.println(e.getMessage());
 			}
@@ -124,12 +124,12 @@ public class SessionObserver {
 
 	// ------------------------------------------------------------------------
 
-	public static void pushNotifyStopObservation(UserObject observed, UserObject observer) {
+	public static void pushNotifyStopObservation(long observedId, String observerName) {
 		List<WebSocketSession> notifySessions = new ArrayList<WebSocketSession>();
 		// collect relevant sessions
 		synchronized (SESSIONS) {
 			for (Entry<UserSession, WebSocketSession> s : SESSIONS.entrySet()) {
-				if (s.getKey().getUserId() == observed.getId() && s.getValue() != null) {
+				if (s.getKey().getUserId() == observedId && s.getValue() != null) {
 					notifySessions.add(s.getValue());
 				}
 			}
@@ -137,7 +137,7 @@ public class SessionObserver {
 		// --
 		for (WebSocketSession s : notifySessions) {
 			try {
-				s.sendMessage(new MsgNotification(observer.getName() + " has stopped observing you"));
+				s.sendMessage(new MsgNotification(observerName + " has stopped observing you"));
 			} catch (IOException e) {
 				System.err.println(e.getMessage());
 			}

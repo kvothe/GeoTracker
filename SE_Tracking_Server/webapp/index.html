@@ -33,7 +33,7 @@
         <div class="collapse navbar-collapse" id="navbar-collapse-01">        
           <ul class="nav navbar-nav navbar-left">
             <li><a id="home_link" class="navbar-brand" href="#page_content">GeoTracker</a></li>                     
-            <li hidden class="dropdown" id="dashboard_menu">
+            <li style="display:none;" class="dropdown" id="dashboard_menu">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dashboard <b class="caret"></b></a>
               <span class="dropdown-arrow"></span>
               <ul class="dropdown-menu">
@@ -43,9 +43,9 @@
                 <li><a href="#" id="navbar_messages">Messages</a></li>
               </ul>
             </li>
-          </ul>              
-        
-          <form hidden class="navbar-form navbar-right" id="navbar_form_login">
+          </ul> 
+            
+          <form style="display:none;" class="navbar-form navbar-right" id="navbar_form_login">
             <div class="form-group">
               <input id="login_username" type="text" placeholder="Username" class="form-control" />
             </div>
@@ -57,19 +57,31 @@
               <button type="submit" id="register_button" class="btn btn-success">Register now</button>
             </div>
           </form>
-          
-          <form hidden class="navbar-form navbar-right" id="navbar_form_logout">
-            <div class="form-group navbar-right">
-              <button type="submit" id="logout_button" class="btn btn-success">Logout</button>
-            </div>
-          </form>        
+            
+          <ul class="nav navbar-nav navbar-right" id="navbar_form_logout" style="display:none;">      
+            <li class="dropdown" id="navbar_user_menu">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="navbar_user_name">Welcome!<b class="caret"></b></a>
+              <span class="dropdown-arrow"></span>
+              <ul class="dropdown-menu">
+                <li><a href="#" id="navbar_user_list">Settings</a></li>                
+              </ul>
+            </li>
+            
+            <li>
+              <form  class="navbar-form " >
+                <div class="form-group navbar-right">
+                  <button type="submit" id="logout_button" class="btn btn-success">Logout</button>
+                </div>
+              </form>
+            </li>
+          </ul>
         </div>
         <!--/.navbar-collapse -->
       </div>
     </div>
     
     <!-- Alert Box -->
-    <div id="page_alert" hidden="" class="alert alert-dismissable alert-danger">
+    <div id="page_alert" style="display:none;" class="alert alert-dismissable alert-danger">
     <b>Warning!</b> You best check yourself, you&#39;re not looking so good.</div>
     <!-- Main jumbotron for a primary marketing message or call to action -->
     <div class="jumbotron" id="jumbotron">

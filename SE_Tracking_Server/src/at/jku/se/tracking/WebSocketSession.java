@@ -170,7 +170,7 @@ public class WebSocketSession {
 				// TODO: perform login
 				if (userId != -1) {
 					String sessionId = UUID.randomUUID().toString();
-					this.session = new UserSession(sessionId, userId, System.currentTimeMillis());
+					this.session = new UserSession(sessionId, user.getName(), userId, System.currentTimeMillis());
 					// --
 					System.out.println("User <" + userId + "> registered session <" + sessionId + ">");
 					SessionObserver.registerSession(this.session, this);
@@ -204,7 +204,7 @@ public class WebSocketSession {
 				// --
 				if (authenticated) {
 					String sessionId = UUID.randomUUID().toString();
-					this.session = new UserSession(sessionId, user.getId(), System.currentTimeMillis());
+					this.session = new UserSession(sessionId, user.getName(), user.getId(), System.currentTimeMillis());
 					// --
 					System.out.println("User <" + user.getId() + "> registered session <" + sessionId + ">");
 					SessionObserver.registerSession(this.session, this);
@@ -227,7 +227,7 @@ public class WebSocketSession {
 
 	private void handleSessionCheck(MsgSession sessionCheck) throws IOException {
 		if (checkSession(sessionCheck)) {
-			sendMessage(new MsgOk(sessionCheck.getConversationId()));
+			sendMessage(new MsgOk(sessionCheck.getConversationId(), session.getUsername()));
 		}
 	}
 
@@ -373,7 +373,7 @@ public class WebSocketSession {
 					// --
 					sendMessage(new MsgOk(request.getConversationId(), observed.getName()));
 					// --
-					SessionObserver.pushNotifyStartObservation(observed, DatabaseService.queryUser(session.getUserId()));
+					SessionObserver.pushNotifyStartObservation(observed.getId(), session.getUsername());
 				} else {
 					sendMessage(new MsgError(request.getConversationId(), "User doesn't exist"));
 				}
@@ -397,6 +397,7 @@ public class WebSocketSession {
 					long observationId = request.getObservationId();
 					long observed = request.userIsObserver() ? session.getUserId() : user.getId();
 					long observer = request.userIsObserver() ? user.getId() : session.getUserId();
+					String observerName = request.userIsObserver() ? user.getName() : session.getUsername();
 					// --
 					if (observationId == -1) {
 						// check if this observer observes the requested user
@@ -417,7 +418,7 @@ public class WebSocketSession {
 					// --
 					if (success) {
 						sendMessage(new MsgOk(request.getConversationId(), user.getName()));
-						SessionObserver.pushNotifyStopObservation(DatabaseService.queryUser(observed), DatabaseService.queryUser(observer));
+						SessionObserver.pushNotifyStopObservation(observed, observerName);
 					} else {
 						sendMessage(new MsgError(request.getConversationId(), "Error while stopping session"));
 					}
