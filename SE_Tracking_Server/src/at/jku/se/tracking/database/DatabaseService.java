@@ -217,11 +217,12 @@ public class DatabaseService {
 		// --
 		insert.setDouble(3, location.getLongitude());
 		insert.setDouble(4, location.getLatitude());
-		insert.setDouble(5, location.getAccuracy());
-		insert.setFloat(6, location.getAltitude());
-		insert.setDouble(7, location.getAltitudeAccuracy());
-		insert.setDouble(8, location.getHeading());
-		insert.setFloat(9, location.getSpeed());
+		// --
+		setDoubleOrNull(insert, 5, location.getAccuracy());
+		setFloatOrNull(insert, 6, location.getAltitude());
+		setDoubleOrNull(insert, 7, location.getAltitudeAccuracy());
+		setDoubleOrNull(insert, 8, location.getHeading());
+		setFloatOrNull(insert, 9, location.getSpeed());
 		// --
 		try {
 			result = insert.executeUpdate() == 1;
@@ -385,5 +386,23 @@ public class DatabaseService {
 		CONNECTION_POOL.returnResource(con);
 		// --
 		return sessions;
+	}
+
+	// ------------------------------------------------------------------------
+
+	private static void setDoubleOrNull(PreparedStatement stmt, int idx, double value) throws SQLException {
+		if (Double.isNaN(value)) {
+			stmt.setNull(idx, java.sql.Types.FLOAT);
+		} else {
+			stmt.setDouble(idx, value);
+		}
+	}
+
+	private static void setFloatOrNull(PreparedStatement stmt, int idx, float value) throws SQLException {
+		if (Float.isNaN(value)) {
+			stmt.setNull(idx, java.sql.Types.FLOAT);
+		} else {
+			stmt.setFloat(idx, value);
+		}
 	}
 }

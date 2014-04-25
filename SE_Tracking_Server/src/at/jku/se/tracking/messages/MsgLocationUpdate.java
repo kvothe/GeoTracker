@@ -51,19 +51,14 @@ public class MsgLocationUpdate extends AMessage {
 		return returnDouble(FIELD_ACCURACY, LocationConstants.ACCURACY_NULL);
 	}
 	public float getAltitude() {
-		return returnFloat(FIELD_LATITUDE, LocationConstants.ALTITUDE_NULL);
+		return returnFloat(FIELD_ALTITUDE, LocationConstants.ALTITUDE_NULL);
 	}
 	public double getAltitudeAccuraccy() {
 		return returnDouble(FIELD_ALTITUDE_ACCURACCY, LocationConstants.ACCURACY_NULL);
 	}
 
 	public double getHeading() {
-		float speed = getSpeed();
-		if (speed == LocationConstants.SPEED_NULL || speed == 0) {
-			return LocationConstants.HEADING_NAN;
-		} else {
-			return returnDouble(FIELD_HEADING, LocationConstants.HEADING_NULL);
-		}
+		return returnDouble(FIELD_HEADING, LocationConstants.HEADING_NULL);
 	}
 
 	public float getSpeed() {
