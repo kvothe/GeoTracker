@@ -28,11 +28,13 @@
     <div class="navbar navbar-inverse navbar-fixed-top" id="navbar">
       <div class="container">
         <div class="navbar-header">
-          <ul class="nav navbar-nav navbar-left">    
-            <a id="home_link" class="navbar-brand" href="#page_content">GeoTracker</a> 
-            <!--li><a href="#page_content" id="home_link">GeoTracker</a></li-->
-            <!--a id="dashboard_link" class="navbar-brand" href="#page_content">Dashboard</a-->
-            
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse-01">
+                <span class="sr-only">Toggle navigation</span>
+              </button>
+        </div>
+        <div class="collapse navbar-collapse" id="navbar-collapse-01">        
+          <ul class="nav navbar-nav navbar-left">
+            <li><a id="home_link" class="navbar-brand" href="#page_content">GeoTracker</a></li>                     
             <li class="dropdown" id="dashboard_menu">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dashboard <b class="caret"></b></a>
               <span class="dropdown-arrow"></span>
@@ -43,10 +45,8 @@
                 <li><a href="#" id="navbar_messages">Messages</a></li>
               </ul>
             </li>
-          </ul>
-        </div>
-        <div class="navbar-collapse collapse">        
-          <ul class="nav navbar-nav"></ul>
+          </ul>              
+        
           <form hidden class="navbar-form navbar-right" id="navbar_form_login">
             <div class="form-group">
               <input id="login_username" type="text" placeholder="Username" class="form-control" />
@@ -54,14 +54,17 @@
             <div class="form-group">
               <input id="login_password" type="password" placeholder="Password" class="form-control" />
             </div>
-            <button type="submit" id="login_button" class="btn btn-success">Sign in</button> 
-            <button type="submit" id="register_button" class="btn btn-success">Register now</button>
-          </form>
-          <form hidden class="navbar-form navbar-right" id="navbar_form_logout">
-           <div class="form-group">
-            <button type="submit" id="logout_button" class="btn btn-success">Logout</button>
+            <div class="form-group">
+              <button type="submit" id="login_button" class="btn btn-success">Sign in</button>             
+              <button type="submit" id="register_button" class="btn btn-success">Register now</button>
             </div>
           </form>
+          
+          <form hidden class="navbar-form navbar-right" id="navbar_form_logout">
+            <div class="form-group navbar-right">
+              <button type="submit" id="logout_button" class="btn btn-success">Logout</button>
+            </div>
+          </form>        
         </div>
         <!--/.navbar-collapse -->
       </div>
