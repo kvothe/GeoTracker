@@ -2,13 +2,15 @@ package at.jku.se.tracking;
 
 public class UserSession {
 	private String sessionId;
+	private String username;
 	private long userId;
 	private long timestamp;
 
 	// ------------------------------------------------------------------------
 
-	public UserSession(String sessionId, long userId, long timestamp) {
+	public UserSession(String sessionId, String username, long userId, long timestamp) {
 		this.sessionId = sessionId;
+		this.username = username;
 		this.userId = userId;
 		this.timestamp = timestamp;
 	}
@@ -29,6 +31,12 @@ public class UserSession {
 
 	public void renew() {
 		this.timestamp = System.currentTimeMillis();
+	}
+
+	// ------------------------------------------------------------------------
+
+	public String getUsername() {
+		return username;
 	}
 
 	// ------------------------------------------------------------------------

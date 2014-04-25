@@ -3,6 +3,9 @@ var socket;
 // --
 var cid = -1;
 var conversations = {};
+var currentUsername;
+
+var browserSupportsLocation = new Boolean();
 
 window.onload = function () {
 	// Create a new WebSocket.
@@ -343,8 +346,10 @@ function handleResponseLogin(data) {
 	//success
 	if (data["message-type"] === 'response-ok') {
 		setCookie("session_id", data["message"], 7);
+		$('#navbar_user_name').html("Welcome " + currentUsername + "!<b class=\"caret\">");
 		showDashboard("user-list");
 	} else {
+		currentUsername = null;
 		showErrorMessage("<b>Error!</b> " + data["message"]);
 	}
 }
@@ -355,10 +360,14 @@ function handleResponseSessionCheck(data) {
 	console.log('Handle Session Check Response');
 	// --
 	if (data["message-type"] === 'response-ok') {
+    console.log(data);
+    currentUsername = data["message"];
+    $('#navbar_user_name').html("Welcome " + currentUsername + "!<b class=\"caret\">");
 		$('#navbar_form_logout').show();
 		$('#navbar_form_login').hide();
 		$('#dashboard_menu').fadeIn();
 	} else {
+    currentUsername = null;
 		//remove invalid session id
 		eraseCookie("session_id");
 		// --
@@ -573,6 +582,7 @@ function sendLoginRequest(username, password) {
 	};
 	conversations[mcid] = "request-login";
 	socket.send(JSON.stringify(request));
+	currentUsername = username;
 }
 
 function sendSessionCheck() {
@@ -762,8 +772,6 @@ function loadScript() {
 		'callback=initializeMap';
 	document.body.appendChild(script);
 }
-
-var browserSupportsLocation = new Boolean();
 
 function initializeMap() {
 	var mapProp = {
