@@ -9,6 +9,7 @@ import at.jku.se.tracking.messages.MsgLogin;
 import at.jku.se.tracking.messages.MsgLogout;
 import at.jku.se.tracking.messages.MsgRegister;
 import at.jku.se.tracking.messages.MsgRequestSessionList;
+import at.jku.se.tracking.messages.MsgRequestSessionTrack;
 import at.jku.se.tracking.messages.MsgRequestUserList;
 import at.jku.se.tracking.messages.MsgSession;
 import at.jku.se.tracking.messages.MsgStartObservation;
@@ -97,6 +98,8 @@ public class MarshallingService {
 				return new MsgStartObservation(map);
 			case STOP_OBSERVATION:
 				return new MsgStopObservation(map);
+			case SESSION_POINTS:
+				return new MsgRequestSessionTrack(map);
 			default:
 				break;
 			}

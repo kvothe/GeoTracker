@@ -9,7 +9,68 @@
   padding: 5px 5px;  
 }
 
-html, body, .container, .row, .col-xs-6 , .col-md-9 { height: 100% }
+/*
+.equal, .equal > div[class*='col-'] {  
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    flex:1 1 auto;
+}
+*/
+html, body, .container, .row, .col-xs-12, .col-lg-9, .col-sm-9 { height: 100%; font-size: 12px; }
+
+h1,
+h2,
+h3 {
+  margin-top: 30px;
+  margin-bottom: 15px;
+}
+h4,
+h5,
+h6 {
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+h1,
+.h1 {
+  font-size: 51px;
+}
+h2,
+.h2 {
+  font-size: 43px;
+}
+h3,
+.h3 {
+  font-size: 30px;
+}
+h4,
+.h4 {
+  font-size: 21px;
+}
+h5,
+.h5 {
+  font-size: 20px;
+}
+h6,
+.h6 {
+  font-size: 17px;
+}
+p {
+  font-size: 12px;
+  line-height: 1.72222;
+  margin: 0 0 15px;
+}
+
+.btn-circle {
+  display:block;
+  width: 25px;
+  height: 25px;
+  padding-left: 7px;
+  border-radius: 50%
+}
 
 #googleMap {
 	width:100%;

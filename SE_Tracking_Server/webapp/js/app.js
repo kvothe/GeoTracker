@@ -64,6 +64,9 @@ window.onload = function () {
 			case "request-session-list":
 				handleResponseSessionList(message[0]);
 				break;
+			case "request-session-points":
+				handleResponseSessionPoints(message[0]);
+				break;
 			case "request-start-observation":
 				handleResponseStartObservation(message[0]);
 				break;
@@ -256,11 +259,11 @@ function listItemHandlerStartObservation(name, observable) {
 	}
 }
 
-function listItemHandlerStopObservation(name, starttime, endtime) {
+function listItemHandlerStopObservation(observationid, name, starttime, endtime) {
 	console.log("clicked link for user " + name + " (" + starttime + "-" + endtime + ")");
 	hideMessage();
 	if (!endtime) {
-		sendRequestStopObservation(name, false);
+		sendRequestStopObservation(observationid, name, false);
 	} else {
 		showErrorMessage("Session already stopped.");
 	}
@@ -275,7 +278,6 @@ function showDashboard(content) {
 		$('#page_content').load('dashboard.html #content', function () {
 			// loadScript();
 			initializeMap();
-			getLocation();
 			// --
 			if (content == "user-list") {
 				$('#dashboard_user_panel').show();
@@ -405,35 +407,107 @@ function handleResponseUserList(data) {
 function handleResponseSessionList(data) {
 	console.log('Handle Session List Response');
 	// --
-	console.log(data);
 	if (data["message-type"] === 'response-list') {
 		var i = 1;
 		$('#dashboard_list_sessions').html("");
 		for (var session in data["list"]) {
+			var observationid = data["list"][session]["observation-id"];
 			var name = data["list"][session]["observed"];
 			var starttime = data["list"][session]["starttime"];
 			var endtime = data["list"][session]["endtime"];
 			// --
-			var linkId = "dashboard_list_session_observed_" + i;
+			var entryId = "dashboard_list_session_observed_" + i;
+			var buttonId = "dashboard_list_session_observed_cancel_" + i;
 			// --
-			var html = "<a href=\"#\" id=\"" + linkId + "\" class=\"list-group-item\">" + name + " (" + starttime + ")";
+			var html = "<a href=\"#\" id=\"" + entryId + "\" class=\"list-group-item\"><small>"
+				 + formatDate(starttime) + "</small><br><b>"
+				 + name;
 			if (endtime) {
 				html += "<i class=\"glyphicon fui-check\" style=\"float: right; margin-top: 6px; margin-right: 10px\"/>";
+				html += "</b><br><small>"
+				html += formatTimestamp(starttime);
+				html += " - " + formatTimestamp(endtime) + "</small>"
+			} else {
+				html += "<button id=\"" + buttonId + "\" class=\"btn btn-xs btn-primary btn-circle\" style=\"float: right; margin-top:-2px; margin-right:3px\">";
+				html += "<i class=\"glyphicon fui-cross\"/></button>";
+				html += "</b><br><small>"
+				html += formatTimestamp(starttime);
+				html += "</small>"
 			}
 			html += "</a>";
 			// --
 			$('#dashboard_list_sessions').append(html);
 			// --
-			$('#' + linkId).click({
-				id : linkId,
+			$('#' + entryId).click({
+				entryId : entryId,
+				observationid : observationid
+			}, function (event) {
+				//listItemHandlerStopObservation(event.data.observationid, event.data.user, event.data.starttime, event.data.endtime);
+				console.log("request session points " + event.data.observationid);
+				sendRequestSessionPoints(event.data.observationid);
+			});
+
+			$('#' + buttonId).click({
+				buttonId : buttonId,
+				observationid : observationid,
 				user : name,
 				starttime : starttime,
 				endtime : endtime
 			}, function (event) {
-				listItemHandlerStopObservation(event.data.user, event.data.starttime, event.data.endtime);
+				listItemHandlerStopObservation(event.data.observationid, event.data.user, event.data.starttime, event.data.endtime);
 			});
 			// --
 			i++;
+		}
+	}
+}
+
+// ----------------------------------------------------------------------------
+var path;
+var marker;
+function handleResponseSessionPoints(data) {
+	console.log('Handle Session Points Response');
+	// --
+	//console.log(data);
+	if (path) {
+		path.setMap(null);
+	}
+	if (data["message-type"] === 'response-list') {
+		var pointList = [];
+		var bounds = new google.maps.LatLngBounds();
+		// --
+		for (var point in data["list"]) {
+			var timestamp = data["list"][point]["timestamp"];
+			var latitude = data["list"][point]["latitude"];
+			var longitude = data["list"][point]["longitude"];
+			var accuracy = data["list"][point]["accuracy"];
+			// --
+			var latlng = new google.maps.LatLng(latitude, longitude);
+			pointList.push(latlng);
+			bounds.extend(latlng);
+		}
+
+		if (pointList.length) {
+			path = new google.maps.Polyline({
+					path : pointList,
+					geodesic : true,
+					strokeColor : '#FF0000',
+					strokeOpacity : 1.0,
+					strokeWeight : 2
+				});
+
+			if (map) {
+				if (marker) {
+					marker.setMap(null);
+				}
+				path.setMap(map);
+				map.fitBounds(bounds);
+			}
+		} else {
+			if (map) {
+				console.log("no points");
+				setMapToCurrentPosition();
+			}
 		}
 	}
 }
@@ -570,6 +644,19 @@ function sendRequestSessionList(listObserved, listObservers) {
 	socket.send(JSON.stringify(request));
 }
 
+function sendRequestSessionPoints(observationid) {
+	console.log(observationid);
+	var mcid = ++cid;
+	var request = {
+		"cid" : mcid,
+		"message-type" : "request-session-points",
+		"session-id" : getCookie("session_id"),
+		"observation-id" : observationid
+	};
+	conversations[mcid] = "request-session-points";
+	socket.send(JSON.stringify(request));
+}
+
 function sendRequestStartObservation(name) {
 	var mcid = ++cid;
 	var request = {
@@ -582,12 +669,13 @@ function sendRequestStartObservation(name) {
 	socket.send(JSON.stringify(request));
 }
 
-function sendRequestStopObservation(name, userIsObserver) {
+function sendRequestStopObservation(observationid, name, userIsObserver) {
 	var mcid = ++cid;
 	var request = {
 		"cid" : mcid,
 		"message-type" : "request-stop-observation",
 		"session-id" : getCookie("session_id"),
+		"observation-id" : observationid,
 		"user" : name,
 		"user-is-observer" : userIsObserver
 	};
@@ -622,6 +710,22 @@ function showInfoMessage(message) {
 }
 function hideMessage() {
 	$("#page_alert").fadeOut();
+}
+
+function formatTimestamp(milliseconds) {
+	var d = new Date(milliseconds);
+	// --
+	var str = d.getHours() + ":" + (d.getMinutes() < 10 ? "0" : "") + d.getMinutes();
+	// --
+	return str;
+}
+
+function formatDate(milliseconds) {
+	var d = new Date(milliseconds);
+	// --
+	var str = d.getDate() + "." + (d.getMonth() + 1) + ".";
+	// --
+	return str;
 }
 
 // ----------------------------------------------------------------------------
@@ -659,42 +763,74 @@ function loadScript() {
 	document.body.appendChild(script);
 }
 
+var browserSupportsLocation = new Boolean();
+
 function initializeMap() {
 	var mapProp = {
-		center : new google.maps.LatLng(51.508742, -0.120850),
-		zoom : 5,
-		mapTypeId : google.maps.MapTypeId.ROADMAP
+		zoom : 6,
+		mapTypeId : google.maps.MapTypeId.TERRAIN
 	};
 	map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
+
+	setMapToCurrentPosition();
 
 	$(window).resize(function () {
 		google.maps.event.trigger(map, "resize");
 	});
-}
 
-function getLocation() {
+	// Register location tracker
 	if (navigator.geolocation) {
-		console.log("showPosition");
-		navigator.geolocation.watchPosition(showPosition);
+		console.log("locationUpdate");
+		navigator.geolocation.watchPosition(positionChanged);
 	}
 }
 
 // ----------------------------------------------------------------------------
 
-function showPosition(position) {
-	var mapProp = {
-		center : new google.maps.LatLng(position.coords.latitude, position.coords.longitude),
-		zoom : 11,
-		mapTypeId : google.maps.MapTypeId.ROADMAP
-	};
-	map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
-
+function positionChanged(position) {
 	var myLatlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-
-	var marker = new google.maps.Marker({
-			position : myLatlng,
-			map : map
-		});
-
 	sendLocationUpdate(position);
+}
+
+function setMapToCurrentPosition() {
+	if (navigator.geolocation) {
+		browserSupportFlag = true;
+		navigator.geolocation.getCurrentPosition(function (position) {
+			console.log("position update");
+			var myLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+			// --
+			if (!marker) {
+				marker = new google.maps.Marker({
+						position : myLatLng,
+						map : map,
+						title : 'You are here'
+					});
+			} else {
+				marker.setMap(null);
+				marker.setPosition(myLatLng);
+				marker.setMap(map);
+			}
+			// --
+			map.setCenter(myLatLng);
+		}, function () {
+			handleNoGeolocation(browserSupportFlag);
+		});
+	}
+	// Browser doesn't support Geolocation
+	else {
+		browserSupportFlag = false;
+		handleNoGeolocation(browserSupportFlag);
+	}
+}
+
+// ----------------------------------------------------------------------------
+
+function handleNoGeolocation(errorFlag) {
+	if (errorFlag == true) {
+		console.log("Geolocation service failed.");
+		map.setCenter(new google.maps.LatLng(51.508742, -0.120850));
+	} else {
+		console.log("Your browser doesn't support geolocation. We've placed you in Siberia.");
+		map.setCenter(new google.maps.LatLng(60, 105));
+	}
 }

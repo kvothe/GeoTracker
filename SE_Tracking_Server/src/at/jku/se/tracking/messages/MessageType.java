@@ -11,6 +11,7 @@ public enum MessageType {
 	START_OBSERVATION("request-start-observation"),
 	STOP_OBSERVATION("request-stop-observation"),
 	SET_OBSERVABLE("request-set-observable"),
+	SESSION_POINTS("request-session-points"),
 	LOCATION_UPDATE("location-update"),
 	NOTIFICATION("notification"),
 	OK("response-ok"),
