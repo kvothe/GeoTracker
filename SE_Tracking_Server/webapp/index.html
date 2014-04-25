@@ -1,9 +1,7 @@
 ﻿<!DOCTYPE html>
 <html>
-  <head>
-    <meta name="generator"
-    content="HTML Tidy for HTML5 (experimental) for Windows https://github.com/w3c/tidy-html5/tree/c63cc39" />
-    <title>GeoTracker - Home</title>
+  <head>    
+    <title>GeoTracker</title>
     <meta name="viewport" content="width=device-width" />    
     <!--meta name="viewport" content="width=1000, initial-scale=1.0, maximum-scale=1.0"-->
     
@@ -30,9 +28,23 @@
     <div class="navbar navbar-inverse navbar-fixed-top" id="navbar">
       <div class="container">
         <div class="navbar-header">
-        <a id="home_link" class="navbar-brand" href="#page_content">GeoTracker</a> 
-        <a id="dashboard_link" class="navbar-brand" href="#page_content">Dashboard</a></div>
-        
+          <ul class="nav navbar-nav navbar-left">    
+            <a id="home_link" class="navbar-brand" href="#page_content">GeoTracker</a> 
+            <!--li><a href="#page_content" id="home_link">GeoTracker</a></li-->
+            <!--a id="dashboard_link" class="navbar-brand" href="#page_content">Dashboard</a-->
+            
+            <li class="dropdown" id="dashboard_menu">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dashboard <b class="caret"></b></a>
+              <span class="dropdown-arrow"></span>
+              <ul class="dropdown-menu">
+                <li><a href="#" id="navbar_user_list">User List</a></li>
+                <li><a href="#" id="navbar_session_list">Observations</a></li>            
+                <li class="divider"></li>
+                <li><a href="#" id="navbar_messages">Messages</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
         <div class="navbar-collapse collapse">        
           <ul class="nav navbar-nav"></ul>
           <form hidden class="navbar-form navbar-right" id="navbar_form_login">
@@ -46,7 +58,9 @@
             <button type="submit" id="register_button" class="btn btn-success">Register now</button>
           </form>
           <form hidden class="navbar-form navbar-right" id="navbar_form_logout">
+           <div class="form-group">
             <button type="submit" id="logout_button" class="btn btn-success">Logout</button>
+            </div>
           </form>
         </div>
         <!--/.navbar-collapse -->
@@ -67,16 +81,16 @@
       <!-- Example row of columns -->
       <div class="row">
         <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-          <h1>Track your Friends</h1>
+          <h3>Track your Friends</h3>
           <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum
           nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.</p>
         </div>
         <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-          <h2>Google Map integration</h2>
-          <img width="70%" src="images/google_maps_alternate_route_2.jpg" />
+          <h3>Google Map integration</h3>
+          <img width="70%" src="images/google_maps_alternate_route_2.jpg" class="img-rounded img-responsive"/>
         </div>
         <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-          <h2>HTML5 Websockets</h2>
+          <h3>HTML5 Websockets</h3>
           <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum
           nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.</p>
         </div>

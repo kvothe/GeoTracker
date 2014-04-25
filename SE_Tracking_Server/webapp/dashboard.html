@@ -8,26 +8,32 @@
   </head>
   <body style="height:100%;width:100%">
     <div id="content" class="container" style="height: 80%;">
-      <div class="row" style="height: 100%;">
-        <div class="col-md-3" style="height: 90%;">
-          <ul class="nav nav-tabs">
-            <li class="active">
-              <a href="#dashboard_tab_userlist" data-toggle="tab">Users</a>
-            </li>
-            <li>
-              <a href="#dashboard_tab_sessions" data-toggle="tab">Sessions</a>
-            </li>
-          </ul>
-          <div class="tab-content">
-            <div class="tab-pane fade in active" id="dashboard_tab_userlist">              
-              <ul class="list-group" id="dashboard_list_users">               
-              </ul>
-              <button id="dashboard_user_refresh" type="button" class="btn btn-default">&#8635;</button>
+      <div class="row" style="height: 100%; margin-top:20px">
+        <div class="col-md-3" style="height: 90%;"> 
+          <div hidden id="dashboard_user_panel" class="panel panel-default">
+            <div class="panel-heading">
+              <div class="form-group">
+                <input type="search" class="form-control" value="" placeholder="Search" />                
+                <span class="input-icon fui-search"></span>              
+              </div>            
             </div>
-            <div class="tab-pane fade" id="dashboard_tab_sessions">              
-              <ul class="list-group" id="dashboard_list_sessions">                
-              </ul>
-              <button id="dashboard_session_refresh" type="button" class="btn btn-default">&#8635;</button></div>
+            <div class="panel-body" id="dashboard_list_users">
+              <!--<ul class="list-group" id="dashboard_list_users"></ul>-->
+            </div>
+            <button id="dashboard_user_refresh" type="button" class="btn btn-default">&#8635;</button>
+          </div>
+          
+          <div hidden id="dashboard_session_panel" class="panel panel-default">
+            <div class="panel-heading">
+              <div class="form-group">
+                <input type="search" class="form-control" value="" placeholder="Search" />                
+                <span class="input-icon fui-search"></span>              
+              </div>            
+            </div>
+            <div class="panel-body">
+              <ul class="list-group" id="dashboard_list_sessions"></ul>
+            </div>
+             <button id="dashboard_session_refresh" type="button" class="btn btn-default">&#8635;</button>
           </div>
         </div>
         <div class="col-md-9" id="dashboard_map_container" style="height: 90%;">         
