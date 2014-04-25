@@ -12,16 +12,14 @@
     
     <link href="favicon.ico" rel="icon" type="image/x-icon" />
     <!-- Libraries -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBU0E_xCCUSNw4bXqTKHxy6OFFeqyjXrXY&amp;sensor=true" type="text/javascript"></script>
-    <!--script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCk21t6ICUW7xeQMvz0qL1jL_VNwl7sLtw&amp;sensor=false" type="text/javascript"></script-->>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBU0E_xCCUSNw4bXqTKHxy6OFFeqyjXrXY&amp;sensor=true" type="text/javascript"></script>    
     <!-- Style -->
     <style type="text/css">
       body {
         padding-top: 50px;
         padding-bottom: 20px;
-      }                
-    
-</style>
+      }    
+  </style>
   </head>
   <body>
     <!-- Navigation Bar -->
@@ -35,7 +33,7 @@
         <div class="collapse navbar-collapse" id="navbar-collapse-01">        
           <ul class="nav navbar-nav navbar-left">
             <li><a id="home_link" class="navbar-brand" href="#page_content">GeoTracker</a></li>                     
-            <li class="dropdown" id="dashboard_menu">
+            <li hidden class="dropdown" id="dashboard_menu">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dashboard <b class="caret"></b></a>
               <span class="dropdown-arrow"></span>
               <ul class="dropdown-menu">
@@ -69,6 +67,7 @@
         <!--/.navbar-collapse -->
       </div>
     </div>
+    
     <!-- Alert Box -->
     <div id="page_alert" hidden="" class="alert alert-dismissable alert-danger">
     <b>Warning!</b> You best check yourself, you&#39;re not looking so good.</div>
@@ -105,8 +104,9 @@
       <footer class="footer">
         <p style="">© GeoTracker 2014</p>
       </footer>
-    </div>
+    </div>    
     <!-- /container -->
+    
     <!-- Load JS here for greater good =============================-->
     <script src="js/jquery-2.0.3.min.js"></script>
     <script src="js/jquery-ui-1.10.3.custom.min.js"></script>
