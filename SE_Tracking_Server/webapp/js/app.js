@@ -14,7 +14,7 @@ window.onload = function () {
 	}
 
 	// Initialize UI for anonymous user
-	$('#dashboard_link').hide();
+	$('#dashboard_menu').hide();
 	$('#navbar_form_logout').hide();
 	$('#navbar_form_login').hide();
 
@@ -110,11 +110,16 @@ window.onload = function () {
 		});
 	}
 
-	if ($('#dashboard_link')) {
-		$('#dashboard_link').click(function (e) {
+	if ($('#dashboard_menu')) {
+		$('#navbar_user_list').click(function (e) {
 			e.preventDefault ? e.preventDefault() : e.returnValue = false;
 			// --
-			showDashboard();
+			showDashboard("user-list");
+		});
+		$('#navbar_session_list').click(function (e) {
+			e.preventDefault ? e.preventDefault() : e.returnValue = false;
+			// --
+			showDashboard("session-list");
 		});
 	}
 
@@ -128,7 +133,7 @@ window.onload = function () {
 				$('#register_submit').click(buttonHandlerRegister);
 				$('#register_password').keyup(keypressHandlerPasswordCheck);
 				$('#register_password_repeat').keyup(keypressHandlerPasswordCheck);
-        $('#register_observable').prop('checked', true);
+				$('#register_observable').prop('checked', true);
 				// $('#navbar_form_login').hide();
 				$('#page_content').hide().fadeIn();
 			});
@@ -170,7 +175,7 @@ window.onload = function () {
 			//navigate to home
 			// window.location.href = "index.html"; // TODO: improve
 
-			$('#dashboard_link').hide();
+			$('#dashboard_menu').hide();
 			$('#navbar_form_logout').hide();
 			$('#navbar_form_login').show();
 
@@ -184,8 +189,8 @@ window.onload = function () {
 
 window.onresize = function (event) {
 	/*if ($('#googleMap')) {
-		$('#googleMap').width($('#dashboard_map_container').width());
-		$('#googleMap').height($('#dashboard_map_container').height());
+	$('#googleMap').width($('#dashboard_map_container').width());
+	$('#googleMap').height($('#dashboard_map_container').height());
 	}*/
 	if (map) {
 		var center = map.getCenter();
@@ -263,24 +268,43 @@ function listItemHandlerStopObservation(name, starttime, endtime) {
 
 // ----------------------------------------------------------------------------
 
-function showDashboard() {
-	$('#dashboard_link').fadeIn();
-	hideMessage();
-	$('#page_content').load('dashboard.html #content', function () {
-		// loadScript();
-		initializeMap();
-		getLocation();
-		// --
-		$('#dashboard_user_refresh').click(buttonHandlerRefreshUserList);
-		$('#dashboard_session_refresh').click(buttonHandlerRefreshSessionList);
-		sendRequestUserList(false);
-		sendRequestSessionList(true);
-		// --
-		$('#jumbotron').hide();
-		$('#navbar_form_logout').fadeIn();
-		$('#navbar_form_login').hide();
-		$('#page_content').hide().fadeIn();
-	});
+function showDashboard(content) {
+	$('#dashboard_menu').fadeIn();
+	if (!$('#googleMap').length) {
+		hideMessage();
+		$('#page_content').load('dashboard.html #content', function () {
+			// loadScript();
+			initializeMap();
+			getLocation();
+			// --
+			if (content == "user-list") {
+				$('#dashboard_user_panel').show();
+				$('#dashboard_user_refresh').click(buttonHandlerRefreshUserList);
+				sendRequestUserList(false);
+			} else if (content == "session-list") {
+				$('#dashboard_session_panel').show();
+				$('#dashboard_session_refresh').click(buttonHandlerRefreshSessionList);
+				sendRequestSessionList(true);
+			}
+			// --
+			$('#jumbotron').hide();
+			$('#navbar_form_logout').fadeIn();
+			$('#navbar_form_login').hide();
+			$('#page_content').hide().fadeIn();
+		});
+	} else {
+		if (content == "user-list") {
+			$('#dashboard_session_panel').hide();
+			$('#dashboard_user_panel').fadeIn();
+			$('#dashboard_user_refresh').click(buttonHandlerRefreshUserList);
+			sendRequestUserList(false);
+		} else if (content == "session-list") {
+			$('#dashboard_user_panel').hide();
+			$('#dashboard_session_panel').fadeIn();
+			$('#dashboard_session_refresh').click(buttonHandlerRefreshSessionList);
+			sendRequestSessionList(true);
+		}
+	}
 }
 
 /* ----------------------------------------------------------------------------
@@ -294,7 +318,7 @@ function handleResponseRegistration(data) {
 	if (data["message-type"] === 'response-ok') {
 		// Perform auto login
 		setCookie("session_id", data["message"], 7);
-		$('#dashboard_link').fadeIn();
+		$('#dashboard_menu').fadeIn();
 		$('#navbar_form_logout').fadeIn();
 		$('#navbar_form_login').hide();
 		// --
@@ -317,7 +341,7 @@ function handleResponseLogin(data) {
 	//success
 	if (data["message-type"] === 'response-ok') {
 		setCookie("session_id", data["message"], 7);
-		showDashboard();
+		showDashboard("user-list");
 	} else {
 		showErrorMessage("<b>Error!</b> " + data["message"]);
 	}
@@ -331,12 +355,12 @@ function handleResponseSessionCheck(data) {
 	if (data["message-type"] === 'response-ok') {
 		$('#navbar_form_logout').show();
 		$('#navbar_form_login').hide();
-		$('#dashboard_link').fadeIn();
+		$('#dashboard_menu').fadeIn();
 	} else {
 		//remove invalid session id
 		eraseCookie("session_id");
 		// --
-		$('#dashboard_link').hide();
+		$('#dashboard_menu').hide();
 		$('#navbar_form_logout').hide();
 		$('#navbar_form_login').fadeIn();
 	}
@@ -355,9 +379,9 @@ function handleResponseUserList(data) {
 			var observable = data["list"][user]["observable"];
 			var linkId = "dashboard_list_user_" + i;
 			// --
-			var html = "<a href=\"#\" id=\"" + linkId + "\" class=\"list-group-item\">" + name;
+			var html = "<a href=\"#\" class=\"list-group-item\" id=\"" + linkId + "\">" + name + "";
 			if (observable === true) {
-				html += "<span class=\"badge\">&#x2713;</span>";
+				html += "<i class=\"glyphicon fui-check\" style=\"float: right; margin-top: 6px; margin-right: 10px\"/>";
 			}
 			html += "</a>";
 			// --
@@ -394,7 +418,7 @@ function handleResponseSessionList(data) {
 			// --
 			var html = "<a href=\"#\" id=\"" + linkId + "\" class=\"list-group-item\">" + name + " (" + starttime + ")";
 			if (endtime) {
-				html += "<span class=\"badge\">&#x2713;</span>";
+				html += "<i class=\"glyphicon fui-check\" style=\"float: right; margin-top: 6px; margin-right: 10px\"/>";
 			}
 			html += "</a>";
 			// --
