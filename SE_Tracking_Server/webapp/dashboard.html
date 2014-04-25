@@ -6,10 +6,10 @@
     <title>GeoTracker - Dashboard</title>   
     <link href="favicon.ico" rel="icon" type="image/x-icon" />
   </head>
-  <body style="height:100%;width:100%">
+  <body>
     <div id="content" class="container" style="height: 80%;">
       <div class="row" style="height: 100%; margin-top:20px">
-        <div class="col-md-3" style="height: 90%;"> 
+        <div class="col-xs-12 col-lg-3 col-sm-3" > 
           <div hidden id="dashboard_user_panel" class="panel panel-default">
             <div class="panel-heading">
               <div class="form-group">
@@ -17,8 +17,8 @@
                 <span class="input-icon fui-search"></span>              
               </div>            
             </div>
-            <div class="panel-body" id="dashboard_list_users">
-              <!--<ul class="list-group" id="dashboard_list_users"></ul>-->
+            <div class="panel-body" >
+              <ul class="list-group" id="dashboard_list_users"></ul>
             </div>
             <button id="dashboard_user_refresh" type="button" class="btn btn-default">&#8635;</button>
           </div>
@@ -36,7 +36,7 @@
              <button id="dashboard_session_refresh" type="button" class="btn btn-default">&#8635;</button>
           </div>
         </div>
-        <div class="col-md-9" id="dashboard_map_container" style="height: 90%;">         
+        <div class="col-xs-12 col-lg-9 col-sm-9" id="dashboard_map_container" style="height: 90%;">         
           <div id="googleMap" style="position: relative; background-color: rgb(229, 227, 223); overflow: hidden;"></div>
         </div>
       </div>

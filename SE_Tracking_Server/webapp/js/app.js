@@ -6,7 +6,7 @@ var conversations = {};
 
 window.onload = function () {
 	// Create a new WebSocket.
-	socket = new WebSocket('wss://localhost:443/');
+	socket = new WebSocket('wss://' + document.domain + ':8443/');
 
 	// always redirect to index.html
 	if (document.URL.indexOf('index.html') == -1) {

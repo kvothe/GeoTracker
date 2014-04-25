@@ -298,6 +298,7 @@ public class WebSocketSession {
 					// crude implementation due to workaround for quick-json bug with trailing commas
 					Map<String, Object> session = new HashMap<String, Object>();
 					UserObject u = DatabaseService.queryUser(s.getObserved());
+					session.put("id", s.getId());
 					if (u != null) {
 						session.put("observed", u.getName());
 					}
