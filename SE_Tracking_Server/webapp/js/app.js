@@ -157,7 +157,7 @@ window.onload = function () {
 			var password = $('#login_password').val();
 
 			if (username.length > 4 && password.length > 6) {
-				sendLoginRequest(username, password);
+				sendLoginRequest(username, password);        
 				hideMessage();
 			} else {
 				console.log("login error");
@@ -346,7 +346,11 @@ function handleResponseLogin(data) {
 	//success
 	if (data["message-type"] === 'response-ok') {
 		setCookie("session_id", data["message"], 7);
+    // --
+    $('#login_username').val('');
+    $('#login_password').val('');
 		$('#navbar_user_name').html("Welcome " + currentUsername + "!<b class=\"caret\">");
+    // --
 		showDashboard("user-list");
 	} else {
 		currentUsername = null;
