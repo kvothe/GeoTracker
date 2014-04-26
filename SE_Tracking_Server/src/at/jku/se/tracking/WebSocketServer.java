@@ -14,6 +14,8 @@ import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 
 import at.jku.se.tracking.database.DatabaseService;
 
+import java.io.File;
+import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +26,11 @@ import java.util.List;
  * @author markus.hofmarcher
  */
 public class WebSocketServer {
+
+	public static String WORKING_DIR;
+
+	// ------------------------------------------------------------------------
+
 	private Server server;
 	private String host;
 	private int port;
@@ -35,13 +42,21 @@ public class WebSocketServer {
 	// ------------------------------------------------------------------------
 
 	public static void main(String[] args) throws Exception {
+		File dir = new File(WebSocketServer.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+		if (dir.isFile()) {
+			WORKING_DIR = dir.getParent();
+		} else {
+			WORKING_DIR = dir.getPath();
+		}
+
+		System.out.println("Working Directory: " + WORKING_DIR);
+		// --
 		WebSocketServer webSocketServer = new WebSocketServer();
 		// Host / Port
 		webSocketServer.setHost("0.0.0.0");
 		webSocketServer.setPort(8443);
 		// SSL Keystore
-		webSocketServer.setKeyStoreResource(new FileResource(WebSocketServer.class.getClassLoader().getResource(
-				"resources/keystore.jks")));
+		webSocketServer.setKeyStoreResource(new FileResource(new URL("file://" + WORKING_DIR + File.separator + "resources/keystore.jks")));
 		webSocketServer.setKeyStorePassword("password");
 		webSocketServer.setKeyManagerPassword("password");
 		// Register WebSocket handler
@@ -60,8 +75,7 @@ public class WebSocketServer {
 		sslContextFactory.setKeyStoreResource(keyStoreResource);
 		sslContextFactory.setKeyStorePassword(keyStorePassword);
 		sslContextFactory.setKeyManagerPassword(keyManagerPassword);
-		SslConnectionFactory sslConnectionFactory = new SslConnectionFactory(sslContextFactory,
-				HttpVersion.HTTP_1_1.asString());
+		SslConnectionFactory sslConnectionFactory = new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString());
 		// --
 		HttpConnectionFactory httpConnectionFactory = new HttpConnectionFactory(new HttpConfiguration());
 		// --
