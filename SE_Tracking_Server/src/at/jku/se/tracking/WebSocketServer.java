@@ -31,6 +31,10 @@ public class WebSocketServer {
 
 	// ------------------------------------------------------------------------
 
+	private static final int DEFAULT_PORT = 443;
+
+	// ------------------------------------------------------------------------
+
 	private Server server;
 	private String host;
 	private int port;
@@ -42,19 +46,55 @@ public class WebSocketServer {
 	// ------------------------------------------------------------------------
 
 	public static void main(String[] args) throws Exception {
-		File dir = new File(WebSocketServer.class.getProtectionDomain().getCodeSource().getLocation().getPath());
-		if (dir.isFile()) {
-			WORKING_DIR = dir.getParent();
-		} else {
-			WORKING_DIR = dir.getPath();
+		int port = DEFAULT_PORT;
+		// --
+		for (String a : args) {
+			String[] arg = parseArgument(a);
+			// --
+			if (arg.length == 2) {
+				switch (arg[0]) {
+				case "-dir":
+					File workingDir = new File(arg[1]);
+					if (workingDir.exists() && workingDir.isDirectory()) {
+						WORKING_DIR = workingDir.getCanonicalPath();
+					} else {
+						System.err.println("working dir not exist or is invalid (" + workingDir.getAbsolutePath() + ")");
+						return;
+					}
+					break;
+				case "-port":
+					try {
+						port = Integer.parseInt(arg[1]);
+					} catch (NumberFormatException e) {
+						System.err.println("invalid port (" + arg[1] + ")");
+						return;
+					}
+					break;
+				case "-h":
+				case "-help":
+				case "--help":
+					System.out.println("java -jar <jar-name> [-dir:<working-directory>] [-port:<portnumber>]");
+					break;
+				}
+			}
 		}
-
+		// --
+		if (WORKING_DIR == null) {
+			File dir = new File(WebSocketServer.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+			if (dir.isFile()) {
+				WORKING_DIR = dir.getParent();
+			} else {
+				WORKING_DIR = dir.getPath();
+			}
+		}
+		// --
 		System.out.println("Working Directory: " + WORKING_DIR);
+		System.out.println("Starting server on port '" + port + "'...");
 		// --
 		WebSocketServer webSocketServer = new WebSocketServer();
 		// Host / Port
 		webSocketServer.setHost("0.0.0.0");
-		webSocketServer.setPort(8443);
+		webSocketServer.setPort(port);
 		// SSL Keystore
 		webSocketServer.setKeyStoreResource(new FileResource(new URL("file://" + WORKING_DIR + File.separator + "resources/keystore.jks")));
 		webSocketServer.setKeyStorePassword("password");
@@ -64,6 +104,17 @@ public class WebSocketServer {
 		// Initialize and start the server
 		webSocketServer.initialize();
 		webSocketServer.start();
+	}
+
+	// ------------------------------------------------------------------------
+
+	private static String[] parseArgument(String arg) {
+		if (arg.contains(":")) {
+			int idx = arg.indexOf(":");
+			return new String[] { arg.substring(0, idx), arg.substring(idx + 1) };
+		} else {
+			return new String[] { arg };
+		}
 	}
 
 	// ------------------------------------------------------------------------
