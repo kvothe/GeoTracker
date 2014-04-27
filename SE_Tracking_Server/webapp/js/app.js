@@ -7,9 +7,17 @@ var currentUsername;
 
 var browserSupportsLocation = new Boolean();
 
+var path;
+var points;
+var markers;
+
 window.onload = function () {
 	// Create a new WebSocket.
-	socket = new WebSocket('wss://' + document.domain + ':8443/');
+	if (location.port) {
+		socket = new WebSocket('wss://' + location.hostname + ':' + location.port);
+	} else {
+		socket = new WebSocket('wss://' + location.hostname);
+	}
 
 	// always redirect to index.html
 	if (document.URL.indexOf('index.html') == -1) {
@@ -157,7 +165,7 @@ window.onload = function () {
 			var password = $('#login_password').val();
 
 			if (username.length > 4 && password.length > 6) {
-				sendLoginRequest(username, password);        
+				sendLoginRequest(username, password);
 				hideMessage();
 			} else {
 				console.log("login error");
@@ -346,11 +354,11 @@ function handleResponseLogin(data) {
 	//success
 	if (data["message-type"] === 'response-ok') {
 		setCookie("session_id", data["message"], 7);
-    // --
-    $('#login_username').val('');
-    $('#login_password').val('');
+		// --
+		$('#login_username').val('');
+		$('#login_password').val('');
 		$('#navbar_user_name').html("Welcome " + currentUsername + "!<b class=\"caret\">");
-    // --
+		// --
 		showDashboard("user-list");
 	} else {
 		currentUsername = null;
@@ -364,14 +372,14 @@ function handleResponseSessionCheck(data) {
 	console.log('Handle Session Check Response');
 	// --
 	if (data["message-type"] === 'response-ok') {
-    console.log(data);
-    currentUsername = data["message"];
-    $('#navbar_user_name').html("Welcome " + currentUsername + "!<b class=\"caret\">");
+		console.log(data);
+		currentUsername = data["message"];
+		$('#navbar_user_name').html("Welcome " + currentUsername + "!<b class=\"caret\">");
 		$('#navbar_form_logout').show();
 		$('#navbar_form_login').hide();
 		$('#dashboard_menu').fadeIn();
 	} else {
-    currentUsername = null;
+		currentUsername = null;
 		//remove invalid session id
 		eraseCookie("session_id");
 		// --
@@ -455,8 +463,6 @@ function handleResponseSessionList(data) {
 				entryId : entryId,
 				observationid : observationid
 			}, function (event) {
-				//listItemHandlerStopObservation(event.data.observationid, event.data.user, event.data.starttime, event.data.endtime);
-				console.log("request session points " + event.data.observationid);
 				sendRequestSessionPoints(event.data.observationid);
 			});
 
@@ -476,52 +482,13 @@ function handleResponseSessionList(data) {
 }
 
 // ----------------------------------------------------------------------------
-var path;
-var marker;
+
+
 function handleResponseSessionPoints(data) {
 	console.log('Handle Session Points Response');
 	// --
-	//console.log(data);
-	if (path) {
-		path.setMap(null);
-	}
 	if (data["message-type"] === 'response-list') {
-		var pointList = [];
-		var bounds = new google.maps.LatLngBounds();
-		// --
-		for (var point in data["list"]) {
-			var timestamp = data["list"][point]["timestamp"];
-			var latitude = data["list"][point]["latitude"];
-			var longitude = data["list"][point]["longitude"];
-			var accuracy = data["list"][point]["accuracy"];
-			// --
-			var latlng = new google.maps.LatLng(latitude, longitude);
-			pointList.push(latlng);
-			bounds.extend(latlng);
-		}
-
-		if (pointList.length) {
-			path = new google.maps.Polyline({
-					path : pointList,
-					geodesic : true,
-					strokeColor : '#FF0000',
-					strokeOpacity : 1.0,
-					strokeWeight : 2
-				});
-
-			if (map) {
-				if (marker) {
-					marker.setMap(null);
-				}
-				path.setMap(map);
-				map.fitBounds(bounds);
-			}
-		} else {
-			if (map) {
-				console.log("no points");
-				setMapToCurrentPosition();
-			}
-		}
+		setPath(data["list"]);
 	}
 }
 
@@ -659,7 +626,6 @@ function sendRequestSessionList(listObserved, listObservers) {
 }
 
 function sendRequestSessionPoints(observationid) {
-	console.log(observationid);
 	var mcid = ++cid;
 	var request = {
 		"cid" : mcid,
@@ -799,6 +765,113 @@ function initializeMap() {
 
 // ----------------------------------------------------------------------------
 
+function clearMarkers() {
+	if (markers) {
+		while (markers.length > 0) {
+			var marker = markers.pop();
+			marker.setMap(null);
+		}
+	}
+}
+
+function addMarker(marker) {
+	if (!markers) {
+		markers = new Array();
+	}
+	markers.push(marker);
+	marker.setMap(map);
+}
+
+// ----------------------------------------------------------------------------
+
+function clearPath() {}
+
+function setPath(coordList) {
+	// clear path
+	if (path) {
+		path.setMap(null);
+	}
+	// clear points
+	if (points) {
+		while (points.length > 0) {
+			var point = points.pop();
+			point.setMap(null);
+		}
+	} else {
+		points = new Array();
+	}
+	// clear markers
+	clearMarkers();
+	// --
+	if (!coordList || coordList.length == 0) {
+		console.log("no points");
+		setMapToCurrentPosition();
+	} else {
+		var pointList = [];
+		var bounds = new google.maps.LatLngBounds();
+
+		// build path and add points
+		for (var point in coordList) {
+			var timestamp = coordList[point]["timestamp"];
+			var latitude = coordList[point]["latitude"];
+			var longitude = coordList[point]["longitude"];
+			var accuracy = coordList[point]["accuracy"];
+			// --
+			var latlng = new google.maps.LatLng(latitude, longitude);
+			pointList.push(latlng);
+			bounds.extend(latlng);
+			// --
+			var pathPoint = {
+				strokeColor : '#FF0000',
+				strokeOpacity : 0.8,
+				strokeWeight : 2,
+				fillColor : '#FF0000',
+				fillOpacity : 0.35,
+				map : map,
+				center : latlng,
+				radius : accuracy / 100
+			};
+			// --
+			points.push(new google.maps.Circle(pathPoint));
+		}
+
+		// Set Path
+		path = new google.maps.Polyline({
+				path : pointList,
+				geodesic : true,
+				strokeColor : '#FF0000',
+				strokeOpacity : 1.0,
+				strokeWeight : 2
+			});
+		path.setMap(map);
+
+		// Add Markers
+		if (pointList.length > 0) {
+			var start = pointList[0];
+			var startMarker = new google.maps.Marker({
+					position : start,
+					map : map,
+					title : 'Start'
+				});
+			addMarker(startMarker);
+			// --
+			if (pointList.length > 1) {
+				var end = pointList[0];
+				var endMarker = new google.maps.Marker({
+						position : end,
+						map : map,
+						title : 'Finish'
+					});
+				addMarker(endMarker);
+			}
+		}
+
+		// Set map bounds
+		map.fitBounds(bounds);
+	}
+}
+// ----------------------------------------------------------------------------
+
 function positionChanged(position) {
 	var myLatlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
 	sendLocationUpdate(position);
@@ -811,17 +884,13 @@ function setMapToCurrentPosition() {
 			console.log("position update");
 			var myLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
 			// --
-			if (!marker) {
-				marker = new google.maps.Marker({
-						position : myLatLng,
-						map : map,
-						title : 'You are here'
-					});
-			} else {
-				marker.setMap(null);
-				marker.setPosition(myLatLng);
-				marker.setMap(map);
-			}
+			clearMarkers();
+			var marker = new google.maps.Marker({
+					position : myLatLng,
+					map : map,
+					title : 'You are here'
+				});
+			addMarker(marker);
 			// --
 			map.setCenter(myLatLng);
 		}, function () {
