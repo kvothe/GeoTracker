@@ -8,6 +8,7 @@ import at.jku.se.tracking.messages.serialization.AMessage;
 public class MsgLocationUpdate extends AMessage {
 
 	private static final String FIELD_SESSION_ID = "session-id";
+	private static final String FIELD_USERNAME = "username";
 	private static final String FIELD_LATITUDE = "latitude";
 	private static final String FIELD_LONGITUDE = "logitude";
 	private static final String FIELD_ACCURACY = "accuracy";
@@ -23,10 +24,10 @@ public class MsgLocationUpdate extends AMessage {
 		setMap(map);
 	}
 
-	public MsgLocationUpdate(String sessionId, double latitude, double longitude, double accuracy, float altitude, float altitudeAccuracy,
+	public MsgLocationUpdate(String username, double latitude, double longitude, double accuracy, float altitude, float altitudeAccuracy,
 			double heading, float speed, long timestamp) {
 		setType(MessageType.LOCATION_UPDATE);
-		setValue(FIELD_SESSION_ID, sessionId);
+		setValue(FIELD_USERNAME, username);
 		setValue(FIELD_LATITUDE, latitude);
 		setValue(FIELD_LONGITUDE, longitude);
 		setValue(FIELD_ACCURACY, accuracy);
@@ -39,6 +40,12 @@ public class MsgLocationUpdate extends AMessage {
 
 	// ------------------------------------------------------------------------
 
+	public String getSessionId() {
+		return (String) getValue(FIELD_SESSION_ID);
+	}
+	public String getUsername() {
+		return (String) getValue(FIELD_USERNAME);
+	}
 	public double getLatitude() {
 		return returnDouble(FIELD_LATITUDE, LocationConstants.LONG_LAT_NULL);
 	}
