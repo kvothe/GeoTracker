@@ -59,14 +59,6 @@ public class WebSocketSession {
 
 	@OnWebSocketMessage
 	public void onMessage(String message) {
-		// TODO: define messages for actions
-		// 1) Register
-		// 2) Authenticate
-		// 3) List observable users
-		// 4) Request observation
-		// 5) Stop observation
-		// 6) Show tracking sessions
-		// ------------------------------
 		// Store authenticated users remote session for push messages
 		System.out.println("--> " + message);
 		// --
@@ -167,7 +159,7 @@ public class WebSocketSession {
 				user = new UserObject(username, encryptedPassword, salt, registration.isObservable());
 				// Store user
 				long userId = DatabaseService.insertUser(user);
-				// TODO: perform login
+				// perform login
 				if (userId != -1) {
 					String sessionId = UUID.randomUUID().toString();
 					this.session = new UserSession(sessionId, user.getName(), userId, System.currentTimeMillis());
@@ -181,13 +173,11 @@ public class WebSocketSession {
 				}
 			}
 		} catch (GeneralSecurityException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-			sendMessage(new MsgError(registration.getConversationId(), e));
+			sendMessage(new MsgError(registration.getConversationId(), "Something went terribly wrong, try again if you dare..."));
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-			sendMessage(new MsgError(registration.getConversationId(), e));
+			sendMessage(new MsgError(registration.getConversationId(), "Well, something went wrong. Go pester your admin!"));
 		}
 	}
 
@@ -216,10 +206,10 @@ public class WebSocketSession {
 			}
 		} catch (GeneralSecurityException e) {
 			e.printStackTrace();
-			sendMessage(new MsgError(login.getConversationId(), e));
+			sendMessage(new MsgError(login.getConversationId(), "Something went terribly wrong, try again if you dare..."));
 		} catch (SQLException e) {
 			e.printStackTrace();
-			sendMessage(new MsgError(login.getConversationId(), e));
+			sendMessage(new MsgError(login.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
 		}
 	}
 
@@ -250,12 +240,14 @@ public class WebSocketSession {
 				if (DatabaseService.insertLocation(geoObject)) {
 					sendMessage(new MsgOk(location.getConversationId()));
 				} else {
-					sendMessage(new MsgError(location.getConversationId(), "problem inserting location"));
+					sendMessage(new MsgError(location.getConversationId(), "We have a problem storing your location..."));
 				}
+				// TODO: push update
+				SessionObserver.pushLocationUpdate(timestamp, session.getUserId(), session.getUsername(), location.getLongitude(),
+						location.getLatitude(), location.getAccuracy());
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
-				sendMessage(new MsgError(location.getConversationId(), e));
+				sendMessage(new MsgError(location.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
 			}
 		}
 	}
@@ -283,9 +275,8 @@ public class WebSocketSession {
 				// --
 				sendMessage(new MsgResponseList(request.getConversationId(), userList));
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
-				sendMessage(new MsgError(request.getConversationId(), e));
+				sendMessage(new MsgError(request.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
 			}
 		}
 	}
@@ -297,7 +288,7 @@ public class WebSocketSession {
 			try {
 				List<Map<String, Object>> sessionList = new ArrayList<Map<String, Object>>();
 				// --
-				List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(session.getUserId(), true, false);
+				List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(session.getUserId(), true, false, false);
 				// --
 				for (TrackingSessionObject s : sessions) {
 					// crude implementation due to workaround for quick-json bug with trailing commas
@@ -315,9 +306,8 @@ public class WebSocketSession {
 				// --
 				sendMessage(new MsgResponseList(request.getConversationId(), sessionList));
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
-				sendMessage(new MsgError(request.getConversationId(), e));
+				sendMessage(new MsgError(request.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
 			}
 		}
 	}
@@ -344,9 +334,8 @@ public class WebSocketSession {
 				// --
 				sendMessage(new MsgResponseList(request.getConversationId(), pointList));
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
-				sendMessage(new MsgError(request.getConversationId(), e));
+				sendMessage(new MsgError(request.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
 			}
 		}
 	}
@@ -378,9 +367,8 @@ public class WebSocketSession {
 					sendMessage(new MsgError(request.getConversationId(), "User doesn't exist"));
 				}
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
-				sendMessage(new MsgError(request.getConversationId(), e));
+				sendMessage(new MsgError(request.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
 			}
 		}
 	}
@@ -426,9 +414,8 @@ public class WebSocketSession {
 					sendMessage(new MsgError(request.getConversationId(), "User doesn't exist"));
 				}
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
-				sendMessage(new MsgError(request.getConversationId(), e));
+				sendMessage(new MsgError(request.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
 			}
 		}
 	}

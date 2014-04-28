@@ -1,14 +1,18 @@
 package at.jku.se.tracking;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import at.jku.se.tracking.database.UserObject;
+import at.jku.se.tracking.database.DatabaseService;
+import at.jku.se.tracking.database.TrackingSessionObject;
+import at.jku.se.tracking.messages.MsgLocationUpdate;
 import at.jku.se.tracking.messages.MsgNotification;
+import at.jku.se.tracking.messages.serialization.AMessage;
 
 public class SessionObserver {
 	static final long SESSION_EXPIRATION_DURATION = 1 * 60 * 60 * 1000; // 1 hour of inactivity
@@ -94,50 +98,64 @@ public class SessionObserver {
 
 	// ------------------------------------------------------------------------
 
-	public static void pushLocationUpdate(long userId, double newLong, double newLat) {
+	public static void pushLocationUpdate(long timestamp, long userId, String username, double newLong, double newLat, double newAccuracy) {
 		// TODO:
 		// 1) query database for users currently observing "userId"
 		// 2) push new location to these users
+		try {
+			MsgLocationUpdate locationUpdate = new MsgLocationUpdate(username, newLat, newLong, newAccuracy, Float.NaN, Float.NaN, Double.NaN,
+					Float.NaN, timestamp);// TODO
+			// --
+			List<Long> notifyUsers = new ArrayList<Long>();
+			List<TrackingSessionObject> observations = DatabaseService.queryTrackingSessions(userId, true, false, true);
+			for (TrackingSessionObject s : observations) {
+				long observer = s.getObserver();
+				if (!notifyUsers.contains(observer)) {
+					notifyUsers.add(observer);
+				}
+			}
+			long[] tmp = new long[notifyUsers.size()];
+			for (int i = 0; i < notifyUsers.size(); i++) {
+				tmp[i] = notifyUsers.get(i);
+			}
+			sendMessageTo(locationUpdate, tmp);
+		} catch (SQLException e) {
+			System.err.println("Error while pushing location update...");
+			e.printStackTrace();
+		}
 	}
-
 	// ------------------------------------------------------------------------
 
 	public static void pushNotifyStartObservation(long observedId, String observerName) {
-		List<WebSocketSession> notifySessions = new ArrayList<WebSocketSession>();
-		// collect relevant sessions
-		synchronized (SESSIONS) {
-			for (Entry<UserSession, WebSocketSession> s : SESSIONS.entrySet()) {
-				if (s.getKey().getUserId() == observedId && s.getValue() != null) {
-					notifySessions.add(s.getValue());
-				}
-			}
-		}
-		// --
-		for (WebSocketSession s : notifySessions) {
-			try {
-				s.sendMessage(new MsgNotification(observerName + " is now observing you"));
-			} catch (IOException e) {
-				System.err.println(e.getMessage());
-			}
-		}
+		sendMessageTo(new MsgNotification(observerName + " is now observing you"), observedId);
 	}
 
 	// ------------------------------------------------------------------------
 
 	public static void pushNotifyStopObservation(long observedId, String observerName) {
+		sendMessageTo(new MsgNotification(observerName + " has stopped observing you"), observedId);
+	}
+
+	// ------------------------------------------------------------------------
+
+	private static void sendMessageTo(AMessage msg, long... receipients) {
 		List<WebSocketSession> notifySessions = new ArrayList<WebSocketSession>();
 		// collect relevant sessions
 		synchronized (SESSIONS) {
 			for (Entry<UserSession, WebSocketSession> s : SESSIONS.entrySet()) {
-				if (s.getKey().getUserId() == observedId && s.getValue() != null) {
-					notifySessions.add(s.getValue());
+				for (long receipient : receipients) {
+					if (s.getKey().getUserId() == receipient && s.getValue() != null) {
+						if (!notifySessions.contains(s.getValue())) {
+							notifySessions.add(s.getValue());
+						}
+					}
 				}
 			}
 		}
 		// --
 		for (WebSocketSession s : notifySessions) {
 			try {
-				s.sendMessage(new MsgNotification(observerName + " has stopped observing you"));
+				s.sendMessage(msg);
 			} catch (IOException e) {
 				System.err.println(e.getMessage());
 			}

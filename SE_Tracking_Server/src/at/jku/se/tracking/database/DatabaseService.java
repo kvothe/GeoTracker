@@ -294,31 +294,38 @@ public class DatabaseService {
 
 	// ------------------------------------------------------------------------
 
-	public static List<TrackingSessionObject> queryTrackingSessions(long userId, boolean listObserved, boolean listObservers) throws SQLException {
-		if (CONNECTION_POOL == null) {
-			return null;
-		}
-		// --
+	public static List<TrackingSessionObject> queryTrackingSessions(long userId, boolean listObserved, boolean listObservers, boolean activeOnly)
+			throws SQLException {
 		List<TrackingSessionObject> sessions = new ArrayList<TrackingSessionObject>();
-		if (!listObserved && !listObservers) {
+		if (CONNECTION_POOL == null || !listObserved && !listObservers) {
 			return sessions;
 		}
 		// --
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
 		// --
 		PreparedStatement query = null;
+		String stmt = "SELECT * FROM [" + TrackingSessionObject.TABLE_NAME + "] WHERE ";
 		if (listObserved && listObservers) {
-			query = con.prepareStatement("SELECT * FROM [" + TrackingSessionObject.TABLE_NAME + "] WHERE [" + TrackingSessionObject.COLUMN_OBSERVER
-					+ "] = ? OR [" + TrackingSessionObject.COLUMN_OBSERVED + "] = ?");
+			stmt += "[" + TrackingSessionObject.COLUMN_OBSERVER + "] = ? OR [" + TrackingSessionObject.COLUMN_OBSERVED + "] = ?";
+			if (activeOnly) {
+				stmt += " AND [" + TrackingSessionObject.COLUMN_ENDTIME + "] IS NULL";
+			}
+			query = con.prepareStatement(stmt);
 			query.setLong(1, userId);
 			query.setLong(2, userId);
 		} else if (listObserved) {
-			query = con.prepareStatement("SELECT * FROM [" + TrackingSessionObject.TABLE_NAME + "] WHERE " + TrackingSessionObject.COLUMN_OBSERVER
-					+ " = ?");
+			stmt += "[" + TrackingSessionObject.COLUMN_OBSERVER + "] = ?";
+			if (activeOnly) {
+				stmt += " AND [" + TrackingSessionObject.COLUMN_ENDTIME + "] IS NULL";
+			}
+			query = con.prepareStatement(stmt);
 			query.setLong(1, userId);
 		} else if (listObservers) {
-			query = con.prepareStatement("SELECT * FROM [" + TrackingSessionObject.TABLE_NAME + "] WHERE " + TrackingSessionObject.COLUMN_OBSERVED
-					+ " = ?");
+			stmt += "[" + TrackingSessionObject.COLUMN_OBSERVED + "] = ?";
+			if (activeOnly) {
+				stmt += " AND [" + TrackingSessionObject.COLUMN_ENDTIME + "] IS NULL";
+			}
+			query = con.prepareStatement(stmt);
 			query.setLong(1, userId);
 		}
 		// --
