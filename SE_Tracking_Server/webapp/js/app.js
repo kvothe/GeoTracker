@@ -93,6 +93,9 @@ window.onload = function () {
       case "notification":
         handleNotification(message[0]);
         break;
+      case "location-update":
+        handleLocationUpdateNotification(message[0]);
+        break;
       }
     }
     return false;
@@ -249,6 +252,11 @@ function keypressHandlerPasswordCheck(event) {
   }
 }
 
+function searchObservationKeyUp(e) {
+  var query = $('#dashboard_session_search').val();
+  searchObservationList(query);
+}
+
 function buttonHandlerRefreshUserList(e) {
   e.preventDefault ? e.preventDefault() : e.returnValue = false;
   sendRequestUserList(false);
@@ -296,6 +304,7 @@ function showDashboard(content) {
       } else if (content == "session-list") {
         $('#dashboard_session_panel').show();
         $('#dashboard_session_refresh').click(buttonHandlerRefreshSessionList);
+        $('#dashboard_session_search').keyup(searchObservationKeyUp);
         sendRequestSessionList(true);
       }
       // --
@@ -394,12 +403,20 @@ function handleResponseUserList(data) {
   console.log('Handle User List Response');
   // --
   if (data["message-type"] === 'response-list') {
+    userList = new Array();
     var i = 1;
     $('#dashboard_list_users').html("");
     for (var user in data["list"]) {
       var name = data["list"][user]["name"];
       var observable = data["list"][user]["observable"];
       var linkId = "dashboard_list_user_" + i;
+      // --
+      userList.push({
+        "name" : name,
+        "observable" : observable,
+        "labelid" : linkId,
+        "buttonid" : linkId
+      });
       // --
       var html = "<a href=\"#\" class=\"list-group-item\" id=\"" + linkId + "\">" + name + "";
       if (observable === true) {
@@ -422,12 +439,17 @@ function handleResponseUserList(data) {
   }
 }
 
+var observationList;
+var userList;
+var currentObservation;
+
 // ----------------------------------------------------------------------------
 
 function handleResponseSessionList(data) {
   console.log('Handle Session List Response');
   // --
   if (data["message-type"] === 'response-list') {
+    observationList = new Array();
     var i = 1;
     $('#dashboard_list_sessions').html("");
     for (var session in data["list"]) {
@@ -439,22 +461,16 @@ function handleResponseSessionList(data) {
       var entryId = "dashboard_list_session_observed_" + i;
       var buttonId = "dashboard_list_session_observed_cancel_" + i;
       // --
-      var html = "<a href=\"#\" id=\"" + entryId + "\" class=\"list-group-item\"><small>"
-         + formatDate(starttime) + "</small><br><b>"
-         + name;
-      if (endtime) {
-        html += "<i class=\"glyphicon fui-check\" style=\"float: right; margin-top: 6px; margin-right: 10px\"/>";
-        html += "</b><br><small>"
-        html += formatTimestamp(starttime);
-        html += " - " + formatTimestamp(endtime) + "</small>"
-      } else {
-        html += "<button id=\"" + buttonId + "\" class=\"btn btn-xs btn-primary btn-circle\" style=\"float: right; margin-top:-2px; margin-right:3px\">";
-        html += "<i class=\"glyphicon fui-cross\"/></button>";
-        html += "</b><br><small>"
-        html += formatTimestamp(starttime);
-        html += "</small>"
-      }
-      html += "</a>";
+      observationList.push({
+        "id" : observationid,
+        "user" : name,
+        "starttime" : starttime,
+        "endtime" : endtime,
+        "elementid" : entryId,
+        "buttonid" : buttonId
+      });
+      // --
+      html = generateSessionEntryHtml(entryId, buttonId, name, starttime, endtime);
       // --
       $('#dashboard_list_sessions').append(html);
       // --
@@ -463,6 +479,7 @@ function handleResponseSessionList(data) {
         observationid : observationid
       }, function (event) {
         sendRequestSessionPoints(event.data.observationid);
+        currentObservation = event.data.observationid;
       });
 
       $('#' + buttonId).click({
@@ -478,6 +495,27 @@ function handleResponseSessionList(data) {
       i++;
     }
   }
+}
+
+function generateSessionEntryHtml(entryId, buttonId, name, starttime, endtime) {
+  var html = "<a href=\"#\" id=\"" + entryId + "\" class=\"list-group-item\"><small>"
+     + formatDate(starttime) + "</small><br><b>"
+     + name;
+  if (endtime) {
+    html += "<i class=\"glyphicon fui-check\" style=\"float: right; margin-top: 6px; margin-right: 10px\"/>";
+    html += "</b><br><small>"
+    html += formatTimestamp(starttime);
+    html += " - " + formatTimestamp(endtime) + "</small>"
+  } else {
+    html += "<button id=\"" + buttonId + "\" class=\"btn btn-xs btn-primary btn-circle\" style=\"float: right; margin-top:-2px; margin-right:3px\">";
+    html += "<i class=\"glyphicon fui-cross\"/></button>";
+    html += "</b><br><small>"
+    html += formatTimestamp(starttime);
+    html += "</small>"
+  }
+  html += "</a>";
+  // --
+  return html;
 }
 
 // ----------------------------------------------------------------------------
@@ -523,6 +561,26 @@ function handleNotification(data) {
   console.log('Handle Notification');
   var message = data["message"];
   showInfoMessage(message);
+}
+
+function handleLocationUpdateNotification(data) {
+  console.log('Handle Location Update Notification')
+  // --
+  var username = data["username"];
+  var longitude = data["longitude"];
+  var latitude = data["latitude"];
+  var accuracy = data["accuracy"];
+  // --
+  // Look for username in current session list
+  for (var session in sessionList) {
+    var sessionUser = session["username"];
+    if (username === sessionUser) {
+      var sessionId = session["id"];
+      if (sessionId == currentObservation) {
+        // TODO extend current path
+      }
+    }
+  }
 }
 
 /* ----------------------------------------------------------------------------
@@ -660,6 +718,22 @@ function sendRequestStopObservation(observationid, name, userIsObserver) {
   };
   conversations[mcid] = "request-stop-observation";
   socket.send(JSON.stringify(request));
+}
+
+/* ----------------------------------------------------------------------------
+Client Side UI Functions
+--------------------------------------------------------------------------- */
+function searchObservationList(query) {
+  for (var observation in observationList) {
+    var elementId = observationList[observation]["elementid"];
+    var username = observationList[observation]["user"];
+    // --
+    if (query && username && username.indexOf(query) == -1) {
+      $('#' + elementId).hide();
+    } else {
+      $('#' + elementId).show();
+    }
+  }
 }
 
 /* ----------------------------------------------------------------------------
@@ -815,6 +889,7 @@ function setPath(coordList) {
       var latitude = coordList[point]["latitude"];
       var longitude = coordList[point]["longitude"];
       var accuracy = coordList[point]["accuracy"];
+      accuracy = accuracy == 0 ? 0 : accuracy / 100;
       // --
       var latlng = new google.maps.LatLng(latitude, longitude);
       pointList.push(latlng);
@@ -828,7 +903,7 @@ function setPath(coordList) {
         fillOpacity : 0.35,
         map : map,
         center : latlng,
-        radius : accuracy / 100
+        radius : accuracy
       };
       // --
       points.push(new google.maps.Circle(pathPoint));
