@@ -167,7 +167,7 @@ window.onload = function () {
       var username = $('#login_username').val();
       var password = $('#login_password').val();
 
-      if (username.length > 4 && password.length > 6) {
+      if (username.length >= 4 && password.length >= 6) {
         sendLoginRequest(username, password);
         hideMessage();
       } else {
@@ -228,7 +228,7 @@ function buttonHandlerRegister(e) {
   var passwordRepeat = $("#register_password_repeat").val();
   var observable = $("#register_observable").is(':checked');
   // --
-  if (username.length > 4 && password.length > 6) {
+  if (username.length >= 4 && password.length >= 6) {
     if (password == passwordRepeat) {
       sendRegistrationRequest(username, password, observable);
       console.log("registration request sent");
