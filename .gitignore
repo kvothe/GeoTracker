@@ -225,3 +225,4 @@ SE_Tracking_Server/bin/at/jku/se/tracking/database/DatabaseService.class
 SE_Tracking_Server/bin/at/jku/se/tracking/database/UserObject.class
 SE_Tracking_Server/bin/at/jku/se/tracking/messages/serialization/AMessage.class
 SE_Tracking_Server/bin/at/jku/se/tracking/messages/serialization/MarshallingService.class
+/SE_Tracking_Server/webapp/nbproject/private/
