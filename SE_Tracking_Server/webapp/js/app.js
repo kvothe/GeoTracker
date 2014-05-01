@@ -277,7 +277,7 @@ function buttonHandlerSetSettings(e) {
     console.log("test set setting");
     e.preventDefault ? e.preventDefault() : e.returnValue = false;
     var isObservable = false;
-    
+
     if ($('#settings_observable').prop('checked')) {
         isObservable = true;
     }
@@ -939,163 +939,166 @@ function initializeMap() {
     // Register location tracker
     if (navigator.geolocation) {
         console.log("locationUpdate");
-        navigator.geolocation.watchPosition(positionChanged);
+        navigator.geolocation.watchPosition(function(position) {
+            if (currentUsername) {
+                console.log(position);
+                sendLocationUpdate(position);
+            }
+        }, function() { /*error*/
+        }, {
+            maximumAge: 30000,
+            timeout: 27000,
+            enableHighAccuracy: true
+        }
+        );
     }
 }
 
 // ----------------------------------------------------------------------------
 
-function clearMarkers() {
-    if (markers) {
-        while (markers.length > 0) {
-            var marker = markers.pop();
-            marker.setMap(null);
-        }
-    }
-}
-
-function addMarker(marker) {
-    if (!markers) {
-        markers = new Array();
-    }
-    markers.push(marker);
-    marker.setMap(map);
-}
-
-// ----------------------------------------------------------------------------
-
-function clearPath() {
-}
-
-function setPath(coordList) {
-    // clear path
-    if (path) {
-        path.setMap(null);
-    }
-    // clear points
-    if (points) {
-        while (points.length > 0) {
-            var point = points.pop();
-            point.setMap(null);
-        }
-    } else {
-        points = new Array();
-    }
-    // clear markers
-    clearMarkers();
-    // --
-    if (!coordList || coordList.length == 0) {
-        console.log("no points");
-        setMapToCurrentPosition();
-    } else {
-        var pointList = [];
-        var bounds = new google.maps.LatLngBounds();
-
-        // build path and add points
-        for (var point in coordList) {
-            var timestamp = coordList[point]["timestamp"];
-            var latitude = coordList[point]["latitude"];
-            var longitude = coordList[point]["longitude"];
-            var accuracy = coordList[point]["accuracy"];
-            accuracy = accuracy == 0 ? 0 : accuracy / 100;
-            // --
-            var latlng = new google.maps.LatLng(latitude, longitude);
-            pointList.push(latlng);
-            bounds.extend(latlng);
-            // --
-            var pathPoint = {
-                strokeColor: '#FF0000',
-                strokeOpacity: 0.8,
-                strokeWeight: 2,
-                fillColor: '#FF0000',
-                fillOpacity: 0.35,
-                map: map,
-                center: latlng,
-                radius: accuracy
-            };
-            // --
-            points.push(new google.maps.Circle(pathPoint));
-        }
-
-        // Set Path
-        path = new google.maps.Polyline({
-            path: pointList,
-            geodesic: true,
-            strokeColor: '#FF0000',
-            strokeOpacity: 1.0,
-            strokeWeight: 2
-        });
-        path.setMap(map);
-
-        // Add Markers
-        if (pointList.length > 0) {
-            var start = pointList[0];
-            var startMarker = new google.maps.Marker({
-                position: start,
-                map: map,
-                title: 'Start'
-            });
-            addMarker(startMarker);
-            // --
-            if (pointList.length > 1) {
-                var end = pointList[0];
-                var endMarker = new google.maps.Marker({
-                    position: end,
-                    map: map,
-                    title: 'Finish'
-                });
-                addMarker(endMarker);
+    function clearMarkers() {
+        if (markers) {
+            while (markers.length > 0) {
+                var marker = markers.pop();
+                marker.setMap(null);
             }
         }
-
-        // Set map bounds
-        map.fitBounds(bounds);
     }
-}
+
+    function addMarker(marker) {
+        if (!markers) {
+            markers = new Array();
+        }
+        markers.push(marker);
+        marker.setMap(map);
+    }
+
 // ----------------------------------------------------------------------------
 
-function positionChanged(position) {
-    if (currentUsername) {
-        var myLatlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-        sendLocationUpdate(position);
+    function clearPath() {
     }
-}
 
-function setMapToCurrentPosition() {
-    if (navigator.geolocation) {
-        browserSupportFlag = true;
-        navigator.geolocation.getCurrentPosition(function(position) {
-            console.log("position update");
-            var myLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-            // --
-            clearMarkers();
-            var marker = new google.maps.Marker({
-                position: myLatLng,
-                map: map,
-                title: 'You are here'
+    function setPath(coordList) {
+        // clear path
+        if (path) {
+            path.setMap(null);
+        }
+        // clear points
+        if (points) {
+            while (points.length > 0) {
+                var point = points.pop();
+                point.setMap(null);
+            }
+        } else {
+            points = new Array();
+        }
+        // clear markers
+        clearMarkers();
+        // --
+        if (!coordList || coordList.length == 0) {
+            console.log("no points");
+            setMapToCurrentPosition();
+        } else {
+            var pointList = [];
+            var bounds = new google.maps.LatLngBounds();
+
+            // build path and add points
+            for (var point in coordList) {
+                var timestamp = coordList[point]["timestamp"];
+                var latitude = coordList[point]["latitude"];
+                var longitude = coordList[point]["longitude"];
+                var accuracy = coordList[point]["accuracy"];
+                accuracy = accuracy == 0 ? 0 : accuracy / 100;
+                // --
+                var latlng = new google.maps.LatLng(latitude, longitude);
+                pointList.push(latlng);
+                bounds.extend(latlng);
+                // --
+                var pathPoint = {
+                    strokeColor: '#FF0000',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    fillColor: '#FF0000',
+                    fillOpacity: 0.35,
+                    map: map,
+                    center: latlng,
+                    radius: accuracy
+                };
+                // --
+                points.push(new google.maps.Circle(pathPoint));
+            }
+
+            // Set Path
+            path = new google.maps.Polyline({
+                path: pointList,
+                geodesic: true,
+                strokeColor: '#FF0000',
+                strokeOpacity: 1.0,
+                strokeWeight: 2
             });
-            addMarker(marker);
-            // --
-            map.setCenter(myLatLng);
-        }, function() {
+            path.setMap(map);
+
+            // Add Markers
+            if (pointList.length > 0) {
+                var start = pointList[0];
+                var startMarker = new google.maps.Marker({
+                    position: start,
+                    map: map,
+                    title: 'Start'
+                });
+                addMarker(startMarker);
+                // --
+                if (pointList.length > 1) {
+                    var end = pointList[0];
+                    var endMarker = new google.maps.Marker({
+                        position: end,
+                        map: map,
+                        title: 'Finish'
+                    });
+                    addMarker(endMarker);
+                }
+            }
+
+            // Set map bounds
+            map.fitBounds(bounds);
+        }
+    }
+// ----------------------------------------------------------------------------
+    function setMapToCurrentPosition() {
+        if (navigator.geolocation) {
+            browserSupportFlag = true;
+            navigator.geolocation.getCurrentPosition(function(position) {
+                console.log("position update");
+                var myLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+                // --
+                clearMarkers();
+                var marker = new google.maps.Marker({
+                    position: myLatLng,
+                    map: map,
+                    title: 'You are here'
+                });
+                addMarker(marker);
+                // --
+                map.setCenter(myLatLng);
+            }, function() {
+                handleNoGeolocation(browserSupportFlag);
+            });
+        }
+        // Browser doesn't support Geolocation
+        else {
+            browserSupportFlag = false;
             handleNoGeolocation(browserSupportFlag);
-        });
+        }
     }
-    // Browser doesn't support Geolocation
-    else {
-        browserSupportFlag = false;
-        handleNoGeolocation(browserSupportFlag);
-    }
-}
 
 // ----------------------------------------------------------------------------
 
-function handleNoGeolocation(errorFlag) {
-    if (errorFlag == true) {
-        console.log("Geolocation service failed.");
-        map.setCenter(new google.maps.LatLng(51.508742, -0.120850));
-    } else {
-        console.log("Your browser doesn't support geolocation. We've placed you in Siberia.");
-        map.setCenter(new google.maps.LatLng(60, 105));
-    }
+    function handleNoGeolocation(errorFlag) {
+        if (errorFlag == true) {
+            console.log("Geolocation service failed.");
+            map.setCenter(new google.maps.LatLng(51.508742, -0.120850));
+        } else {
+            console.log("Your browser doesn't support geolocation. We've placed you in Siberia.");
+            map.setCenter(new google.maps.LatLng(60, 105));
+        }
 }
