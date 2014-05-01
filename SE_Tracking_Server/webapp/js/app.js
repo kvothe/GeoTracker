@@ -326,6 +326,7 @@ function showDashboard(content) {
       sendRequestSessionList(true);
     }
   }
+  scrollToTop();
 }
 
 /* ----------------------------------------------------------------------------
@@ -744,12 +745,17 @@ function searchObservationList(query) {
 Utilities
 --------------------------------------------------------------------------- */
 
+function scrollToTop(){
+	$('html, body').animate({scrollTop: '0px'}, 800);
+}
+
 function showSuccessMessage(message) {
   $("#page_alert").removeClass("alert-danger");
   $("#page_alert").removeClass("alert-info");
   $("#page_alert").addClass("alert-success");
   $("#page_alert").html(message);
   makeAlertDismissable();
+  scrollToTop();
   $("#page_alert").fadeIn();
 }
 
@@ -759,7 +765,9 @@ function showErrorMessage(message) {
   $("#page_alert").addClass("alert-danger");
   $("#page_alert").html(message);
   makeAlertDismissable();
+  scrollToTop();
   $("#page_alert").fadeIn();
+  
 }
 
 function showInfoMessage(message) {
@@ -768,6 +776,7 @@ function showInfoMessage(message) {
   $("#page_alert").addClass("alert-info");
   $("#page_alert").html(message);
   makeAlertDismissable();
+  scrollToTop();
   $("#page_alert").fadeIn();
 }
 
