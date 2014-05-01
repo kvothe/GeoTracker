@@ -749,24 +749,36 @@ function showSuccessMessage(message) {
   $("#page_alert").removeClass("alert-info");
   $("#page_alert").addClass("alert-success");
   $("#page_alert").html(message);
+  makeAlertDismissable();
   $("#page_alert").fadeIn();
 }
+
 function showErrorMessage(message) {
   $("#page_alert").removeClass("alert-success");
   $("#page_alert").removeClass("alert-info");
   $("#page_alert").addClass("alert-danger");
   $("#page_alert").html(message);
+  makeAlertDismissable();
   $("#page_alert").fadeIn();
 }
+
 function showInfoMessage(message) {
   $("#page_alert").removeClass("alert-success");
   $("#page_alert").removeClass("alert-danger");
   $("#page_alert").addClass("alert-info");
   $("#page_alert").html(message);
+  makeAlertDismissable();
   $("#page_alert").fadeIn();
 }
+
 function hideMessage() {
   $("#page_alert").fadeOut();
+}
+
+function makeAlertDismissable()
+{
+	$("#page_alert").addClass("alert-dismissable");
+	$("#page_alert").append( "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-hidden=\"true\">&times;</button>" );
 }
 
 function formatTimestamp(milliseconds) {

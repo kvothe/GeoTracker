@@ -215,3 +215,13 @@ pip-log.txt
 .mr.developer.cfg
 *.class
 SE_Tracking_Server/config/database.properties
+SE_Tracking_Server/bin/at/jku/se/tracking/SessionObserver.class
+SE_Tracking_Server/bin/at/jku/se/tracking/SessionObserver.class
+SE_Tracking_Server/bin/at/jku/se/tracking/WebSocketServer$1.class
+SE_Tracking_Server/bin/at/jku/se/tracking/WebSocketServer$2.class
+SE_Tracking_Server/bin/at/jku/se/tracking/WebSocketServer.class
+SE_Tracking_Server/bin/at/jku/se/tracking/WebSocketSession.class
+SE_Tracking_Server/bin/at/jku/se/tracking/database/DatabaseService.class
+SE_Tracking_Server/bin/at/jku/se/tracking/database/UserObject.class
+SE_Tracking_Server/bin/at/jku/se/tracking/messages/serialization/AMessage.class
+SE_Tracking_Server/bin/at/jku/se/tracking/messages/serialization/MarshallingService.class
