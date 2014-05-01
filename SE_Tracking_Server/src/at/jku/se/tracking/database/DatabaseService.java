@@ -402,6 +402,7 @@ public class DatabaseService {
 			+ "WHERE s.[" + TrackingSessionObject.COLUMN_ID + "] = ? " 
 			+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] >= s.[" + TrackingSessionObject.COLUMN_STARTTIME + "] "
 			+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] <= s.[" + TrackingSessionObject.COLUMN_ENDTIME + "] "
+			+ "AND s.[" + TrackingSessionObject.COLUMN_OBSERVED + "] = l.[" + GeolocationObject.COLUMN_USER_FK + "]"
 			+ "ORDER BY l.[" + GeolocationObject.COLUMN_TIMESTAMP + "]");
 		//@formatter:on
 		query.setLong(1, sessionId);
