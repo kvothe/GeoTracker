@@ -31,7 +31,7 @@ public class WebSocketServer {
 
 	// ------------------------------------------------------------------------
 
-	private static final int DEFAULT_PORT = 443;
+	private static final int DEFAULT_PORT = 448;
 
 	// ------------------------------------------------------------------------
 

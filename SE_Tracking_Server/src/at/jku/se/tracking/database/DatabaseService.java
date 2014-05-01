@@ -291,6 +291,31 @@ public class DatabaseService {
 		// --
 		return result;
 	}
+	
+	public static boolean setObservableSetting(Long userId, boolean isObservable) throws SQLException {
+		boolean result = false;
+		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
+
+		//@formatter:off
+		PreparedStatement insert = 
+			con.prepareStatement("UPDATE [" + UserObject.TABLE_NAME + "] SET "
+			+ "[" + UserObject.COLUMN_OBSERVABLE + "] = ? "
+			+ "WHERE " + UserObject.COLUMN_ID + " = ?");			
+		//@formatter:on
+
+		insert.setBoolean(1, isObservable);
+		insert.setLong(2, userId);
+		// --
+		try {
+			result = insert.executeUpdate() == 1;
+		} finally {
+			insert.close();
+		}
+		// --
+		CONNECTION_POOL.returnResource(con);
+		// --
+		return result;
+	}
 
 	// ------------------------------------------------------------------------
 
