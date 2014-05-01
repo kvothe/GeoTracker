@@ -1,0 +1,9 @@
+diff a/SE_Tracking_Server/src/at/jku/se/tracking/database/DatabaseService.java b/SE_Tracking_Server/src/at/jku/se/tracking/database/DatabaseService.java	(rejected hunks)
+@@ -377,6 +377,7 @@
+ 			+ "WHERE s.[" + TrackingSessionObject.COLUMN_ID + "] = ? " 
+ 			+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] >= s.[" + TrackingSessionObject.COLUMN_STARTTIME + "] "
+ 			+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] <= s.[" + TrackingSessionObject.COLUMN_ENDTIME + "] "
++			+ "AND s.[" + TrackingSessionObject.COLUMN_OBSERVED + "] = l.[" + GeolocationObject.COLUMN_USER_FK + "]"
+ 			+ "ORDER BY l.[" + GeolocationObject.COLUMN_TIMESTAMP + "]");
+ 		//@formatter:on
+ 		query.setLong(1, sessionId);

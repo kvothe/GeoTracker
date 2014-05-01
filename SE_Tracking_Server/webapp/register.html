@@ -1,39 +1,39 @@
 <!DOCTYPE html>
 <html>
-  <head>    
-    <link href="favicon.ico" rel="icon" type="image/x-icon" />
-    <title>GeoTracker</title>
-  </head>
-  <body>
-    <div class="container" id="content">
-      <!-- Example row of columns -->
-      <div class="container">
-        <div class="row">
-          <h1>Registration</h1> 
-          <form>            
-            <div class="form-group">
-              <input id="register_username" type="text" placeholder="Username" class="form-control" />
-              <span class="input-icon fui-user"></span>
+    <head>    
+        <link href="favicon.ico" rel="icon" type="image/x-icon" />
+        <title>GeoTracker</title>
+    </head>
+    <body>
+        <div class="container" id="content">
+            <!-- Example row of columns -->
+            <div class="container">
+                <div class="row">
+                    <h1>Registration</h1> 
+                    <form>            
+                        <div class="form-group">
+                            <input id="register_username" type="text" placeholder="Username" class="form-control" />
+                            <span class="input-icon fui-user"></span>
+                        </div>
+                        <div class="form-group">
+                            <input id="register_password" type="password" placeholder="Password" class="form-control" />
+                            <span class="input-icon fui-lock"></span>
+                        </div>
+                        <div id="register_form_password_check" class="form-group">
+                            <input id="register_password_repeat" type="password" placeholder="Repeat Password" class="form-control" />   
+                            <span class="input-icon fui-check-inverted"></span>              
+                        </div>
+
+                        <div id="register_form_observable" class="form-group">
+                            <label for="register_observable"/> 
+                            <input type="checkbox" checked id="register_observable"/>
+                            <span class="checkbox_span">Make my position visible to others</span>
+                        </div>
+                        <button id="register_submit" type="submit" class="btn btn-primary">Register</button>
+                    </form>
+                </div>
+                <hr />
             </div>
-            <div class="form-group">
-              <input id="register_password" type="password" placeholder="Password" class="form-control" />
-              <span class="input-icon fui-lock"></span>
-            </div>
-            <div id="register_form_password_check" class="form-group">
-              <input id="register_password_repeat" type="password" placeholder="Repeat Password" class="form-control" />   
-              <span class="input-icon fui-check-inverted"></span>              
-            </div>
-               
-            <label class="checkbox" for="register_observable"> 
-              <input type="checkbox" checked="" value="" id="register_observable">
-              Make my position visible to others
-            </label>
-            
-            <button id="register_submit" type="submit" class="btn btn-primary">Register</button>
-          </form>
         </div>
-        <hr />
-      </div>
-    </div>
-  </body>
+    </body>
 </html>

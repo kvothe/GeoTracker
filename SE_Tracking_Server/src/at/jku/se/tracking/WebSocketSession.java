@@ -28,6 +28,8 @@ import at.jku.se.tracking.messages.MsgOk;
 import at.jku.se.tracking.messages.MsgRegister;
 import at.jku.se.tracking.messages.MsgRequestSessionList;
 import at.jku.se.tracking.messages.MsgRequestSessionTrack;
+import at.jku.se.tracking.messages.MsgRequestSetSettings;
+import at.jku.se.tracking.messages.MsgRequestSettings;
 import at.jku.se.tracking.messages.MsgRequestUserList;
 import at.jku.se.tracking.messages.MsgResponseList;
 import at.jku.se.tracking.messages.MsgSession;
@@ -109,6 +111,16 @@ public class WebSocketSession {
 				MsgStopObservation stopObservation = (MsgStopObservation) m;
 				handleStopObservation(stopObservation);
 				break;
+			case GET_SETTINGS:
+				MsgRequestSettings requestSettings = (MsgRequestSettings) m;
+				handleGetSettings(requestSettings);
+				break;
+				
+			case SET_SETTINGS:
+				MsgRequestSetSettings requestSetSettings = (MsgRequestSetSettings) m;
+				handleSetSettings(requestSetSettings);
+				break;
+			
 			default:
 				break;
 			}
@@ -178,6 +190,41 @@ public class WebSocketSession {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			sendMessage(new MsgError(registration.getConversationId(), "Well, something went wrong. Go pester your admin!"));
+		}
+	}
+	
+	// ------------------------------------------------------------------------
+
+	private void handleGetSettings(MsgRequestSettings settings) throws IOException {
+		try {
+			String username = settings.getUsername().trim();
+			UserObject user = DatabaseService.queryUser(username);
+			if (user != null) {
+				boolean settingObservable = user.isObservable();
+					sendMessage(new MsgOk(settings.getConversationId(), String.valueOf(settingObservable)));
+			} else {
+				sendMessage(new MsgError(settings.getConversationId(), "invalid username"));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			sendMessage(new MsgError(settings.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
+		}
+	}
+	
+	private void handleSetSettings(MsgRequestSetSettings settings) throws IOException {
+		try {
+			String username = settings.getUsername().trim();
+			UserObject user = DatabaseService.queryUser(username);
+			if (user != null) {
+				boolean settingObservable = settings.getObservable();
+				DatabaseService.setObservableSetting(user.getId(), settingObservable);
+				sendMessage(new MsgOk(settings.getConversationId(), "Settings successfully changed"));
+			} else {
+				sendMessage(new MsgError(settings.getConversationId(), "invalid username"));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			sendMessage(new MsgError(settings.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
 		}
 	}
 

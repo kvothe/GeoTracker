@@ -16,7 +16,9 @@ public enum MessageType {
 	NOTIFICATION("notification"),
 	OK("response-ok"),
 	ERROR("response-error"),
-	LOGOUT("request-logout");
+	LOGOUT("request-logout"),
+	GET_SETTINGS("request-settings"),
+	SET_SETTINGS("request-set-settings");
 	
 	//@formatter:on
 
