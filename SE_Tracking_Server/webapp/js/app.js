@@ -342,6 +342,10 @@ function handleResponseRegistration(data) {
     $('#dashboard_menu').fadeIn();
     $('#navbar_form_logout').fadeIn();
     $('#navbar_form_login').hide();
+    
+    currentUsername = $("#register_username").val();
+    $('#navbar_user_name').html("Welcome " + currentUsername + "!<b class=\"caret\">");
+    
     // --
     showSuccessMessage("<b>Success!</b> You successfully registered for GeoTracker.");
     // reset values
