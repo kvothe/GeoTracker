@@ -247,6 +247,8 @@ public class WebSocketSession {
 					SessionObserver.registerSession(this.session, this);
 					// --
 					sendMessage(new MsgOk(login.getConversationId(), sessionId));
+				}else{
+					sendMessage(new MsgError(login.getConversationId(), "invalid credentials"));
 				}
 			} else {
 				sendMessage(new MsgError(login.getConversationId(), "invalid credentials"));
