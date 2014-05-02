@@ -849,7 +849,6 @@ function showErrorMessage(message) {
     makeAlertDismissable();
     scrollToTop();
     $("#page_alert").fadeIn();
-
 }
 
 function showInfoMessage(message) {
@@ -869,7 +868,8 @@ function hideMessage() {
 function makeAlertDismissable()
 {
     $("#page_alert").addClass("alert-dismissable");
-    $("#page_alert").append("<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-hidden=\"true\">&times;</button>");
+    //$("#page_alert").append("<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-hidden=\"true\">&times;</button>");
+    $("#page_alert").append("<button type=\"button\" class=\"close\" onclick =\"hideMessage()\" aria-hidden=\"true\">&times;</button>");
 }
 
 function formatTimestamp(milliseconds) {
@@ -997,6 +997,7 @@ function initializeMap() {
         // --
         if (!coordList || coordList.length == 0) {
             console.log("no points");
+            showErrorMessage("No coordinates for this observation, showing current position.");
             setMapToCurrentPosition();
         } else {
             var pointList = [];
