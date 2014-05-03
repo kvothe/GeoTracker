@@ -11,13 +11,11 @@ var path;
 var points;
 var markers;
 
+var timerID = 0;
+
 window.onload = function() {
-    // Create a new WebSocket.
-    if (location.port) {
-        socket = new WebSocket('wss://' + location.hostname + ':' + location.port);
-    } else {
-        socket = new WebSocket('wss://' + location.hostname);
-    }
+
+    start();
 
     // always redirect to index.html
     if (document.URL.indexOf('index.html') == -1) {
@@ -30,11 +28,134 @@ window.onload = function() {
     $('#navbar_form_login').hide();
 
     /* --------------------------------------------------------------------------
+     Click handler for elements on index.html
+     --------------------------------------------------------------------------- */
+
+    if ($('#home_link')) {
+        $('#home_link').click(function(e) {
+            $('#html').removeClass("html");
+            e.preventDefault ? e.preventDefault() : e.returnValue = false;
+            // --
+            $('#page_content').load('index.html #page_content', function() {
+                $('#jumbotron').fadeIn();
+                $('#page_content').hide().fadeIn();
+            });
+        });
+    }
+
+    if ($('#dashboard_menu')) {
+        $('#navbar_user_list').click(function(e) {
+            e.preventDefault ? e.preventDefault() : e.returnValue = false;
+            // --
+            showDashboard("user-list");
+        });
+        $('#navbar_session_list').click(function(e) {
+            e.preventDefault ? e.preventDefault() : e.returnValue = false;
+            // --
+            showDashboard("session-list");
+        });
+    }
+
+    // Navigate to registration
+    if ($('#register_button')) {
+        $('#register_button').click(function(e) {
+            $('#html').removeClass("html");
+            e.preventDefault ? e.preventDefault() : e.returnValue = false;
+            hideMessage();
+            // load page
+            $('#page_content').load('register.html #content', function() {
+                $('#register_submit').click(buttonHandlerRegister);
+                $('#register_password').keyup(keypressHandlerPasswordCheck);
+                $('#register_password_repeat').keyup(keypressHandlerPasswordCheck);
+                $('#register_observable').prop('checked', true);
+                // $('#navbar_form_login').hide();
+                $('#page_content').hide().fadeIn();
+            });
+        });
+    }
+
+    // Navigate to settings
+    if ($('#settings_button')) {
+        $('#settings_button').click(function(e) {
+            $('#html').removeClass("html");
+            e.preventDefault ? e.preventDefault() : e.returnValue = false;
+            hideMessage();
+            // load page
+            $('#page_content').load('settings.html #content', function() {
+                $('#page_content').hide().fadeIn();
+                $('#settings_submit_button').click(buttonHandlerSetSettings);
+                sendGetSettingRequest();
+            });
+        });
+    }
+
+    // Send login request
+    if ($('#login_button')) {
+        $('#login_button').click(function(e) {
+            $('#html').removeClass("html");
+            console.log("login handler");
+            e.preventDefault ? e.preventDefault() : e.returnValue = false;
+
+            // Retrieve username and password
+            var username = $('#login_username').val();
+            var password = $('#login_password').val();
+
+            if (username.length >= 4 && password.length >= 6) {
+                sendLoginRequest(username, password);
+                hideMessage();
+            } else {
+                console.log("login error");
+                $('#login_username').val('');
+                $('#login_password').val('');
+                showErrorMessage("<b>Error!</b> Enter Username(min. length is 4) and Password(min. length is 6)");
+            }
+        });
+    }
+
+    // Send logout request
+    if ($('#logout_button')) {
+        $('#logout_button').click(function(e) {
+            $('#html').removeClass("html");
+            e.preventDefault ? e.preventDefault() : e.returnValue = false;
+            // --
+            sendLogout();
+
+            //remove cookie
+            eraseCookie("session_id");
+            currentUsername = null;
+
+            //navigate to home
+            $('#dashboard_menu').hide();
+            $('#navbar_form_logout').hide();
+            $('#navbar_form_login').show();
+
+            $('#page_content').load('index.html #page_content', function() {
+                $('#page_content').hide().fadeIn();
+                showSuccessMessage("You have been logged out");
+            });
+        });
+    }
+};
+
+function start() {
+    // Create a new WebSocket.
+    if (location.port) {
+        socket = new WebSocket('wss://' + location.hostname + ':' + location.port);
+    } else {
+        socket = new WebSocket('wss://' + location.hostname);
+    }
+
+    /* --------------------------------------------------------------------------
      WebSocket callbacks
      --------------------------------------------------------------------------- */
 
     // Show a connected message when the WebSocket is opened.
     socket.onopen = function(event) {
+        if (window.timerID) { /* a setInterval has been fired */
+            window.clearInterval(window.timerID);
+            window.timerID = 0;
+        }
+
         cid = 0;
         console.log('Connected to: ' + event.currentTarget.URL);
         // check if the session cookie is still valid and act accordingly
@@ -115,113 +236,15 @@ window.onload = function() {
     // Show a disconnected message when the WebSocket is closed.
     socket.onclose = function(event) {
         console.log('Disconnected from WebSocket.');
-        showErrorMessage("You have lost the connection to the server");
+        showErrorMessage("You have lost the connection to the server.. trying to reconnect...");
+
+        if (!window.timerID) { /* avoid firing a new setInterval, after one has been done */
+            window.timerID = setInterval(function() {
+                start()
+            }, 5000);
+        }
     };
-
-    /* --------------------------------------------------------------------------
-     Click handler for elements on index.html
-     --------------------------------------------------------------------------- */
-
-    if ($('#home_link')) {
-        $('#home_link').click(function(e) {
-            e.preventDefault ? e.preventDefault() : e.returnValue = false;
-            // --
-            $('#page_content').load('index.html #page_content', function() {
-                $('#jumbotron').fadeIn();
-                $('#page_content').hide().fadeIn();
-            });
-        });
-    }
-
-    if ($('#dashboard_menu')) {
-        $('#navbar_user_list').click(function(e) {
-            e.preventDefault ? e.preventDefault() : e.returnValue = false;
-            // --
-            showDashboard("user-list");
-        });
-        $('#navbar_session_list').click(function(e) {
-            e.preventDefault ? e.preventDefault() : e.returnValue = false;
-            // --
-            showDashboard("session-list");
-        });
-    }
-
-    // Navigate to registration
-    if ($('#register_button')) {
-        $('#register_button').click(function(e) {
-            e.preventDefault ? e.preventDefault() : e.returnValue = false;
-            hideMessage();
-            // load page
-            $('#page_content').load('register.html #content', function() {
-                $('#register_submit').click(buttonHandlerRegister);
-                $('#register_password').keyup(keypressHandlerPasswordCheck);
-                $('#register_password_repeat').keyup(keypressHandlerPasswordCheck);
-                $('#register_observable').prop('checked', true);
-                // $('#navbar_form_login').hide();
-                $('#page_content').hide().fadeIn();
-            });
-        });
-    }
-
-    // Navigate to settings
-    if ($('#settings_button')) {
-        $('#settings_button').click(function(e) {
-            e.preventDefault ? e.preventDefault() : e.returnValue = false;
-            hideMessage();
-            // load page
-            $('#page_content').load('settings.html #content', function() {
-                $('#page_content').hide().fadeIn();
-                $('#settings_submit_button').click(buttonHandlerSetSettings);
-                sendGetSettingRequest();
-            });
-        });
-    }
-
-    // Send login request
-    if ($('#login_button')) {
-        $('#login_button').click(function(e) {
-            console.log("login handler");
-            e.preventDefault ? e.preventDefault() : e.returnValue = false;
-
-            // Retrieve username and password
-            var username = $('#login_username').val();
-            var password = $('#login_password').val();
-
-            if (username.length >= 4 && password.length >= 6) {
-                sendLoginRequest(username, password);
-                hideMessage();
-            } else {
-                console.log("login error");
-                $('#login_username').val('');
-                $('#login_password').val('');
-                showErrorMessage("<b>Error!</b> Enter Username(min. length is 4) and Password(min. length is 6)");
-            }
-        });
-    }
-
-    // Send logout request
-    if ($('#logout_button')) {
-        $('#logout_button').click(function(e) {
-            e.preventDefault ? e.preventDefault() : e.returnValue = false;
-            // --
-            sendLogout();
-
-            //remove cookie
-            eraseCookie("session_id");
-            currentUsername = null;
-
-            //navigate to home
-            $('#dashboard_menu').hide();
-            $('#navbar_form_logout').hide();
-            $('#navbar_form_login').show();
-
-            $('#page_content').load('index.html #page_content', function() {
-                $('#page_content').hide().fadeIn();
-                showSuccessMessage("You have been logged out");
-            });
-        });
-    }
-};
+}
 
 window.onresize = function(event) {
     /*if ($('#googleMap')) {
@@ -332,11 +355,18 @@ function showDashboard(content) {
             if (content == "user-list") {
                 $('#dashboard_user_panel').show();
                 $('#dashboard_user_refresh').click(buttonHandlerRefreshUserList);
+                $('#googleMap').hide();
+                $('#list_container').removeClass("col-sm-3");
+                $('#list_container').removeClass("col-lg-3");
+                $('#html').removeClass("html");
                 sendRequestUserList(false);
             } else if (content == "session-list") {
+                $('#html').addClass("html");
+                $('#googleMap').show();
                 $('#dashboard_session_panel').show();
                 $('#dashboard_session_refresh').click(buttonHandlerRefreshSessionList);
                 $('#dashboard_session_search').keyup(searchObservationKeyUp);
+                $('#list_container').addClass("col-lg-3 col-sm-3");
                 sendRequestSessionList(true);
             }
             // --
@@ -348,11 +378,18 @@ function showDashboard(content) {
     } else {
         if (content == "user-list") {
             $('#dashboard_session_panel').hide();
+            $('#html').removeClass("html");
             $('#dashboard_user_panel').fadeIn();
             $('#dashboard_user_refresh').click(buttonHandlerRefreshUserList);
+            $('#googleMap').hide();
+            $('#list_container').removeClass("col-sm-3");
+            $('#list_container').removeClass("col-lg-3");
             sendRequestUserList(false);
         } else if (content == "session-list") {
             $('#dashboard_user_panel').hide();
+            $('#googleMap').show();
+            $('#html').addClass("html");
+            $('#list_container').addClass("col-lg-3 col-sm-3");
             $('#dashboard_session_panel').fadeIn();
             $('#dashboard_session_refresh').click(buttonHandlerRefreshSessionList);
             sendRequestSessionList(true);
@@ -473,17 +510,20 @@ function handleResponseUserList(data) {
         for (var user in data["list"]) {
             var name = data["list"][user]["name"];
             var observable = data["list"][user]["observable"];
+            var isObserved = data["list"][user]["isObserved"];
             var linkId = "dashboard_list_user_" + i;
             // --
             userList.push({
                 "name": name,
                 "observable": observable,
+                "isObserved": isObserved,
                 "labelid": linkId,
                 "buttonid": linkId
             });
             // --
+
             var html = "<a href=\"#\" class=\"list-group-item\" id=\"" + linkId + "\">" + name + "";
-            if (observable === true) {
+            if (isObserved === true) {
                 html += "<i class=\"glyphicon fui-check\" style=\"float: right; margin-top: 6px; margin-right: 10px\"/>";
             }
             html += "</a>";
@@ -493,9 +533,16 @@ function handleResponseUserList(data) {
             $('#' + linkId).click({
                 id: linkId,
                 user: name,
-                observable: observable
+                observable: observable,
+                isObserved: isObserved
             }, function(event) {
-                listItemHandlerStartObservation(event.data.user, event.data.observable);
+                if (event.data.isObserved === true) {
+                    listItemHandlerStopObservation(event.data.id, event.data.user, null, null);
+                    sendRequestUserList(false);
+                } else {
+                    listItemHandlerStartObservation(event.data.user, event.data.observable);
+                    sendRequestUserList(false);
+                }
             });
             // --
             i++;
@@ -750,6 +797,7 @@ function sendRequestUserList(observableOnly) {
         "cid": mcid,
         "message-type": "request-user-list",
         "session-id": getCookie("session_id"),
+        "username": currentUsername,
         "observable-only": observableOnly
     };
     conversations[mcid] = "request-user-list";
@@ -956,150 +1004,150 @@ function initializeMap() {
 
 // ----------------------------------------------------------------------------
 
-    function clearMarkers() {
-        if (markers) {
-            while (markers.length > 0) {
-                var marker = markers.pop();
-                marker.setMap(null);
-            }
+function clearMarkers() {
+    if (markers) {
+        while (markers.length > 0) {
+            var marker = markers.pop();
+            marker.setMap(null);
         }
     }
+}
 
-    function addMarker(marker) {
-        if (!markers) {
-            markers = new Array();
-        }
-        markers.push(marker);
-        marker.setMap(map);
+function addMarker(marker) {
+    if (!markers) {
+        markers = new Array();
     }
+    markers.push(marker);
+    marker.setMap(map);
+}
 
 // ----------------------------------------------------------------------------
 
-    function clearPath() {
+function clearPath() {
+}
+
+function setPath(coordList) {
+    // clear path
+    if (path) {
+        path.setMap(null);
     }
-
-    function setPath(coordList) {
-        // clear path
-        if (path) {
-            path.setMap(null);
+    // clear points
+    if (points) {
+        while (points.length > 0) {
+            var point = points.pop();
+            point.setMap(null);
         }
-        // clear points
-        if (points) {
-            while (points.length > 0) {
-                var point = points.pop();
-                point.setMap(null);
-            }
-        } else {
-            points = new Array();
-        }
-        // clear markers
-        clearMarkers();
-        // --
-        if (!coordList || coordList.length == 0) {
-            console.log("no points");
-            showErrorMessage("No coordinates for this observation, showing current position.");
-            setMapToCurrentPosition();
-        } else {
-            var pointList = [];
-            var bounds = new google.maps.LatLngBounds();
+    } else {
+        points = new Array();
+    }
+    // clear markers
+    clearMarkers();
+    // --
+    if (!coordList || coordList.length == 0) {
+        console.log("no points");
+        showErrorMessage("No coordinates for this observation, showing current position.");
+        setMapToCurrentPosition();
+    } else {
+        var pointList = [];
+        var bounds = new google.maps.LatLngBounds();
 
-            // build path and add points
-            for (var point in coordList) {
-                var timestamp = coordList[point]["timestamp"];
-                var latitude = coordList[point]["latitude"];
-                var longitude = coordList[point]["longitude"];
-                var accuracy = coordList[point]["accuracy"];
-                accuracy = accuracy == 0 ? 0 : accuracy / 100;
-                // --
-                var latlng = new google.maps.LatLng(latitude, longitude);
-                pointList.push(latlng);
-                bounds.extend(latlng);
-                // --
-                var pathPoint = {
-                    strokeColor: '#FF0000',
-                    strokeOpacity: 0.8,
-                    strokeWeight: 2,
-                    fillColor: '#FF0000',
-                    fillOpacity: 0.35,
-                    map: map,
-                    center: latlng,
-                    radius: accuracy
-                };
-                // --
-                points.push(new google.maps.Circle(pathPoint));
-            }
-
-            // Set Path
-            path = new google.maps.Polyline({
-                path: pointList,
-                geodesic: true,
+        // build path and add points
+        for (var point in coordList) {
+            var timestamp = coordList[point]["timestamp"];
+            var latitude = coordList[point]["latitude"];
+            var longitude = coordList[point]["longitude"];
+            var accuracy = coordList[point]["accuracy"];
+            accuracy = accuracy == 0 ? 0 : accuracy / 100;
+            // --
+            var latlng = new google.maps.LatLng(latitude, longitude);
+            pointList.push(latlng);
+            bounds.extend(latlng);
+            // --
+            var pathPoint = {
                 strokeColor: '#FF0000',
-                strokeOpacity: 1.0,
-                strokeWeight: 2
-            });
-            path.setMap(map);
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: '#FF0000',
+                fillOpacity: 0.35,
+                map: map,
+                center: latlng,
+                radius: accuracy
+            };
+            // --
+            points.push(new google.maps.Circle(pathPoint));
+        }
 
-            // Add Markers
-            if (pointList.length > 0) {
-                var start = pointList[0];
-                var startMarker = new google.maps.Marker({
-                    position: start,
+        // Set Path
+        path = new google.maps.Polyline({
+            path: pointList,
+            geodesic: true,
+            strokeColor: '#FF0000',
+            strokeOpacity: 1.0,
+            strokeWeight: 2
+        });
+        path.setMap(map);
+
+        // Add Markers
+        if (pointList.length > 0) {
+            var start = pointList[0];
+            var startMarker = new google.maps.Marker({
+                position: start,
+                map: map,
+                title: 'Start'
+            });
+            addMarker(startMarker);
+            // --
+            if (pointList.length > 1) {
+                var end = pointList[0];
+                var endMarker = new google.maps.Marker({
+                    position: end,
                     map: map,
-                    title: 'Start'
+                    title: 'Finish'
                 });
-                addMarker(startMarker);
-                // --
-                if (pointList.length > 1) {
-                    var end = pointList[0];
-                    var endMarker = new google.maps.Marker({
-                        position: end,
-                        map: map,
-                        title: 'Finish'
-                    });
-                    addMarker(endMarker);
-                }
+                addMarker(endMarker);
             }
-
-            // Set map bounds
-            map.fitBounds(bounds);
         }
+
+        // Set map bounds
+        map.fitBounds(bounds);
     }
+}
 // ----------------------------------------------------------------------------
-    function setMapToCurrentPosition() {
-        if (navigator.geolocation) {
-            browserSupportFlag = true;
-            navigator.geolocation.getCurrentPosition(function(position) {
-                console.log("position update");
-                var myLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-                // --
-                clearMarkers();
-                var marker = new google.maps.Marker({
-                    position: myLatLng,
-                    map: map,
-                    title: 'You are here'
-                });
-                addMarker(marker);
-                // --
-                map.setCenter(myLatLng);
-            }, function() {
-                handleNoGeolocation(browserSupportFlag);
+function setMapToCurrentPosition() {
+    if (navigator.geolocation) {
+        browserSupportFlag = true;
+        navigator.geolocation.getCurrentPosition(function(position) {
+            console.log("position update");
+            var myLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+            // --
+            clearMarkers();
+            var marker = new google.maps.Marker({
+                position: myLatLng,
+                map: map,
+                title: 'You are here'
             });
-        }
-        // Browser doesn't support Geolocation
-        else {
-            browserSupportFlag = false;
+            addMarker(marker);
+            // --
+            map.setCenter(myLatLng);
+        }, function() {
             handleNoGeolocation(browserSupportFlag);
-        }
+        });
     }
+    // Browser doesn't support Geolocation
+    else {
+        browserSupportFlag = false;
+        handleNoGeolocation(browserSupportFlag);
+    }
+}
 
 // ----------------------------------------------------------------------------
 
-    function handleNoGeolocation(errorFlag) {
-        if (errorFlag == true) {
-            console.log("Geolocation service failed.");
-            map.setCenter(new google.maps.LatLng(51.508742, -0.120850));
-        } else {
-            console.log("Your browser doesn't support geolocation. We've placed you in Siberia.");
-            map.setCenter(new google.maps.LatLng(60, 105));
-        }
+function handleNoGeolocation(errorFlag) {
+    if (errorFlag == true) {
+        console.log("Geolocation service failed.");
+        map.setCenter(new google.maps.LatLng(51.508742, -0.120850));
+    } else {
+        console.log("Your browser doesn't support geolocation. We've placed you in Siberia.");
+        map.setCenter(new google.maps.LatLng(60, 105));
+    }
 }

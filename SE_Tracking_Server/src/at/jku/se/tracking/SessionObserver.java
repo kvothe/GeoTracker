@@ -103,8 +103,8 @@ public class SessionObserver {
 		// 1) query database for users currently observing "userId"
 		// 2) push new location to these users
 		try {
-			MsgLocationUpdate locationUpdate = new MsgLocationUpdate(username, newLat, newLong, newAccuracy, Float.NaN, Float.NaN, Double.NaN,
-					Float.NaN, timestamp);// TODO
+			MsgLocationUpdate locationUpdate = new MsgLocationUpdate(username, newLat, newLong, newAccuracy, 0.0f, 0.0f, 0.0,
+					0.0f, timestamp);// TODO
 			// --
 			List<Long> notifyUsers = new ArrayList<Long>();
 			List<TrackingSessionObject> observations = DatabaseService.queryTrackingSessions(userId, true, false, true);

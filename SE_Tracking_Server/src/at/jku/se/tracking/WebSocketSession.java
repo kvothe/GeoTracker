@@ -309,6 +309,7 @@ public class WebSocketSession {
 				List<Map<String, Object>> userList = new ArrayList<Map<String, Object>>();
 				// --
 				List<UserObject> users = DatabaseService.queryUsers(request.getOnlyObservable());
+
 				// --
 				for (UserObject u : users) {
 					if (u.getId() != session.getUserId()) {
@@ -317,6 +318,16 @@ public class WebSocketSession {
 						user.put("name", u.getName());
 						user.put("observable", u.isObservable());
 						user.put("online", false);
+						UserObject observed = DatabaseService.queryUser(u.getName());
+						
+						// check if this user already observes the requested user
+						List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(session.getUserId(), observed.getId(), true);
+						if (sessions.size() > 0) {
+							user.put("isObserved", true);
+						} else {
+							user.put("isObserved", false);
+						}
+						
 						// --
 						userList.add(user);
 					}
@@ -403,8 +414,10 @@ public class WebSocketSession {
 					// check if this user already observes the requested user
 					List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(session.getUserId(), observed.getId(), true);
 					if (sessions.size() > 0) {
-						sendMessage(new MsgError(request.getConversationId(), "You are already observing " + observed.getName()));
-						return;
+						
+						
+						sendMessage(new MsgError(request.getConversationId(), "You stopped observing " + observed.getName()));
+						//return;
 					}
 					// --
 					DatabaseService.startTrackingSession(session.getUserId(), observed.getId(), System.currentTimeMillis());

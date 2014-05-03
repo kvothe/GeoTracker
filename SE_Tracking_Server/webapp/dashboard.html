@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html id="html">
   <head>  
     <title>GeoTracker</title>   
     <link href="favicon.ico" rel="icon" type="image/x-icon" />
@@ -7,7 +7,7 @@
   <body>
     <div id="content" class="container" style="height: 80%;">
       <div class="row" style="height: 100%; margin-top:20px">
-        <div class="col-xs-12 col-lg-3 col-sm-3" > 
+        <div id="list_container" class="col-xs-12 col-lg-3 col-sm-3" > 
           <div hidden id="dashboard_user_panel" class="panel panel-default"  style="height: 100%">
             <div class="panel-heading">
               <div class="form-group">
@@ -18,7 +18,7 @@
             <div class="panel-body" style="overflow-y: auto; overflow-x: hidden;">
               <ul class="list-group" style="overflow-y: auto; overflow-x: hidden;" id="dashboard_list_users"></ul>
             </div>
-            <button id="dashboard_user_refresh" type="button" class="btn btn-default">&#8635;</button>
+            <!--<button id="dashboard_user_refresh" type="button" class="btn btn-default">&#8635;</button>-->
           </div>
           
           <div hidden id="dashboard_session_panel" class="panel panel-default" style="height: 100%;overflow-y: auto; overflow-x: hidden; min-height:50px;">
