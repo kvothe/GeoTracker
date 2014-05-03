@@ -983,6 +983,9 @@ function initializeMap() {
     $(window).resize(function() {
         google.maps.event.trigger(map, "resize");
     });
+    
+    google.maps.event.trigger(map, 'resize');
+    map.setZoom( map.getZoom() );
 
     // Register location tracker
     if (navigator.geolocation) {
@@ -1000,6 +1003,11 @@ function initializeMap() {
         }
         );
     }
+    
+     setTimeout(function() {
+            google.maps.event.trigger(map, "resize");
+            map.setZoom(15);
+        }, 10);
 }
 
 // ----------------------------------------------------------------------------
