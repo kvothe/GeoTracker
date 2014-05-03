@@ -392,6 +392,20 @@ public class DatabaseService {
 		 * select l.[timestamp], l.longitude, l.latitude, l.accuracy from [trackingsession] s, [geolocation] l where
 		 * s.id = 17 and l.[timestamp] >= s.starttime and l.[timestamp] <= s.[endtime] order by l.timestamp
 		 */
+
+		String str = 			"SELECT l.[" + GeolocationObject.COLUMN_TIMESTAMP + "], "
+				+ "l.["	+ GeolocationObject.COLUMN_LONGITUDE + "], "
+				+ "l.[" + GeolocationObject.COLUMN_LATITUDE + "], "
+				+ "l.[" + GeolocationObject.COLUMN_ACCURACY	+ "] "
+				+ "FROM [" + TrackingSessionObject.TABLE_NAME + "] s, [" + GeolocationObject.TABLE_NAME + "] l "
+				+ "WHERE s.[" + TrackingSessionObject.COLUMN_ID + "] = ? " 
+				+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] >= s.[" + TrackingSessionObject.COLUMN_STARTTIME + "] "
+				+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] <= s.[" + TrackingSessionObject.COLUMN_ENDTIME + "] "
+				+ "AND s.[" + TrackingSessionObject.COLUMN_OBSERVED + "] = l.[" + GeolocationObject.COLUMN_USER_FK + "]"
+				+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] >= ( "
+				+ "SELECT MAX("+GeolocationObject.COLUMN_TIMESTAMP+")-86400000 FROM [" + GeolocationObject.TABLE_NAME + "]) "
+				+ "ORDER BY l.[" + GeolocationObject.COLUMN_TIMESTAMP + "]";
+		
 		//@formatter:off
 		PreparedStatement query = con.prepareStatement(
 			"SELECT l.[" + GeolocationObject.COLUMN_TIMESTAMP + "], "
@@ -403,6 +417,8 @@ public class DatabaseService {
 			+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] >= s.[" + TrackingSessionObject.COLUMN_STARTTIME + "] "
 			+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] <= s.[" + TrackingSessionObject.COLUMN_ENDTIME + "] "
 			+ "AND s.[" + TrackingSessionObject.COLUMN_OBSERVED + "] = l.[" + GeolocationObject.COLUMN_USER_FK + "]"
+			+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] >= ( "
+			+ "SELECT MAX("+GeolocationObject.COLUMN_TIMESTAMP+")-86400000 FROM [" + GeolocationObject.TABLE_NAME + "]) "
 			+ "ORDER BY l.[" + GeolocationObject.COLUMN_TIMESTAMP + "]");
 		//@formatter:on
 		query.setLong(1, sessionId);
@@ -427,6 +443,7 @@ public class DatabaseService {
 		// --
 		return points;
 	}
+
 
 	// ------------------------------------------------------------------------
 

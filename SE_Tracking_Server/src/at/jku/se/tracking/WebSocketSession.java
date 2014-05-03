@@ -38,6 +38,7 @@ import at.jku.se.tracking.messages.MsgStopObservation;
 import at.jku.se.tracking.messages.serialization.AMessage;
 import at.jku.se.tracking.messages.serialization.InvalidMessageException;
 import at.jku.se.tracking.messages.serialization.MarshallingService;
+import at.jku.se.tracking.utils.GPSHelper;
 import at.jku.se.tracking.utils.PasswordEncryptionService;
 
 import com.json.exceptions.JSONParsingException;
@@ -381,7 +382,7 @@ public class WebSocketSession {
 				// --
 				List<GeolocationObject> points = DatabaseService.getTrackingSessionPoints(request.getObservationId());
 				// --
-				for (GeolocationObject p : points) {
+				for (GeolocationObject p : this.fixGPSPoints(points)) {
 					// crude implementation due to workaround for quick-json bug with trailing commas
 					Map<String, Object> point = new HashMap<String, Object>();
 					point.put("timestamp", p.getTimestamp());
@@ -389,6 +390,7 @@ public class WebSocketSession {
 					point.put("latitude", p.getLatitude());
 					point.put("accuracy", p.getAccuracy());
 					// --
+					
 					pointList.add(point);
 				}
 				// --
@@ -399,6 +401,33 @@ public class WebSocketSession {
 			}
 		}
 	}
+	
+	private List<GeolocationObject> fixGPSPoints(List<GeolocationObject> points) {
+		List<GeolocationObject> pointsRet = new ArrayList<GeolocationObject>();
+		GeolocationObject lastLoc = null;
+		for(GeolocationObject loc : points) {
+			if(lastLoc == null) {
+				lastLoc = loc;
+				pointsRet.add(loc);
+			} else {
+				if(GPSHelper.distance(loc.getLatitude(), loc.getLongitude(), lastLoc.getLatitude(), lastLoc.getLongitude()) > 3) {
+					if(loc.getAccuracy() != Double.NaN) {
+						if(loc.getAccuracy() <= 30.0f) {
+							pointsRet.add(loc);
+							lastLoc = loc;
+						}
+					} else {
+						pointsRet.add(loc);
+						lastLoc = loc;
+					}
+
+				}
+			}
+		}
+		return pointsRet;
+	}
+	
+	
 
 	// ------------------------------------------------------------------------
 

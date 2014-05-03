@@ -1007,7 +1007,7 @@ function initializeMap() {
      setTimeout(function() {
             google.maps.event.trigger(map, "resize");
             map.setZoom(15);
-        }, 10);
+        }, 100);
 }
 
 // ----------------------------------------------------------------------------
