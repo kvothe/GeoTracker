@@ -412,7 +412,7 @@ public class WebSocketSession {
 			} else {
 				if(GPSHelper.distance(loc.getLatitude(), loc.getLongitude(), lastLoc.getLatitude(), lastLoc.getLongitude()) > 3) {
 					if(loc.getAccuracy() != Double.NaN) {
-						if(loc.getAccuracy() <= 30.0f) {
+						if(loc.getAccuracy() <= 100.0f) {
 							pointsRet.add(loc);
 							lastLoc = loc;
 						}
