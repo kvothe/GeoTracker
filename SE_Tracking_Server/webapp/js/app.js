@@ -973,8 +973,8 @@ function loadScript() {
 
 function initializeMap() {
     var mapProp = {
-        zoom: 12,
-        mapTypeId: google.maps.MapTypeId.TERRAIN
+        zoom: 15,
+        mapTypeId: google.maps.MapTypeId.ROADMAP
     };
     map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
 
