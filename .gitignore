@@ -226,3 +226,11 @@ SE_Tracking_Server/bin/at/jku/se/tracking/database/UserObject.class
 SE_Tracking_Server/bin/at/jku/se/tracking/messages/serialization/AMessage.class
 SE_Tracking_Server/bin/at/jku/se/tracking/messages/serialization/MarshallingService.class
 /SE_Tracking_Server/webapp/nbproject/private/
+
+#netbeans specific
+core
+nbproject/*
+!nbproject/project.properties
+!nbproject/project.xml
+/SE_Tracking_Server/webapp/nbproject/project.properties
+/SE_Tracking_Server/webapp/nbproject/project.xml
