@@ -291,7 +291,7 @@ public class DatabaseService {
 		// --
 		return result;
 	}
-	
+
 	public static boolean setObservableSetting(Long userId, boolean isObservable) throws SQLException {
 		boolean result = false;
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
@@ -319,10 +319,10 @@ public class DatabaseService {
 
 	// ------------------------------------------------------------------------
 
-	public static List<TrackingSessionObject> queryTrackingSessions(long userId, boolean listObserved, boolean listObservers, boolean activeOnly)
+	public static List<TrackingSessionObject> queryTrackingSessions(long userId, boolean listObservedByUser, boolean listObserversOfUser, boolean activeOnly)
 			throws SQLException {
 		List<TrackingSessionObject> sessions = new ArrayList<TrackingSessionObject>();
-		if (CONNECTION_POOL == null || !listObserved && !listObservers) {
+		if (CONNECTION_POOL == null || !listObservedByUser && !listObserversOfUser) {
 			return sessions;
 		}
 		// --
@@ -330,7 +330,7 @@ public class DatabaseService {
 		// --
 		PreparedStatement query = null;
 		String stmt = "SELECT * FROM [" + TrackingSessionObject.TABLE_NAME + "] WHERE ";
-		if (listObserved && listObservers) {
+		if (listObservedByUser && listObserversOfUser) {
 			stmt += "[" + TrackingSessionObject.COLUMN_OBSERVER + "] = ? OR [" + TrackingSessionObject.COLUMN_OBSERVED + "] = ?";
 			if (activeOnly) {
 				stmt += " AND [" + TrackingSessionObject.COLUMN_ENDTIME + "] IS NULL";
@@ -338,14 +338,14 @@ public class DatabaseService {
 			query = con.prepareStatement(stmt);
 			query.setLong(1, userId);
 			query.setLong(2, userId);
-		} else if (listObserved) {
+		} else if (listObservedByUser) {
 			stmt += "[" + TrackingSessionObject.COLUMN_OBSERVER + "] = ?";
 			if (activeOnly) {
 				stmt += " AND [" + TrackingSessionObject.COLUMN_ENDTIME + "] IS NULL";
 			}
 			query = con.prepareStatement(stmt);
 			query.setLong(1, userId);
-		} else if (listObservers) {
+		} else if (listObserversOfUser) {
 			stmt += "[" + TrackingSessionObject.COLUMN_OBSERVED + "] = ?";
 			if (activeOnly) {
 				stmt += " AND [" + TrackingSessionObject.COLUMN_ENDTIME + "] IS NULL";
@@ -387,12 +387,7 @@ public class DatabaseService {
 		List<GeolocationObject> points = new ArrayList<GeolocationObject>();
 		// --
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
-		// --
-		/*
-		 * select l.[timestamp], l.longitude, l.latitude, l.accuracy from [trackingsession] s, [geolocation] l where
-		 * s.id = 17 and l.[timestamp] >= s.starttime and l.[timestamp] <= s.[endtime] order by l.timestamp
-		 */
-		
+
 		//@formatter:off
 		PreparedStatement query = con.prepareStatement(
 			"SELECT l.[" + GeolocationObject.COLUMN_TIMESTAMP + "], "
@@ -402,10 +397,10 @@ public class DatabaseService {
 			+ "FROM [" + TrackingSessionObject.TABLE_NAME + "] s, [" + GeolocationObject.TABLE_NAME + "] l "
 			+ "WHERE s.[" + TrackingSessionObject.COLUMN_ID + "] = ? " 
 			+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] >= s.[" + TrackingSessionObject.COLUMN_STARTTIME + "] "
-			+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] <= s.[" + TrackingSessionObject.COLUMN_ENDTIME + "] "
-			+ "AND s.[" + TrackingSessionObject.COLUMN_OBSERVED + "] = l.[" + GeolocationObject.COLUMN_USER_FK + "]"
-			+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] >= ( "
-			+ "SELECT MAX("+GeolocationObject.COLUMN_TIMESTAMP+")-86400000 FROM [" + GeolocationObject.TABLE_NAME + "]) "
+			+ "AND (s.[" + TrackingSessionObject.COLUMN_ENDTIME + "] IS NULL OR l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] <= s.[" + TrackingSessionObject.COLUMN_ENDTIME + "])"
+			// + "AND s.[" + TrackingSessionObject.COLUMN_OBSERVED + "] = l.[" + GeolocationObject.COLUMN_USER_FK + "] " // ?? die einschränkung sollte schon davor beim ermitteln der session ID erfolgen, so kann man nicht nach sessions wo man OBSERVER ist abfragen
+			//+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] >= ( "
+			//+ "SELECT MAX("+GeolocationObject.COLUMN_TIMESTAMP+")-86400000 FROM [" + GeolocationObject.TABLE_NAME + "]) " // ?? max 24h vom letzten eintrag in der tabelle? eine session sollten wir schon komplett anzeigen, wenn dann die länge einer session beschränken
 			+ "ORDER BY l.[" + GeolocationObject.COLUMN_TIMESTAMP + "]");
 		//@formatter:on
 		query.setLong(1, sessionId);
@@ -430,7 +425,6 @@ public class DatabaseService {
 		// --
 		return points;
 	}
-
 
 	// ------------------------------------------------------------------------
 
