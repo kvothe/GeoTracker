@@ -1153,7 +1153,9 @@ function addPointToPath(lat, lng, acc) {
 		// --
 		var bounds = map.getBounds();
 		bounds.extend(point);
-		map.fitBounds(bounds);
+		//check if bounds have changed(otherwise the map would zoom out)
+		if(map.getBounds() != bounds)
+			map.fitBounds(bounds);
 	}
 }
 
