@@ -1135,6 +1135,7 @@ function addPointToPath(lat, lng, acc) {
 		var point = new google.maps.LatLng(lat, lng);
 		// --
 		path.getPath().push(point);
+		acc = acc == 0 ? 0 : acc / 100;
 		// --
 		var circle = {
 			strokeColor : '#FF0000',
