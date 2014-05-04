@@ -594,6 +594,7 @@ function handleResponseSessionList(data) {
 				entryId : entryId,
 				observationid : observationid
 			}, function (event) {
+				hideMessage();
 				sendRequestSessionPoints(event.data.observationid);
 				currentObservation = event.data.observationid;
 			});
@@ -605,6 +606,7 @@ function handleResponseSessionList(data) {
 				starttime : starttime,
 				endtime : endtime
 			}, function (event) {
+				hideMessage();
 				listItemHandlerStopObservation(event.data.observationid, event.data.user, event.data.starttime, event.data.endtime);
 			});
 			// --
