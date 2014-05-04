@@ -149,7 +149,7 @@ function start() {
 	WebSocket callbacks
 	--------------------------------------------------------------------------- */
 
-	// Show a connected message when the WebSocket is opened.
+	// initialize the app/socket.
 	socket.onopen = function (event) {
 		if (window.timerID) {
 			/* a setInterval has been fired */
