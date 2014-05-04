@@ -82,4 +82,11 @@ public class GeolocationObject {
 	public float getSpeed() {
 		return speed;
 	}
+
+	public boolean isSameLocation(GeolocationObject obj)	{
+	
+		return obj.getLongitude() == this.getLongitude() && obj.getLatitude() == this.getLatitude(); //maybe we should check further the altitude, but not now.
+	}
+	
+	
 }
