@@ -9,6 +9,7 @@ import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.resource.FileResource;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.websocket.api.extensions.ExtensionFactory;
 import org.eclipse.jetty.websocket.server.WebSocketHandler;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 
@@ -154,6 +155,15 @@ public class WebSocketServer {
 			@Override
 			public void configure(WebSocketServletFactory webSocketServletFactory) {
 				webSocketServletFactory.register(webSocket);
+				// workaround for bug in jetty > 9.1.2 with compression of large messages
+				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=431459
+				// WARNING: disables message compression -> might be better to revert to
+				// Jetty 9.1.2; remove as soon as bug is fixed
+				ExtensionFactory extFactory = webSocketServletFactory.getExtensionFactory();
+				// --
+				extFactory.unregister("deflate-frame");
+				extFactory.unregister("permessage-deflate");
+				extFactory.unregister("x-webkit-deflate-frame");
 			}
 		};
 		ContextHandler wsContextHandler = new ContextHandler();
