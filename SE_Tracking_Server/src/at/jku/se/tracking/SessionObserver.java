@@ -99,15 +99,15 @@ public class SessionObserver {
 	// ------------------------------------------------------------------------
 
 	public static void pushLocationUpdate(long timestamp, long userId, String username, double newLong, double newLat, double newAccuracy) {
-		// TODO:
-		// 1) query database for users currently observing "userId"
-		// 2) push new location to these users
 		try {
-			MsgLocationUpdate locationUpdate = new MsgLocationUpdate(username, newLat, newLong, newAccuracy, 0.0f, 0.0f, 0.0,
-					0.0f, timestamp);// TODO
+			MsgLocationUpdate locationUpdate = new MsgLocationUpdate(username, newLat, newLong, newAccuracy, timestamp); // TODO:
+																															// support
+																															// altitude,
+																															// speed,
+																															// heading
 			// --
 			List<Long> notifyUsers = new ArrayList<Long>();
-			List<TrackingSessionObject> observations = DatabaseService.queryTrackingSessions(userId, true, false, true);
+			List<TrackingSessionObject> observations = DatabaseService.queryTrackingSessions(userId, false, true, true);
 			for (TrackingSessionObject s : observations) {
 				long observer = s.getObserver();
 				if (!notifyUsers.contains(observer)) {
@@ -119,6 +119,8 @@ public class SessionObserver {
 				tmp[i] = notifyUsers.get(i);
 			}
 			sendMessageTo(locationUpdate, tmp);
+			// --
+			System.out.println("PUSHING LOCATION UPDATE");
 		} catch (SQLException e) {
 			System.err.println("Error while pushing location update...");
 			e.printStackTrace();

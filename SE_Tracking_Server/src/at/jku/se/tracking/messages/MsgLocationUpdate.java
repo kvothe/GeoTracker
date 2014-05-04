@@ -10,7 +10,7 @@ public class MsgLocationUpdate extends AMessage {
 	private static final String FIELD_SESSION_ID = "session-id";
 	private static final String FIELD_USERNAME = "username";
 	private static final String FIELD_LATITUDE = "latitude";
-	private static final String FIELD_LONGITUDE = "logitude";
+	private static final String FIELD_LONGITUDE = "longitude";
 	private static final String FIELD_ACCURACY = "accuracy";
 	private static final String FIELD_ALTITUDE = "altitude";
 	private static final String FIELD_ALTITUDE_ACCURACCY = "altitude-accuracy";
@@ -24,6 +24,14 @@ public class MsgLocationUpdate extends AMessage {
 		setMap(map);
 	}
 
+	public MsgLocationUpdate(String username, double latitude, double longitude, double accuracy, long timestamp) {
+		setType(MessageType.LOCATION_UPDATE);
+		setValue(FIELD_USERNAME, username);
+		setValue(FIELD_LATITUDE, latitude);
+		setValue(FIELD_LONGITUDE, longitude);
+		setValue(FIELD_ACCURACY, accuracy);		
+		setValue(FIELD_TIMESTAMP, timestamp);
+	}
 	public MsgLocationUpdate(String username, double latitude, double longitude, double accuracy, float altitude, float altitudeAccuracy,
 			double heading, float speed, long timestamp) {
 		setType(MessageType.LOCATION_UPDATE);

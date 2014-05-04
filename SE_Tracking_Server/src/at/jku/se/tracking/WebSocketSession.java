@@ -523,6 +523,7 @@ public class WebSocketSession {
 		if (session == null) {
 			if (SessionObserver.hasSession(sessionId)) {
 				this.session = SessionObserver.getSession(sessionId);
+				SessionObserver.registerSession(this.session, this);
 			} else {
 				sendMessage(new MsgError(message.getConversationId(), "invalid session"));
 				return false;
