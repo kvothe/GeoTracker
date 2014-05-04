@@ -382,7 +382,8 @@ public class WebSocketSession {
 				// --
 				List<GeolocationObject> points = DatabaseService.getTrackingSessionPoints(request.getObservationId());
 				// --
-				for (GeolocationObject p : this.fixGPSPoints(points)) {
+				//for (GeolocationObject p : this.fixGPSPoints(points)) {
+				for (GeolocationObject p : points) {
 					// crude implementation due to workaround for quick-json bug with trailing commas
 					Map<String, Object> point = new HashMap<String, Object>();
 					point.put("timestamp", p.getTimestamp());
@@ -394,6 +395,7 @@ public class WebSocketSession {
 					pointList.add(point);
 				}
 				// --
+				System.out.println("pushing session points - " + points.size());
 				sendMessage(new MsgResponseList(request.getConversationId(), pointList));
 			} catch (SQLException e) {
 				e.printStackTrace();
