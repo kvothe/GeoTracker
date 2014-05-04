@@ -397,6 +397,7 @@ public class DatabaseService {
 			+ "FROM [" + TrackingSessionObject.TABLE_NAME + "] s, [" + GeolocationObject.TABLE_NAME + "] l "
 			+ "WHERE s.[" + TrackingSessionObject.COLUMN_ID + "] = ? " 
 			+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] >= s.[" + TrackingSessionObject.COLUMN_STARTTIME + "] "
+			+ "AND l.[" + GeolocationObject.COLUMN_ACCURACY + "] <= 70 " //tests mit Bestandsdaten zeigen gute Ergebnisse
 			+ "AND (s.[" + TrackingSessionObject.COLUMN_ENDTIME + "] IS NULL OR l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] <= s.[" + TrackingSessionObject.COLUMN_ENDTIME + "])"
 			+ "AND s.[" + TrackingSessionObject.COLUMN_OBSERVED + "] = l.[" + GeolocationObject.COLUMN_USER_FK + "] " // ?? die einschrÃ¤nkung sollte schon davor beim ermitteln der session ID erfolgen, so kann man nicht nach sessions wo man OBSERVER ist abfragen
 			//die Einschränkung kann nicht weggelassen werden, sonst würde ja observer-egal abgefragt. Man könnte den Observer vorher ermitteln, aber wenn hier schon ein Join ist dann können wir den auch verwenden.
