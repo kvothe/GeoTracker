@@ -382,14 +382,7 @@ public class WebSocketSession {
 				// --
 				List<GeolocationObject> points = DatabaseService.getTrackingSessionPoints(request.getObservationId());
 				// --
-				//for (GeolocationObject p : this.fixGPSPoints(points)) {
-
-				GeolocationObject lastPosition = null; //used for reducing the points if there was no movement // 
-				for (GeolocationObject p : points) {
-					if(lastPosition != null && p.isSameLocation(lastPosition))	{
-						continue;
-					}
-					lastPosition = p;
+				for (GeolocationObject p : this.fixGPSPoints(points)) {
 					// crude implementation due to workaround for quick-json bug with trailing commas
 					Map<String, Object> point = new HashMap<String, Object>();
 					point.put("timestamp", p.getTimestamp());
@@ -417,26 +410,28 @@ public class WebSocketSession {
 			if(lastLoc == null) {
 				lastLoc = loc;
 				pointsRet.add(loc);
-			} else {
-				double distance = GPSHelper.distance(loc.getLatitude(), loc.getLongitude(), lastLoc.getLatitude(), lastLoc.getLongitude());
-				if(distance > 3 && distance < 50)  {
-					if(loc.getAccuracy() != Double.NaN) {
-						if(loc.getAccuracy() <= 100.0f) {
-							pointsRet.add(loc);
-							lastLoc = loc;
-						}
-					} else {
+				continue;
+			}
+			if(lastLoc.isSameLocation(loc)){
+				continue;
+			}
+			double distance = GPSHelper.gps2m((float)loc.getLatitude(), (float)loc.getLongitude(), (float)lastLoc.getLatitude(), (float)lastLoc.getLongitude());
+			System.out.println("distance " + distance);
+			if(distance > 2 && distance < 50)  {
+				if(loc.getAccuracy() != Double.NaN) {
+					if(loc.getAccuracy() <= 100.0f) {
 						pointsRet.add(loc);
 						lastLoc = loc;
 					}
-
+				} else {
+					pointsRet.add(loc);
+					lastLoc = loc;
 				}
+
 			}
 		}
 		return pointsRet;
 	}
-	
-	
 
 	// ------------------------------------------------------------------------
 
