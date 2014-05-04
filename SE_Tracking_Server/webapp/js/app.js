@@ -360,9 +360,11 @@ function showDashboard(content) {
 				$('#list_container').removeClass("col-sm-3");
 				$('#list_container').removeClass("col-lg-3");
 				$('#html').removeClass("html");
+                                initializeMap();
 				sendRequestUserList(false);
 			} else if (content == "session-list") {
 				$('#html').addClass("html");
+                                initializeMap();
 				$('#googleMap').show();
 				$('#dashboard_session_panel').show();
 				$('#dashboard_session_refresh').click(buttonHandlerRefreshSessionList);
@@ -380,6 +382,7 @@ function showDashboard(content) {
 		if (content == "user-list") {
 			$('#dashboard_session_panel').hide();
 			$('#html').removeClass("html");
+                        initializeMap();
 			$('#dashboard_user_panel').fadeIn();
 			$('#dashboard_user_refresh').click(buttonHandlerRefreshUserList);
 			$('#googleMap').hide();
@@ -390,6 +393,7 @@ function showDashboard(content) {
 			$('#dashboard_user_panel').hide();
 			$('#googleMap').show();
 			$('#html').addClass("html");
+                        initializeMap();
 			$('#list_container').addClass("col-lg-3 col-sm-3");
 			$('#dashboard_session_panel').fadeIn();
 			$('#dashboard_session_refresh').click(buttonHandlerRefreshSessionList);
