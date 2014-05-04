@@ -350,7 +350,7 @@ function showDashboard(content) {
 	if (!$('#googleMap').length) {
 		hideMessage();
 		$('#page_content').load('dashboard.html #content', function () {
-			// loadScript();
+
 			initializeMap();
 			// --
 			if (content == "user-list") {
@@ -877,10 +877,6 @@ function searchObservationList(query) {
 	}
 }
 
-/* ----------------------------------------------------------------------------
-Utilities
---------------------------------------------------------------------------- */
-
 function scrollToTop() {
 	$('html, body').animate({
 		scrollTop : '0px'
@@ -927,6 +923,13 @@ function makeAlertDismissable() {
 	$("#page_alert").append("<button type=\"button\" class=\"close\" onclick =\"hideMessage()\" aria-hidden=\"true\">&times;</button>");
 }
 
+
+/* ----------------------------------------------------------------------------
+Utilities
+--------------------------------------------------------------------------- */
+
+// Date and Time
+
 function formatTimestamp(milliseconds) {
 	var d = new Date(milliseconds);
 	// --
@@ -943,8 +946,10 @@ function formatDate(milliseconds) {
 	return str;
 }
 
+
 // ----------------------------------------------------------------------------
 
+// Cookies
 
 function setCookie(cname, cvalue, exhours) {
 	var d = new Date();
@@ -970,13 +975,10 @@ function eraseCookie(cname) {
 
 // ----------------------------------------------------------------------------
 
-function loadScript() {
-	var script = document.createElement('script');
-	script.type = 'text/javascript';
-	script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyCk21t6ICUW7xeQMvz0qL1jL_VNwl7sLtw&sensor=false&' +
-		'callback=initializeMap';
-	document.body.appendChild(script);
-}
+
+/* ----------------------------------------------------------------------------
+Mapping
+--------------------------------------------------------------------------- */
 
 function initializeMap() {
 	var mapProp = {
@@ -1016,8 +1018,6 @@ function initializeMap() {
 		map.setZoom(15);
 	}, 100);
 }
-
-// ----------------------------------------------------------------------------
 
 function clearMarkers() {
 	if (markers) {
