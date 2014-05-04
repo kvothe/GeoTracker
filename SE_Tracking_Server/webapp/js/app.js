@@ -1182,22 +1182,6 @@ function setMapToCurrentPosition() {
 // ----------------------------------------------------------------------------
 
 function handleNoGeolocation(errorFlag) {
-	// TEST CODE
-	var coords = {
-		latitude : 48.34564,
-		longitude : 14.38565,
-		accuracy : 99,
-		altitude : 0,
-		altitudeAccuracy : 0,
-		heading : 0,
-		speed : 0
-	};
-	var position = {
-		coords : coords,
-		timestamp : 1399187507235
-	};
-	sendLocationUpdate(position);
-	// --
 	if (errorFlag == true) {
 		console.log("Geolocation service failed.");
 		map.setCenter(new google.maps.LatLng(51.508742, -0.120850));
