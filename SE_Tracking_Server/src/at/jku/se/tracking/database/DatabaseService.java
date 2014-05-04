@@ -388,9 +388,9 @@ public class DatabaseService {
 		// --
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
 
+		
 		//@formatter:off
-		PreparedStatement query = con.prepareStatement(
-			"SELECT l.[" + GeolocationObject.COLUMN_TIMESTAMP + "], "
+		String stmt = "SELECT l.[" + GeolocationObject.COLUMN_TIMESTAMP + "], "
 			+ "l.["	+ GeolocationObject.COLUMN_LONGITUDE + "], "
 			+ "l.[" + GeolocationObject.COLUMN_LATITUDE + "], "
 			+ "l.[" + GeolocationObject.COLUMN_ACCURACY	+ "] "
@@ -398,12 +398,16 @@ public class DatabaseService {
 			+ "WHERE s.[" + TrackingSessionObject.COLUMN_ID + "] = ? " 
 			+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] >= s.[" + TrackingSessionObject.COLUMN_STARTTIME + "] "
 			+ "AND (s.[" + TrackingSessionObject.COLUMN_ENDTIME + "] IS NULL OR l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] <= s.[" + TrackingSessionObject.COLUMN_ENDTIME + "])"
-			// + "AND s.[" + TrackingSessionObject.COLUMN_OBSERVED + "] = l.[" + GeolocationObject.COLUMN_USER_FK + "] " // ?? die einschr√§nkung sollte schon davor beim ermitteln der session ID erfolgen, so kann man nicht nach sessions wo man OBSERVER ist abfragen
+			+ "AND s.[" + TrackingSessionObject.COLUMN_OBSERVED + "] = l.[" + GeolocationObject.COLUMN_USER_FK + "] " // ?? die einschr√§nkung sollte schon davor beim ermitteln der session ID erfolgen, so kann man nicht nach sessions wo man OBSERVER ist abfragen
+			//die Einschr‰nkung kann nicht weggelassen werden, sonst w¸rde ja observer-egal abgefragt. Man kˆnnte den Observer vorher ermitteln, aber wenn hier schon ein Join ist dann kˆnnen wir den auch verwenden.
 			//+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] >= ( "
 			//+ "SELECT MAX("+GeolocationObject.COLUMN_TIMESTAMP+")-86400000 FROM [" + GeolocationObject.TABLE_NAME + "]) " // ?? max 24h vom letzten eintrag in der tabelle? eine session sollten wir schon komplett anzeigen, wenn dann die l√§nge einer session beschr√§nken
-			+ "ORDER BY l.[" + GeolocationObject.COLUMN_TIMESTAMP + "]");
+			+ "ORDER BY l.[" + GeolocationObject.COLUMN_TIMESTAMP + "]";
 		//@formatter:on
+		PreparedStatement query = con.prepareStatement(stmt);
+		//System.out.println("stmt: " + stmt + " for session id " + sessionId);
 		query.setLong(1, sessionId);
+		
 		// --
 		ResultSet rs = query.executeQuery();
 		// --
