@@ -416,7 +416,7 @@ public class WebSocketSession {
 				continue;
 			}
 			double distance = GPSHelper.gps2m((float)loc.getLatitude(), (float)loc.getLongitude(), (float)lastLoc.getLatitude(), (float)lastLoc.getLongitude());
-			System.out.println("distance " + distance);
+			//System.out.println("distance " + distance);
 			if(distance > 2 && distance < 50)  {
 				if(loc.getAccuracy() != Double.NaN) {
 					if(loc.getAccuracy() <= 100.0f) {
