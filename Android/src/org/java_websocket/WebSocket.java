@@ -22,7 +22,7 @@ public interface WebSocket {
 	 * constructor is used, DEFAULT_PORT will be the port the WebSocketServer
 	 * is binded to. Note that ports under 1024 usually require root permissions.
 	 */
-	public static final int DEFAULT_PORT = 80;
+	public static final int DEFAULT_PORT = 443;
 
 	public static final int DEFAULT_WSS_PORT = 443;
 
