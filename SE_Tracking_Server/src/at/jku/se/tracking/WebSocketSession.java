@@ -3,8 +3,6 @@ package at.jku.se.tracking;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -38,7 +36,7 @@ import at.jku.se.tracking.messages.MsgStopObservation;
 import at.jku.se.tracking.messages.serialization.AMessage;
 import at.jku.se.tracking.messages.serialization.InvalidMessageException;
 import at.jku.se.tracking.messages.serialization.MarshallingService;
-import at.jku.se.tracking.utils.GPSHelper;
+import at.jku.se.tracking.utils.HandleRequestHelper;
 import at.jku.se.tracking.utils.PasswordEncryptionService;
 
 import com.json.exceptions.JSONParsingException;
@@ -307,39 +305,14 @@ public class WebSocketSession {
 	private void handleUserList(MsgRequestUserList request) throws IOException {
 		if (checkSession(request)) {
 			try {
-				List<Map<String, Object>> userList = new ArrayList<Map<String, Object>>();
-				// --
-				List<UserObject> users = DatabaseService.queryUsers(request.getOnlyObservable());
-
-				// --
-				for (UserObject u : users) {
-					if (u.getId() != session.getUserId()) {
-						// crude implementation due to workaround for quick-json bug with trailing commas
-						Map<String, Object> user = new HashMap<String, Object>();
-						user.put("name", u.getName());
-						user.put("observable", u.isObservable());
-						user.put("online", false);
-						UserObject observed = DatabaseService.queryUser(u.getName());
-						
-						// check if this user already observes the requested user
-						List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(session.getUserId(), observed.getId(), true);
-						if (sessions.size() > 0) {
-							user.put("isObserved", true);
-						} else {
-							user.put("isObserved", false);
-						}
-						
-						// --
-						userList.add(user);
-					}
-				}
-				// --
-				sendMessage(new MsgResponseList(request.getConversationId(), userList));
+			List<Map<String, Object>> userList = HandleRequestHelper.getUserList(session.getUserId(), request.getOnlyObservable());
+			// --
+			sendMessage(new MsgResponseList(request.getConversationId(), userList));
 			} catch (SQLException e) {
-				e.printStackTrace();
-				sendMessage(new MsgError(request.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
+			e.printStackTrace();
+			sendMessage(new MsgError(request.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
 			}
-		}
+			}
 	}
 
 	// ------------------------------------------------------------------------
@@ -347,23 +320,7 @@ public class WebSocketSession {
 	private void handleSessionList(MsgRequestSessionList request) throws IOException {
 		if (checkSession(request)) {
 			try {
-				List<Map<String, Object>> sessionList = new ArrayList<Map<String, Object>>();
-				// --
-				List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(session.getUserId(), true, false, false);
-				// --
-				for (TrackingSessionObject s : sessions) {
-					// crude implementation due to workaround for quick-json bug with trailing commas
-					Map<String, Object> session = new HashMap<String, Object>();
-					UserObject u = DatabaseService.queryUser(s.getObserved());
-					session.put("observation-id", s.getId());
-					if (u != null) {
-						session.put("observed", u.getName());
-					}
-					session.put("starttime", s.getStarttime());
-					session.put("endtime", s.getEndtime());
-					// --
-					sessionList.add(session);
-				}
+				List<Map<String, Object>> sessionList = HandleRequestHelper.getSessionList(session.getUserId());
 				// --
 				sendMessage(new MsgResponseList(request.getConversationId(), sessionList));
 			} catch (SQLException e) {
@@ -378,59 +335,13 @@ public class WebSocketSession {
 	private void handleSessionPoints(MsgRequestSessionTrack request) throws IOException {
 		if (checkSession(request)) {
 			try {
-				List<Map<String, Object>> pointList = new ArrayList<Map<String, Object>>();
-				// --
-				List<GeolocationObject> points = DatabaseService.getTrackingSessionPoints(request.getObservationId());
-				// --
-				for (GeolocationObject p : this.fixGPSPoints(points)) {
-					// crude implementation due to workaround for quick-json bug with trailing commas
-					Map<String, Object> point = new HashMap<String, Object>();
-					point.put("timestamp", p.getTimestamp());
-					point.put("longitude", p.getLongitude());
-					point.put("latitude", p.getLatitude());
-					point.put("accuracy", p.getAccuracy());
-					// --
-					
-					pointList.add(point);
-				}
-				// --
-				System.out.println("pushing session points - " + pointList.size() + " reduced from " + points.size() + " points");
+				List<Map<String, Object>> pointList = HandleRequestHelper.getSessionPoints(request.getObservationId());
 				sendMessage(new MsgResponseList(request.getConversationId(), pointList));
 			} catch (SQLException e) {
 				e.printStackTrace();
 				sendMessage(new MsgError(request.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
 			}
 		}
-	}
-	
-	private List<GeolocationObject> fixGPSPoints(List<GeolocationObject> points) {
-		List<GeolocationObject> pointsRet = new ArrayList<GeolocationObject>();
-		GeolocationObject lastLoc = null;
-		for(GeolocationObject loc : points) {
-			if(lastLoc == null) {
-				lastLoc = loc;
-				pointsRet.add(loc);
-				continue;
-			}
-			if(lastLoc.isSameLocation(loc)){
-				continue;
-			}
-			double distance = GPSHelper.gps2m((float)loc.getLatitude(), (float)loc.getLongitude(), (float)lastLoc.getLatitude(), (float)lastLoc.getLongitude());
-			//System.out.println("distance " + distance);
-			if(distance > 2 && distance < 50)  {
-				if(loc.getAccuracy() != Double.NaN) {
-					if(loc.getAccuracy() <= 100.0f) {
-						pointsRet.add(loc);
-						lastLoc = loc;
-					}
-				} else {
-					pointsRet.add(loc);
-					lastLoc = loc;
-				}
-
-			}
-		}
-		return pointsRet;
 	}
 
 	// ------------------------------------------------------------------------

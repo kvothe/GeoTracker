@@ -1,6 +1,7 @@
 package at.jku.se.tracking.messages.serialization;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import at.jku.se.tracking.messages.MessageType;
@@ -54,7 +55,7 @@ public class MarshallingService {
 	public static String toJSON(AMessage m) {
 		return getGenerator().generateJson(m.getMap());
 	}
-
+	
 	// ------------------------------------------------------------------------
 
 	@SuppressWarnings("rawtypes")
@@ -111,5 +112,29 @@ public class MarshallingService {
 			}
 		}
 		return null;
+	}
+
+	public static String toJSON(Map<String, Object> m){
+		return getGenerator().generateJson(m);
+	}
+	
+	public static String toJSON(List<Map<String, Object>> l){
+		return getGenerator().generateJson(l);
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static Map<String, Object> unpackMap(Map<String, Object> map){
+		if (map.containsKey("root")) {
+			Object root = map.get("root");
+			if (root instanceof ArrayList<?>) {
+				for (Object o : (ArrayList<?>) root) {
+					if (o instanceof Map) {
+						map = (Map) o;
+						break;
+					}
+				}
+			}
+		}
+		return map;
 	}
 }

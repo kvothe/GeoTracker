@@ -5,6 +5,8 @@ import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.resource.FileResource;
 import org.eclipse.jetty.util.resource.Resource;
@@ -12,6 +14,7 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.api.extensions.ExtensionFactory;
 import org.eclipse.jetty.websocket.server.WebSocketHandler;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
+import org.glassfish.jersey.servlet.ServletContainer;
 
 import at.jku.se.tracking.database.DatabaseService;
 
@@ -144,6 +147,17 @@ public class WebSocketServer {
 		resourceHandler.setDirectoriesListed(true);
 		resourceHandler.setResourceBase("./webapp/");
 		handlerCollection.addHandler(resourceHandler);
+		
+		//REST
+		ServletContextHandler context = new ServletContextHandler();
+		context.setContextPath("/");
+		handlerCollection.addHandler(context);
+		
+		//configure path
+		ServletHolder jerseyServlet = context.addServlet(ServletContainer.class, "/rest/*");
+		jerseyServlet.setInitOrder(1);
+		jerseyServlet.setInitParameter("jersey.config.server.provider.packages","at.jku.se.tracking.rest");
+		
 		// --
 		server.setHandler(handlerCollection);
 	}

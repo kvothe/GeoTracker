@@ -1,5 +1,10 @@
 package at.jku.se.tracking.utils;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import at.jku.se.tracking.database.GeolocationObject;
+
 public class GPSHelper {
 
 //	public static double distance(double lat1, double lng1, double lat2,
@@ -36,6 +41,36 @@ public class GPSHelper {
 	    double tt = Math.acos(t1 + t2 + t3);
 
 	    return 6366000*tt / 1000;
+	}
+	
+	public static List<GeolocationObject> fixGPSPoints(List<GeolocationObject> points) {
+		List<GeolocationObject> pointsRet = new ArrayList<GeolocationObject>();
+		GeolocationObject lastLoc = null;
+		for(GeolocationObject loc : points) {
+			if(lastLoc == null) {
+				lastLoc = loc;
+				pointsRet.add(loc);
+				continue;
+			}
+			if(lastLoc.isSameLocation(loc)){
+				continue;
+			}
+			double distance = GPSHelper.gps2m((float)loc.getLatitude(), (float)loc.getLongitude(), (float)lastLoc.getLatitude(), (float)lastLoc.getLongitude());
+			//System.out.println("distance " + distance);
+			if(distance > 2 && distance < 50)  {
+				if(loc.getAccuracy() != Double.NaN) {
+					if(loc.getAccuracy() <= 100.0f) {
+						pointsRet.add(loc);
+						lastLoc = loc;
+					}
+				} else {
+					pointsRet.add(loc);
+					lastLoc = loc;
+				}
+
+			}
+		}
+		return pointsRet;
 	}
 
 }
