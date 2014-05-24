@@ -1,100 +1,122 @@
 package at.jku.geotracker.activity;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-
-import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.Activity;
+import android.app.FragmentTransaction;
+import android.content.Intent;
 import android.os.Bundle;
-import android.widget.TextView;
+import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.widget.DrawerLayout;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
 import at.jku.geotracker.R;
-import at.jku.geotracker.ws.client.WSClient;
-import at.jku.geotracker.ws.ssl.MySSLSocketFactory;
+import at.jku.geotracker.activity.menu.MainMenuListAdapter;
+import at.jku.geotracker.application.Globals;
+import at.jku.geotracker.fragment.SessionListFragment;
+import at.jku.geotracker.fragment.SettingsFragment;
+import at.jku.geotracker.fragment.UserListFragment;
+import at.jku.geotracker.service.GPSTrackerService;
 
 public class MainActivity extends Activity {
 
-	public TextView debugView;
+	private DrawerLayout drawerLayout;
+	private ActionBarDrawerToggle drawerToggle;
+	private ListView menuListView;
+	private Intent gspIntent;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		debugView = (TextView) findViewById(R.id.debugview);
 
-		WSClient c = null;
-		try {
-			c = new WSClient(new URI("wss://schnelleflitzer.at"));
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		debugView.setText("start connect");
+		final LinearLayout menuLayout = (LinearLayout) findViewById(R.id.left_drawer);
+		menuListView = (ListView) findViewById(R.id.menu_list);
+		menuListView.addFooterView(new View(getApplicationContext()), null,
+				true);
 
-		try {
-			KeyStore trustStore = KeyStore.getInstance(KeyStore
-					.getDefaultType());
-			trustStore.load(null, null);
+		((Globals) getApplication()).initWSS();
 
-			MySSLSocketFactory sf = new MySSLSocketFactory(trustStore);
-			sf.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+		this.gspIntent = new Intent(this, GPSTrackerService.class);
+		startService(this.gspIntent);
 
-			c.setSocket(sf.createSocket());
-
-			c.connectBlocking();
-
-			JSONObject jo = new JSONObject();
-			try {
-				jo.put("cid", 2);
-				jo.put("message-type", "request-login");
-				jo.put("username", "asdfasdf");
-				jo.put("password", "test11");
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+		drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+		drawerToggle = new ActionBarDrawerToggle(this, drawerLayout,
+				R.drawable.menu, R.string.drawer_open, R.string.drawer_close) {
+			public void onDrawerClosed(View view) {
+				invalidateOptionsMenu();
 			}
 
-			String message = jo.toString();
-			System.out.println(message);
+			public void onDrawerOpened(View drawerView) {
+				invalidateOptionsMenu();
+			}
+		};
+		drawerLayout.setDrawerListener(drawerToggle);
 
-			c.send(message);
+		final MainMenuListAdapter menuListAdapter = new MainMenuListAdapter(
+				getApplicationContext(),
+				((Globals) getApplication()).getMenuList());
+		menuListView.setAdapter(menuListAdapter);
 
-		} catch (KeyStoreException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (CertificateException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (UnrecoverableKeyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (KeyManagementException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		menuListView.setClickable(true);
+		menuListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+		menuListView
+				.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
+					@Override
+					public void onItemClick(AdapterView<?> arg0, View arg1,
+							int position, long arg3) {
+
+						if (position == 0) {
+							UserListFragment userListFragment = new UserListFragment();
+
+							FragmentTransaction transaction = getFragmentManager()
+									.beginTransaction();
+							transaction.replace(R.id.main_container,
+									userListFragment,
+									UserListFragment.class.getSimpleName());
+							transaction.commit();
+						} else if (position == 1) {
+							SettingsFragment settingsFragment = new SettingsFragment();
+
+							FragmentTransaction transaction = getFragmentManager()
+									.beginTransaction();
+							transaction.replace(R.id.main_container,
+									settingsFragment,
+									SettingsFragment.class.getSimpleName());
+							transaction.commit();
+						}else if (position == 2) {
+							SessionListFragment sessionListFragment = new SessionListFragment();
+
+							FragmentTransaction transaction = getFragmentManager()
+									.beginTransaction();
+							transaction.replace(R.id.main_container,
+									sessionListFragment,
+									SessionListFragment.class.getSimpleName());
+							transaction.commit();
+						}
+						((Globals) getApplication()).closeMenu();
+
+					}
+				});
+
+		((Globals) getApplication()).setMenuLayout(menuLayout,
+				this.drawerLayout);
+
+		UserListFragment userListFragment = new UserListFragment();
+
+		FragmentTransaction transaction = getFragmentManager()
+				.beginTransaction();
+		transaction.replace(R.id.main_container, userListFragment,
+				UserListFragment.class.getSimpleName());
+		transaction.commit();
+
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		stopService(this.gspIntent);
 	}
 
 }

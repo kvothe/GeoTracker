@@ -1,10 +1,14 @@
 package at.jku.geotracker.service;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.Service;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
+import at.jku.geotracker.application.Globals;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
@@ -87,16 +91,27 @@ public class GPSTrackerService extends Service implements
 	@Override
 	public void onLocationChanged(Location location) {
 		if (location.getAccuracy() <= 40) {
-				/*Intent intent = new Intent(BROADCAST_ACTION);
-				intent.putExtra("currentLocationLong", location.getLongitude());
-				intent.putExtra("currentLocationLat", location.getLatitude());
-				intent.putExtra("currentSpeed",
-						(double) location.getSpeed() * 3.6);
-				intent.putExtra("currentDistance", distance);
-				sendBroadcast(intent);
 
-				this.lastLocation = location;*/
-			
+			if (Globals.getSessionId() != null) {
+				JSONObject jo = new JSONObject();
+				try {
+					jo.put("message-type", "location-update");
+					jo.put("session-id", Globals.getSessionId());
+					jo.put("latitude", location.getLatitude());
+					jo.put("longitude", location.getLongitude());
+					jo.put("accuracy", location.getAccuracy());
+					jo.put("altitude", location.getAltitude());
+					jo.put("altitude-accuracy", "0");
+					jo.put("heading", "0");
+					jo.put("speed", location.getSpeed());
+					jo.put("timestamp", location.getTime());
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+
+				((Globals) getApplication()).getWsClient().send(jo.toString());
+			}
+
 		}
 	}
 

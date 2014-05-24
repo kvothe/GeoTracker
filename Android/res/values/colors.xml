@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="green">#38F574</color>
+    <color name="menu_back">#575B61</color>
+    <color name="menu_divider_end">#777777</color>
+    <color name="default_color">#EAEEF6</color>
+    <color name="textview_border">#EAEEF5</color>
+
+</resources>

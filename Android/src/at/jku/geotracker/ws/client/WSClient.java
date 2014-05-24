@@ -5,6 +5,10 @@ import java.net.URI;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.framing.Framedata;
 import org.java_websocket.handshake.ServerHandshake;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import at.jku.geotracker.application.Globals;
 
 /**
  * This example demonstrates how to create a websocket connection to a server.
@@ -24,6 +28,15 @@ public class WSClient extends WebSocketClient {
 	@Override
 	public void onMessage(String message) {
 		System.out.println("received: " + message);
+		try {
+			JSONObject ret = new JSONObject(message.substring(1, message.length()-1));
+			if(ret.getInt("cid") == 1001) {
+				Globals.setSessionId(ret.getString("message"));
+			}
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Override

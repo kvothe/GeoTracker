@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="45dp"
+    android:background="@drawable/user_list_selector"
+    android:minHeight="45dp" >
+
+    <TextView
+        android:id="@+id/session_list_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="15dp"
+        android:duplicateParentState="true"
+        android:text="Längenmaß"
+        android:textAllCaps="true"
+        android:textColor="@drawable/user_color_selector"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/session_list_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+         android:layout_centerVertical="true"
+        android:layout_marginLeft="5dp"
+        android:layout_toRightOf="@+id/session_list_title"
+        android:duplicateParentState="true"
+        android:text="16.05.2014 17:00 - 1345.03458035"
+        android:textAllCaps="true"
+        android:textColor="@drawable/user_color_selector"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+</RelativeLayout>
