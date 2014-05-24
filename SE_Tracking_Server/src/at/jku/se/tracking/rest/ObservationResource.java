@@ -21,7 +21,7 @@ public class ObservationResource {
 
 	/**
 	 * processes post request for starting an observation. 
-	 * @param request map with username, password and observedId
+	 * @param request map with username, password and observed
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
@@ -37,11 +37,11 @@ public class ObservationResource {
 		map = MarshallingService.unpackMap(map);
 		String username;
 		String password;
-		long observedId;
+		String observedUsername;
 		try {
 			username = map.get("username").toString().trim();
 			password = map.get("password").toString().trim();
-			observedId = Long.parseLong(map.get("observed").toString());
+			observedUsername = map.get("observed").toString();
 		} catch (NullPointerException e) {
 			return ResponseGenerator.generateBadRequest();
 		}
@@ -50,7 +50,7 @@ public class ObservationResource {
 			//check pw
 			if(LoginResource.checkCredentials(username, password)){
 				UserObject user = DatabaseService.queryUser(username);
-				UserObject observed = DatabaseService.queryUser(observedId);
+				UserObject observed = DatabaseService.queryUser(observedUsername);
 				if (user != null) {
 					//check if user is already observing observed
 					if(DatabaseService.queryTrackingSessions(user.getId(), observed.getId(), true).size() > 0){
@@ -73,7 +73,7 @@ public class ObservationResource {
 	
 	/**
 	 * processes put request for stopping an observation
-	 * @param request map with username, password, userIsObserver and observationId
+	 * @param request map with username, password, userIsObserver and secondUsername
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
@@ -91,12 +91,12 @@ public class ObservationResource {
 		String username;
 		String password;
 		boolean userIsObserver;
-		long observationId;
+		String secondUsername;
 		try {
 			username = map.get("username").toString();
 			password = map.get("password").toString();
 			userIsObserver = Boolean.parseBoolean(map.get("isObserver").toString());
-			observationId = Long.parseLong(map.get("observationId").toString());
+			secondUsername = map.get("secondUsername").toString();
 		} catch (NullPointerException e) {
 			return ResponseGenerator.generateBadRequest();
 		}
@@ -105,20 +105,28 @@ public class ObservationResource {
 			//check pw
 			if(LoginResource.checkCredentials(username, password)){
 				UserObject user = DatabaseService.queryUser(username);
+				UserObject secondUser = DatabaseService.queryUser(secondUsername);
 				if (user != null) {
 					//get active sessions of user depending on userIsObserver
 					TrackingSessionObject session = null;
 					for(TrackingSessionObject t : DatabaseService.queryTrackingSessions(user.getId(), userIsObserver, !userIsObserver, true)){
-						if(t.getId() == observationId){
-							session = t;
-							break;
+						if(userIsObserver){
+							if(t.getObserved() == secondUser.getId()){
+								session = t;
+								break;
+							}
+						}else{
+							if(t.getObserver() == secondUser.getId()){
+								session = t;
+								break;
+							}
 						}
 					}
 					if(session == null)
 						return ResponseGenerator.generateServerError("session not found");
 					else{
 						//stop tracking session
-						DatabaseService.stopTrackingSession(observationId, endtime, user.getId());
+						DatabaseService.stopTrackingSession(session.getId(), endtime, user.getId());
 						return ResponseGenerator.generateOK();
 					}
 				} else {

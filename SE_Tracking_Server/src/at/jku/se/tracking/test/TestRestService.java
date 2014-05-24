@@ -25,7 +25,7 @@ public class TestRestService {
 		
 		Response r;
 		
-//		r = testGetObservableUser(target);
+		r = testGetObservableUser(target);
 //		r = testSetObservableUser(target);
 //		r = testGetUserList(target);
 //		r = testGetSessionPoints(target);
@@ -105,7 +105,7 @@ public class TestRestService {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("username", "manuel12");
 		map.put("password", "manuel12");
-		map.put("observed", 7);
+		map.put("observed", "manuel123");
 		
 		String json = MarshallingService.toJSON(map);
 		
@@ -121,7 +121,7 @@ public class TestRestService {
 		map.put("username", "manuel123");
 		map.put("password", "manuel123");
 		map.put("isObserver", false);
-		map.put("observationId", 40);
+		map.put("secondUsername", "manuel12");
 		
 		String json = MarshallingService.toJSON(map);
 		
