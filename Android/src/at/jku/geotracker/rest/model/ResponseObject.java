@@ -1,21 +1,15 @@
 package at.jku.geotracker.rest.model;
 
-import android.app.Activity;
+import at.jku.geotracker.rest.interfaces.ResponseListener;
 
 public class ResponseObject {
-
+	private ResponseListener listener;
 	private String response;
-	private Activity activity;
 	private int statusCode;
 
-	public ResponseObject() {
-		super();
-	}
-
-	public ResponseObject(String response, Activity activity, int statusCode) {
-		super();
+	public ResponseObject(ResponseListener listener, String response, int statusCode) {
 		this.response = response;
-		this.activity = activity;
+		this.listener = listener;
 		this.statusCode = statusCode;
 	}
 
@@ -35,12 +29,11 @@ public class ResponseObject {
 		this.response = response;
 	}
 
-	public Activity getActivity() {
-		return activity;
+	public ResponseListener getListener() {
+		return listener;
 	}
 
-	public void setActivity(Activity activity) {
-		this.activity = activity;
+	public void setListener(ResponseListener listener) {
+		this.listener = listener;
 	}
-
 }

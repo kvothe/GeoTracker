@@ -1,30 +1,15 @@
 package at.jku.geotracker.rest.model;
 
-import android.app.Activity;
+import at.jku.geotracker.rest.interfaces.ResponseListener;
 
-public class LoginModel {
-
+public class LoginModel extends AbstractModel {
 	private String username;
 	private String password;
-	private Activity loginActivity;
 
-	public LoginModel() {
-		super();
-	}
-
-	public LoginModel(String username, String password, Activity loginActivity) {
-		super();
+	public LoginModel(String username, String password, ResponseListener listener) {
+		super(listener);
 		this.username = username;
 		this.password = password;
-		this.loginActivity = loginActivity;
-	}
-
-	public Activity getLoginActivity() {
-		return loginActivity;
-	}
-
-	public void setLoginActivity(Activity loginActivity) {
-		this.loginActivity = loginActivity;
 	}
 
 	public String getUsername() {

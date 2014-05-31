@@ -3,7 +3,6 @@ package at.jku.geotracker.activity;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Gravity;
@@ -20,6 +19,7 @@ import android.widget.Toast;
 import at.jku.geotracker.R;
 import at.jku.geotracker.application.Globals;
 import at.jku.geotracker.rest.LoginRequest;
+import at.jku.geotracker.rest.interfaces.ResponseListener;
 import at.jku.geotracker.rest.model.LoginModel;
 import at.jku.geotracker.rest.model.ResponseObject;
 
@@ -55,38 +55,35 @@ public class LoginActivity extends Activity {
 
 		mEmailView = (EditText) findViewById(R.id.email);
 		mEmailView.setText(mEmail);
-		
+
 		registerButton = (Button) findViewById(R.id.register_button);
 
 		mPasswordView = (EditText) findViewById(R.id.password);
-		mPasswordView
-				.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-					@Override
-					public boolean onEditorAction(TextView textView, int id,
-							KeyEvent keyEvent) {
-						if (id == R.id.login || id == EditorInfo.IME_NULL) {
-							attemptLogin();
-							return true;
-						}
-						return false;
-					}
-				});
+		mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+			@Override
+			public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
+				if (id == R.id.login || id == EditorInfo.IME_NULL) {
+					attemptLogin();
+					return true;
+				}
+				return false;
+			}
+		});
 
 		mLoginFormView = findViewById(R.id.login_form);
 		mLoginStatusView = findViewById(R.id.login_status);
 		mLoginStatusMessageView = (TextView) findViewById(R.id.login_status_message);
 
-		findViewById(R.id.sign_in_button).setOnClickListener(
-				new View.OnClickListener() {
-					@Override
-					public void onClick(View view) {
-						attemptLogin();
-					}
-				});
+		findViewById(R.id.sign_in_button).setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				attemptLogin();
+			}
+		});
 		showProgress(false);
-		
+
 		registerButton.setOnClickListener(new OnClickListener() {
-			
+
 			@Override
 			public void onClick(View v) {
 				Intent registerIntent = new Intent(LoginActivity.this, RegisterActivity.class);
@@ -96,9 +93,8 @@ public class LoginActivity extends Activity {
 	}
 
 	/**
-	 * Attempts to sign in or register the account specified by the login form.
-	 * If there are form errors (invalid email, missing fields, etc.), the
-	 * errors are presented and no actual login attempt is made.
+	 * Attempts to sign in or register the account specified by the login form. If there are form errors (invalid email,
+	 * missing fields, etc.), the errors are presented and no actual login attempt is made.
 	 */
 	public void attemptLogin() {
 		// Reset errors.
@@ -132,11 +128,9 @@ public class LoginActivity extends Activity {
 		}
 
 		if (cancel) {
-			Toast incorrectToast = Toast.makeText(getApplicationContext(),
-					errorMessage, Toast.LENGTH_LONG);
-			TextView toastview = (TextView) incorrectToast.getView()
-					.findViewById(android.R.id.message);
-			toastview.setTextColor(Color.RED);
+			Toast incorrectToast = Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG);
+			TextView toastview = (TextView) incorrectToast.getView().findViewById(android.R.id.message);
+			// toastview.setTextColor(Color.RED);
 			incorrectToast.setGravity(Gravity.CENTER | Gravity.CENTER, 0, 0);
 			incorrectToast.show();
 			focusView.requestFocus();
@@ -146,8 +140,28 @@ public class LoginActivity extends Activity {
 			mLoginStatusMessageView.setText("Log in...");
 			showProgress(true);
 
-			LoginModel loginModel = new LoginModel(this.mEmail, this.mPassword,
-					this);
+			LoginModel loginModel = new LoginModel(this.mEmail, this.mPassword, new ResponseListener() {
+
+				@Override
+				public void receivedResponse(ResponseObject response) {
+					showProgress(false);
+					if (response.getStatusCode() == 200) {
+						// go to main menu
+						Globals.password = mPassword;
+						Globals.username = mEmail;
+						Intent mainIntent = new Intent(LoginActivity.this, MainActivity.class);
+						startActivity(mainIntent);
+					} else {
+						Toast incorrectToast = Toast.makeText(getApplicationContext(),
+								"Die Benutzerdaten sind nicht korrekt", Toast.LENGTH_LONG);
+						TextView toastview = (TextView) incorrectToast.getView().findViewById(android.R.id.message);
+						// toastview.setTextColor(Color.RED);
+						incorrectToast.setGravity(Gravity.CENTER | Gravity.CENTER, 0, 0);
+						incorrectToast.show();
+					}
+
+				}
+			});
 			new LoginRequest().execute(loginModel);
 		}
 	}
@@ -160,30 +174,9 @@ public class LoginActivity extends Activity {
 	 */
 	private void showProgress(final boolean show) {
 		InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-		inputMethodManager.hideSoftInputFromWindow(
-				mEmailView.getApplicationWindowToken(), 0);
+		inputMethodManager.hideSoftInputFromWindow(mEmailView.getApplicationWindowToken(), 0);
 
 		mLoginStatusView.setVisibility(show ? View.VISIBLE : View.GONE);
 		mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-	}
-
-	public void requestFinished(ResponseObject response) {
-		showProgress(false);
-		if (response.getStatusCode() == 200) {
-			// go to main menu
-			Globals.password = this.mPassword;
-			Globals.username = this.mEmail;
-			Intent mainIntent = new Intent(LoginActivity.this, MainActivity.class);
-			startActivity(mainIntent);
-		} else {
-			Toast incorrectToast = Toast.makeText(getApplicationContext(),
-					"Die Benutzerdaten sind nicht korrekt", Toast.LENGTH_LONG);
-			TextView toastview = (TextView) incorrectToast.getView()
-					.findViewById(android.R.id.message);
-			toastview.setTextColor(Color.RED);
-			incorrectToast.setGravity(Gravity.CENTER | Gravity.CENTER, 0, 0);
-			incorrectToast.show();
-		}
-
 	}
 }

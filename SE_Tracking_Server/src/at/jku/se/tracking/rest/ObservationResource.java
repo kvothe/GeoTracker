@@ -20,18 +20,20 @@ import at.jku.se.tracking.rest.response.ResponseGenerator;
 public class ObservationResource {
 
 	/**
-	 * processes post request for starting an observation. 
-	 * @param request map with username, password and observed
+	 * processes post request for starting an observation.
+	 * 
+	 * @param request
+	 *            map with username, password and observed
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
 	@POST
 	@Path("/start")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response startObservation(String request){
+	public Response startObservation(String request) {
 		long starttime = System.currentTimeMillis();
-		
-		//parse json and retrieve parameter
+
+		// parse json and retrieve parameter
 		@SuppressWarnings("rawtypes")
 		Map map = MarshallingService.getParser().parseJson(request);
 		map = MarshallingService.unpackMap(map);
@@ -41,100 +43,109 @@ public class ObservationResource {
 		try {
 			username = map.get("username").toString().trim();
 			password = map.get("password").toString().trim();
-			observedUsername = map.get("observed").toString();
+			observedUsername = map.get("targetUsername").toString();
 		} catch (NullPointerException e) {
 			return ResponseGenerator.generateBadRequest();
 		}
-		
-		try{
-			//check pw
-			if(LoginResource.checkCredentials(username, password)){
+
+		try {
+			// check pw
+			if (LoginResource.checkCredentials(username, password)) {
+				System.out.println("ObservationResource.start -> credentials ok");
 				UserObject user = DatabaseService.queryUser(username);
-				UserObject observed = DatabaseService.queryUser(observedUsername);
+				UserObject target = DatabaseService.queryUser(observedUsername);
 				if (user != null) {
-					//check if user is already observing observed
-					if(DatabaseService.queryTrackingSessions(user.getId(), observed.getId(), true).size() > 0){
-						return ResponseGenerator.generateServerError("you are already tracking " + observed.getName());
-					}else{
-						//start observation
-						DatabaseService.startTrackingSession(user.getId(), observed.getId(), starttime);
+					// check if user is already observing observed
+					if (DatabaseService.queryTrackingSessions(user.getId(), target.getId(), true).size() > 0) {
+						System.out.println("ObservationResource.start -> already tracking");
+						return ResponseGenerator.generateServerError("you are already tracking " + target.getName());
+					} else {
+						// start observation
+						DatabaseService.startTrackingSession(user.getId(), target.getId(), starttime);
+						System.out.println("ObservationResource.start -> ok");
 						return ResponseGenerator.generateOK();
 					}
 				} else {
+					System.out.println("ObservationResource.start -> generateInvalidUserResponse");
 					return ResponseGenerator.generateInvalidUserResponse();
 				}
-			}else
+			} else {
+				System.out.println("ObservationResource.start -> invalid credentials");
 				return ResponseGenerator.generateNotAuthorized();
-		}catch(SQLException e){
+			}
+		} catch (SQLException e) {
 			e.printStackTrace();
 			return ResponseGenerator.generateSQLError();
 		}
 	}
-	
+
 	/**
 	 * processes put request for stopping an observation
-	 * @param request map with username, password, userIsObserver and secondUsername
+	 * 
+	 * @param request
+	 *            map with username, password, userIsObserver and secondUsername
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
 	@PUT
 	@Path("/stop")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response stopObservation(String request){
+	public Response stopObservation(String request) {
 		long endtime = System.currentTimeMillis();
-		
-		//parse json and retrieve parameter
+
+		// parse json and retrieve parameter
 		@SuppressWarnings("rawtypes")
 		Map map = MarshallingService.getParser().parseJson(request);
 		map = MarshallingService.unpackMap(map);
 
 		String username;
 		String password;
-		boolean userIsObserver;
-		String secondUsername;
+		boolean targetIsObserver;
+		String targetUsername;
 		try {
 			username = map.get("username").toString();
 			password = map.get("password").toString();
-			userIsObserver = Boolean.parseBoolean(map.get("isObserver").toString());
-			secondUsername = map.get("secondUsername").toString();
+			targetIsObserver = Boolean.parseBoolean(map.get("targetIsObserver").toString());
+			targetUsername = map.get("targetUsername").toString();
 		} catch (NullPointerException e) {
 			return ResponseGenerator.generateBadRequest();
 		}
 
-		try{
-			//check pw
-			if(LoginResource.checkCredentials(username, password)){
+		try {
+			// check pw
+			if (LoginResource.checkCredentials(username, password)) {
 				UserObject user = DatabaseService.queryUser(username);
-				UserObject secondUser = DatabaseService.queryUser(secondUsername);
+				UserObject targetUser = DatabaseService.queryUser(targetUsername);
 				if (user != null) {
-					//get active sessions of user depending on userIsObserver
+					// get active sessions of user depending on userIsObserver
 					TrackingSessionObject session = null;
-					for(TrackingSessionObject t : DatabaseService.queryTrackingSessions(user.getId(), userIsObserver, !userIsObserver, true)){
-						if(userIsObserver){
-							if(t.getObserved() == secondUser.getId()){
+					for (TrackingSessionObject t : DatabaseService.queryTrackingSessions(user.getId(),
+							!targetIsObserver, targetIsObserver, true)) {
+						if (!targetIsObserver) {
+							if (t.getObserved() == targetUser.getId()) {
 								session = t;
 								break;
 							}
-						}else{
-							if(t.getObserver() == secondUser.getId()){
+						} else {
+							if (t.getObserver() == targetUser.getId()) {
 								session = t;
 								break;
 							}
 						}
 					}
-					if(session == null)
+					if (session == null)
 						return ResponseGenerator.generateServerError("session not found");
-					else{
-						//stop tracking session
+					else {
+						// stop tracking session
 						DatabaseService.stopTrackingSession(session.getId(), endtime, user.getId());
 						return ResponseGenerator.generateOK();
 					}
 				} else {
 					return ResponseGenerator.generateInvalidUserResponse();
 				}
-			}else
+			} else
 				return ResponseGenerator.generateNotAuthorized();
-		}catch(SQLException e){
+		} catch (SQLException e) {
 			e.printStackTrace();
 			return ResponseGenerator.generateSQLError();
 		}

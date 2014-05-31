@@ -29,7 +29,7 @@ public class GPSTrackerService extends Service implements
 	}
 
 	/*
-	 * Called befor service onStart method is called.All Initialization part
+	 * Called before service onStart method is called.All Initialization part
 	 * goes here
 	 */
 	@Override
@@ -45,6 +45,8 @@ public class GPSTrackerService extends Service implements
 
 	@Override
 	public void onStart(Intent intent, int startId) {
+		// TODO: start websocket server to listen for location updates from
+		// geotracker server
 	}
 
 	@Override
@@ -84,7 +86,7 @@ public class GPSTrackerService extends Service implements
 	}
 
 	/*
-	 * Overrriden method of interface LocationListener called when location of
+	 * Overriden method of interface LocationListener called when location of
 	 * gps device is changed. Location Object is received as a parameter. This
 	 * method is called when location of GPS device is changed
 	 */

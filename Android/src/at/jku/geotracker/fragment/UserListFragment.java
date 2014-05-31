@@ -23,66 +23,54 @@ import at.jku.geotracker.application.Globals;
 import at.jku.geotracker.rest.ObservationStartRequest;
 import at.jku.geotracker.rest.ObservationStopRequest;
 import at.jku.geotracker.rest.UserListRequest;
+import at.jku.geotracker.rest.interfaces.ResponseListener;
 import at.jku.geotracker.rest.model.ObservationModel;
-import at.jku.geotracker.rest.model.ResponseObjectFragment;
+import at.jku.geotracker.rest.model.ResponseObject;
 
 public class UserListFragment extends Fragment {
 
 	private ListView userListView;
 	private UserListAdapter listAdapter;
 	private ArrayList<UserItem> userItems;
-	private ObservationModel om;
 
 	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container,
-			Bundle savedInstanceState) {
-		View view = inflater.inflate(R.layout.userlist_fragment, container,
-				false);
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		View view = inflater.inflate(R.layout.userlist_fragment, container, false);
 		super.onCreate(savedInstanceState);
 		this.userItems = new ArrayList<UserItem>();
 
-		this.om = new ObservationModel();
-		this.om.setUserListFragment(this);
-
 		userListView = (ListView) view.findViewById(R.id.user_list_view);
 
-		this.listAdapter = new UserListAdapter(getActivity()
-				.getApplicationContext(), this.userItems);
+		this.listAdapter = new UserListAdapter(getActivity().getApplicationContext(), this.userItems);
 		userListView.setAdapter(listAdapter);
 		userListView.setClickable(true);
 		userListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 
-		new UserListRequest().execute(this);
+		new UserListRequest().execute(new ResponseHandlerUserList());
 
-		this.userListView
-				.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+		this.userListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
-					@Override
-					public void onItemClick(AdapterView<?> arg0, View arg1,
-							int position, long arg3) {
-						UserItem clickedItem = (UserItem) listAdapter
-								.getItem(position);
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
+				UserItem clickedItem = (UserItem) listAdapter.getItem(position);
 
-						if (clickedItem.isObserved()) {
-							// stop observation
-							((UserItem) listAdapter.getItem(position))
-									.setObserved(false);
-							om.setObserved(clickedItem.getName());
-							new ObservationStopRequest().execute(om);
-						} else {
-							// start observation
-							((UserItem) listAdapter.getItem(position))
-									.setObserved(true);
-							om.setObserved(clickedItem.getName());
-							new ObservationStartRequest().execute(om);
-						}
-						listAdapter.notifyDataSetChanged();
-					}
+				if (clickedItem.isObserved()) {
+					// stop observation
+					((UserItem) listAdapter.getItem(position)).setObserved(false);
+					new ObservationStopRequest().execute(new ObservationModel(clickedItem.getName(),
+							new ResponseHandlerObservation()));
+				} else {
+					// start observation
+					((UserItem) listAdapter.getItem(position)).setObserved(true);
+					new ObservationStartRequest().execute(new ObservationModel(clickedItem.getName(),
+							new ResponseHandlerObservation()));
+				}
+				listAdapter.notifyDataSetChanged();
+			}
 
-				});
+		});
 
-		final ImageButton menuButton = (ImageButton) view
-				.findViewById(R.id.menu_button);
+		final ImageButton menuButton = (ImageButton) view.findViewById(R.id.menu_button);
 
 		menuButton.setOnClickListener(new OnClickListener() {
 
@@ -95,35 +83,44 @@ public class UserListFragment extends Fragment {
 		return view;
 	}
 
-	public void requestFinished(ResponseObjectFragment response) {
-		if (response.getStatusCode() == 200) {
-			try {
-				String respOkay = response.getResponse().substring(1,
-						response.getResponse().length() - 1);
-				JSONArray jsonArray = new JSONArray(respOkay);
-				for (int i = 0; i < jsonArray.length(); i++) {
-					UserItem ui = new UserItem();
-					JSONObject user = jsonArray.getJSONObject(i);
-					ui.setName(user.getString("name"));
-					ui.setObservable(user.getBoolean("observable"));
-					ui.setObserved(user.getBoolean("isObserved"));
-					this.userItems.add(ui);
+	private class ResponseHandlerUserList implements ResponseListener {
+
+		@Override
+		public void receivedResponse(ResponseObject response) {
+			if (response.getStatusCode() == 200) {
+				if (response.getResponse() != null) {
+					String respOkay = response.getResponse().substring(1, response.getResponse().length() - 1);
+					try {
+						JSONArray jsonArray = new JSONArray(respOkay);
+						for (int i = 0; i < jsonArray.length(); i++) {
+							UserItem ui = new UserItem();
+							JSONObject user = jsonArray.getJSONObject(i);
+							ui.setName(user.getString("name"));
+							ui.setObservable(user.getBoolean("observable"));
+							ui.setObserved(user.getBoolean("isObserved"));
+							userItems.add(ui);
+						}
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
 				}
-			} catch (JSONException e) {
-				e.printStackTrace();
+				listAdapter.notifyDataSetChanged();
 			}
-			this.listAdapter.notifyDataSetChanged();
 		}
 	}
 
-	public void requestFinishedObservation(ResponseObjectFragment response) {
-		if (response.getStatusCode() == 200) {
-			Toast.makeText(getActivity().getApplicationContext(),
-					"Erfolgreich geändert", Toast.LENGTH_SHORT).show();
-		} else {
-			Toast.makeText(getActivity().getApplicationContext(),
-					"Es ist ein Fehler aufgetreten", Toast.LENGTH_SHORT).show();
-		}
-	}
+	private class ResponseHandlerObservation implements ResponseListener {
 
+		@Override
+		public void receivedResponse(ResponseObject response) {
+			if (response.getStatusCode() == 200) {
+				Toast.makeText(getActivity().getApplicationContext(), "Erfolgreich geändert", Toast.LENGTH_SHORT)
+						.show();
+			} else {
+				Toast.makeText(getActivity().getApplicationContext(), "Es ist ein Fehler aufgetreten",
+						Toast.LENGTH_SHORT).show();
+			}
+		}
+
+	}
 }

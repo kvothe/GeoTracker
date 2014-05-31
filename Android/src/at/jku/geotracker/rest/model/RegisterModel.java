@@ -1,24 +1,17 @@
 package at.jku.geotracker.rest.model;
 
-import android.app.Activity;
+import at.jku.geotracker.rest.interfaces.ResponseListener;
 
-public class RegisterModel {
+public class RegisterModel extends AbstractModel {
 
 	private String username;
 	private String password;
 	private boolean observAble;
-	private Activity registerActivity;
 
-	public RegisterModel() {
-		super();
-	}
-
-	public RegisterModel(String username, String password,
-			Activity registerActivity, boolean observable) {
-		super();
+	public RegisterModel(String username, String password, boolean observable, ResponseListener listener) {
+		super(listener);
 		this.username = username;
 		this.password = password;
-		this.registerActivity = registerActivity;
 		this.observAble = observable;
 	}
 
@@ -28,14 +21,6 @@ public class RegisterModel {
 
 	public void setObservAble(boolean observAble) {
 		this.observAble = observAble;
-	}
-
-	public Activity getRegisterActivity() {
-		return registerActivity;
-	}
-
-	public void setRegisterActivity(Activity registerActivity) {
-		this.registerActivity = registerActivity;
 	}
 
 	public String getUsername() {

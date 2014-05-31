@@ -1,23 +1,16 @@
 package at.jku.geotracker.rest.model;
 
-import android.app.Fragment;
+import at.jku.geotracker.rest.interfaces.ResponseListener;
 
-public class SettingsModel {
+public class SettingsModel extends AbstractModel {
 
 	private boolean observable;
-	private Fragment settingsFragment;
 	private String username;
 	private String password;
 
-	public SettingsModel() {
-		super();
-	}
-
-	public SettingsModel(boolean observable, Fragment settingsFragment,
-			String username, String password) {
-		super();
+	public SettingsModel(boolean observable, String username, String password, ResponseListener listener) {
+		super(listener);
 		this.observable = observable;
-		this.settingsFragment = settingsFragment;
 		this.username = username;
 		this.password = password;
 	}
@@ -44,13 +37,5 @@ public class SettingsModel {
 
 	public void setObservable(boolean observable) {
 		this.observable = observable;
-	}
-
-	public Fragment getSettingsFragment() {
-		return settingsFragment;
-	}
-
-	public void setSettingsFragment(Fragment settingsFragment) {
-		this.settingsFragment = settingsFragment;
 	}
 }

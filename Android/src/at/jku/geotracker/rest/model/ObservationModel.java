@@ -1,36 +1,21 @@
 package at.jku.geotracker.rest.model;
 
-import android.app.Fragment;
+import at.jku.geotracker.rest.interfaces.ResponseListener;
 
-public class ObservationModel {
+public class ObservationModel extends AbstractModel {
 
-	private String observed;
-	private Fragment userListFragment;
+	private String targetUsername;
 
-	public ObservationModel() {
-		super();
+	public ObservationModel(String target, ResponseListener listener) {
+		super(listener);
+		this.targetUsername = target;
 	}
 
-	public ObservationModel(String observed, Fragment userListFragment) {
-		super();
-		this.observed = observed;
-		this.userListFragment = userListFragment;
+	public String getTarget() {
+		return targetUsername;
 	}
 
-	public String getObserved() {
-		return observed;
+	public void setTarget(String target) {
+		this.targetUsername = target;
 	}
-
-	public void setObserved(String observed) {
-		this.observed = observed;
-	}
-
-	public Fragment getUserListFragment() {
-		return userListFragment;
-	}
-
-	public void setUserListFragment(Fragment userListFragment) {
-		this.userListFragment = userListFragment;
-	}
-
 }

@@ -35,7 +35,7 @@ public class WebSocketServer {
 
 	// ------------------------------------------------------------------------
 
-	private static final int DEFAULT_PORT = 4883;
+	private static final int DEFAULT_PORT = 8443;
 
 	// ------------------------------------------------------------------------
 
@@ -62,7 +62,7 @@ public class WebSocketServer {
 					if (workingDir.exists() && workingDir.isDirectory()) {
 						WORKING_DIR = workingDir.getCanonicalPath();
 					} else {
-						System.err.println("working dir not exist or is invalid (" + workingDir.getAbsolutePath() + ")");
+						System.err.println("working dir doesn't exist or is invalid (" + workingDir.getAbsolutePath() + ")");
 						return;
 					}
 					break;

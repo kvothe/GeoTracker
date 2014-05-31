@@ -15,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import at.jku.geotracker.R;
 import at.jku.geotracker.rest.RegisterRequest;
+import at.jku.geotracker.rest.interfaces.ResponseListener;
 import at.jku.geotracker.rest.model.RegisterModel;
 import at.jku.geotracker.rest.model.ResponseObject;
 
@@ -63,20 +64,18 @@ public class RegisterActivity extends Activity {
 		mLoginStatusView = findViewById(R.id.login_status);
 		mLoginStatusMessageView = (TextView) findViewById(R.id.login_status_message);
 
-		findViewById(R.id.register_button).setOnClickListener(
-				new View.OnClickListener() {
-					@Override
-					public void onClick(View view) {
-						attemptLogin();
-					}
-				});
+		findViewById(R.id.register_button).setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				attemptLogin();
+			}
+		});
 		showProgress(false);
 	}
 
 	/**
-	 * Attempts to sign in or register the account specified by the login form.
-	 * If there are form errors (invalid email, missing fields, etc.), the
-	 * errors are presented and no actual login attempt is made.
+	 * Attempts to sign in or register the account specified by the login form. If there are form errors (invalid email,
+	 * missing fields, etc.), the errors are presented and no actual login attempt is made.
 	 */
 	public void attemptLogin() {
 		// Reset errors.
@@ -116,11 +115,9 @@ public class RegisterActivity extends Activity {
 		}
 
 		if (cancel) {
-			Toast incorrectToast = Toast.makeText(getApplicationContext(),
-					errorMessage, Toast.LENGTH_LONG);
-			TextView toastview = (TextView) incorrectToast.getView()
-					.findViewById(android.R.id.message);
-			toastview.setTextColor(Color.RED);
+			Toast incorrectToast = Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG);
+			TextView toastview = (TextView) incorrectToast.getView().findViewById(android.R.id.message);
+			// toastview.setTextColor(Color.RED);
 			incorrectToast.setGravity(Gravity.CENTER | Gravity.CENTER, 0, 0);
 			incorrectToast.show();
 			focusView.requestFocus();
@@ -130,8 +127,29 @@ public class RegisterActivity extends Activity {
 			mLoginStatusMessageView.setText("Registriere...");
 			showProgress(true);
 
-			RegisterModel registerModel = new RegisterModel(this.mEmail,
-					this.mPassword, this, this.mObservable);
+			RegisterModel registerModel = new RegisterModel(this.mEmail, this.mPassword, this.mObservable,
+					new ResponseListener() {
+
+						@Override
+						public void receivedResponse(ResponseObject response) {
+							showProgress(false);
+							if (response.getStatusCode() == 200) {
+
+								Toast toast = Toast.makeText(getApplicationContext(), "Erfolgreich registriert",
+										Toast.LENGTH_LONG);
+								toast.show();
+								finish();
+							} else {
+								Toast incorrectToast = Toast.makeText(getApplicationContext(), "Fehler aufgetreten",
+										Toast.LENGTH_LONG);
+								TextView toastview = (TextView) incorrectToast.getView().findViewById(
+										android.R.id.message);
+								// toastview.setTextColor(Color.RED);
+								incorrectToast.setGravity(Gravity.CENTER | Gravity.CENTER, 0, 0);
+								incorrectToast.show();
+							}
+						}
+					});
 			new RegisterRequest().execute(registerModel);
 		}
 	}
@@ -144,30 +162,9 @@ public class RegisterActivity extends Activity {
 	 */
 	private void showProgress(final boolean show) {
 		InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-		inputMethodManager.hideSoftInputFromWindow(
-				mEmailView.getApplicationWindowToken(), 0);
+		inputMethodManager.hideSoftInputFromWindow(mEmailView.getApplicationWindowToken(), 0);
 
 		mLoginStatusView.setVisibility(show ? View.VISIBLE : View.GONE);
 		mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-	}
-
-	public void requestFinished(ResponseObject response) {
-		showProgress(false);
-		if (response.getStatusCode() == 200) {
-
-			Toast toast = Toast.makeText(getApplicationContext(),
-					"Erfolgreich registriert", Toast.LENGTH_LONG);
-			toast.show();
-			finish();
-		} else {
-			Toast incorrectToast = Toast.makeText(getApplicationContext(),
-					"Fehler aufgetreten", Toast.LENGTH_LONG);
-			TextView toastview = (TextView) incorrectToast.getView()
-					.findViewById(android.R.id.message);
-			toastview.setTextColor(Color.RED);
-			incorrectToast.setGravity(Gravity.CENTER | Gravity.CENTER, 0, 0);
-			incorrectToast.show();
-		}
-
 	}
 }
