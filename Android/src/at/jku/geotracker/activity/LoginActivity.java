@@ -148,11 +148,15 @@ public class LoginActivity extends Activity {
 						// go to main menu
 						Globals.password = mPassword;
 						Globals.username = mEmail;
-						Globals.sessionToken = response.getResponse();
+						Globals.sessionToken = response.getResponse(); // TODO: renew session when it expires
 						Log.d("GeoTracker", "session-token=" + Globals.sessionToken);
 						Intent mainIntent = new Intent(LoginActivity.this, MainActivity.class);
 						startActivity(mainIntent);
 					} else {
+						Globals.password = null;
+						Globals.username = null;
+						Globals.sessionToken = null;
+						// --
 						Toast incorrectToast = Toast.makeText(getApplicationContext(),
 								"Die Benutzerdaten sind nicht korrekt", Toast.LENGTH_LONG);
 						incorrectToast.setGravity(Gravity.CENTER | Gravity.CENTER, 0, 0);

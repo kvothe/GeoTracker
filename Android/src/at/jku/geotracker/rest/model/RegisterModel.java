@@ -38,5 +38,4 @@ public class RegisterModel extends AbstractModel {
 	public void setPassword(String password) {
 		this.password = password;
 	}
-
 }

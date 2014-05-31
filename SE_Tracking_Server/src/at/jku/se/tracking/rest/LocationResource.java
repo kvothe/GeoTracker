@@ -57,6 +57,7 @@ public class LocationResource {
 					SessionObserver.pushLocationUpdate(timestamp, userSession.getUserId(), userSession.getUsername(),
 							geoObject.getLongitude(), geoObject.getLatitude(), geoObject.getAccuracy());
 					// --
+					System.out.println("--> received location update: " + data);
 					return ResponseGenerator.generateOK();
 				} else {
 					return ResponseGenerator.generateServerError("We have a problem storing your location...");

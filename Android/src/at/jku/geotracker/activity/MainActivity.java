@@ -84,6 +84,8 @@ public class MainActivity extends Activity {
 					transaction.replace(R.id.main_container, sessionListFragment,
 							SessionListFragment.class.getSimpleName());
 					transaction.commit();
+				} else if (position == 3) {
+					// TODO: logout
 				}
 				((Globals) getApplication()).closeMenu();
 

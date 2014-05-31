@@ -85,6 +85,10 @@ public class Globals extends Application {
 		MainMenuItem m2 = new MainMenuItem();
 		m2.setTitle("Beobachtungen");
 		menuList.add(m2);
+		
+		MainMenuItem m3 = new MainMenuItem();
+		m3.setTitle("Logout");
+		menuList.add(m3);
 
 		return menuList;
 	}

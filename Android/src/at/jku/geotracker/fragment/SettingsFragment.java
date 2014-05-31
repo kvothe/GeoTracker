@@ -38,21 +38,18 @@ public class SettingsFragment extends Fragment {
 
 			@Override
 			public void onClick(View v) {
-				SettingsModel m = new SettingsModel(settingsObservable.isChecked(), Globals.username, Globals.password,
-						new ResponseListener() {
-
-							@Override
-							public void receivedResponse(ResponseObject response) {
-								if (response.getStatusCode() == 200) {
-									Toast.makeText(getActivity().getApplicationContext(), "Erfolgreich gespeichert",
-											Toast.LENGTH_SHORT).show();
-								} else {
-									Toast.makeText(getActivity().getApplicationContext(),
-											"Es ist ein Fehler aufgetreten", Toast.LENGTH_SHORT).show();
-								}
-							}
-
-						});
+				SettingsModel m = new SettingsModel(settingsObservable.isChecked(), new ResponseListener() {
+					@Override
+					public void receivedResponse(ResponseObject response) {
+						if (response.getStatusCode() == 200) {
+							Toast.makeText(getActivity().getApplicationContext(), "Erfolgreich gespeichert",
+									Toast.LENGTH_SHORT).show();
+						} else {
+							Toast.makeText(getActivity().getApplicationContext(), "Es ist ein Fehler aufgetreten",
+									Toast.LENGTH_SHORT).show();
+						}
+					}
+				});
 				new SettingsSetRequest().execute(m);
 			}
 		});
