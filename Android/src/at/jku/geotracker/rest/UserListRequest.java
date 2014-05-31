@@ -9,7 +9,7 @@ public class UserListRequest extends AsyncTask<ResponseListener, ResponseObject,
 
 	@Override
 	protected ResponseObject doInBackground(ResponseListener... params) {
-		ResponseObject response = RESTUtils.get(Globals.restUrl + "/user/getuserlist/" + Globals.username + "/true/");
+		ResponseObject response = RESTUtils.get(Globals.restUrl + "/user/list/true");
 		// --
 		response.setListener(params[0]);
 		return response;

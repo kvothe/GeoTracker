@@ -30,6 +30,7 @@ public class Globals extends Application {
 
 	public static String username = null;
 	public static String password = null;
+	public static String sessionToken = null;
 
 	private LinearLayout menuLayout = null;
 	private DrawerLayout drawerLayout = null;

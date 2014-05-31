@@ -13,9 +13,7 @@ public class ObservationStartRequest extends AsyncTask<ObservationModel, Respons
 	@Override
 	protected ResponseObject doInBackground(ObservationModel... params) {
 		JSONObject data = new JSONObject();
-		try {
-			data.put("username", Globals.username);
-			data.put("password", Globals.password);
+		try {			
 			data.put("targetUsername", params[0].getTarget());
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block

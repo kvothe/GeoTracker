@@ -22,7 +22,7 @@ public class LoginRequest extends AsyncTask<LoginModel, ResponseObject, Response
 			Log.e(TAG, e.getMessage(), e);
 		}
 		// --
-		ResponseObject response = RESTUtils.put(Globals.restUrl + "/login", credentials);
+		ResponseObject response = RESTUtils.put(Globals.restUrl + "/user/login", credentials);
 		// --
 		response.setListener(params[0].getListener());
 		return response;

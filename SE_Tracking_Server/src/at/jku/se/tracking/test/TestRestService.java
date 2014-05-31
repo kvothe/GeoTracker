@@ -16,16 +16,22 @@ import at.jku.se.tracking.utils.AcceptSSLCertificate;
 
 public class TestRestService {
 
-	public static void main(String[] args) throws KeyManagementException,
-			NoSuchAlgorithmException {
+	public static void main(String[] args) throws KeyManagementException, NoSuchAlgorithmException {
 		// sample client
 		Client restClient = AcceptSSLCertificate.getClient();
 		WebTarget target = restClient.target("https://localhost:8443/rest/");
-		
-		
+
 		Response r;
-		
-		r = testGetObservableUser(target);
+
+		r = testLogin(target, "test1", "password");
+		String sessionToken = r.readEntity(String.class);
+
+		System.out.println("session-token: " + sessionToken);
+		System.out.println("----");
+
+		r = testLogout(target, sessionToken);
+		System.out.println(r.getEntity());
+		// r = testGetObservableUser(target);
 		// r = testSetObservableUser(target);
 		// r = testGetUserList(target);
 		// r = testGetSessionPoints(target);
@@ -34,20 +40,39 @@ public class TestRestService {
 		// r = testStartObservation(target);
 		// r = testStopObservation(target);
 
-		String entity = r.readEntity(String.class);
+		// String entity = r.readEntity(String.class);
+		//
+		// System.out.println("Entity: " + entity);
+		// System.out.println(r.getStatus());
 
-		System.out.println("Entity: " + entity);
-		System.out.println(r.getStatus());
+		// System.out.println("----");
+	}
 
-		System.out.println("----");
+	private static Response testLogin(WebTarget target, String username, String password) {
+		// put request
+		WebTarget resourceTarget = target.path("user/login");
+
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("username", username);
+		map.put("password", password);
+		Response response = resourceTarget.request(MediaType.APPLICATION_JSON).put(
+				Entity.entity(MarshallingService.toJSON(map), MediaType.APPLICATION_JSON));
+		return response;
+	}
+
+	private static Response testLogout(WebTarget target, String sessionToken) {
+		// put request
+		WebTarget resourceTarget = target.path("user/logout");
+
+		Response response = resourceTarget.request(MediaType.APPLICATION_JSON).cookie("session-token", sessionToken)
+				.get();
+		return response;
 	}
 
 	private static Response testGetObservableUser(WebTarget target) {
 		// get request
-		WebTarget resourceTarget = target
-				.path("settings/getobservable/testuser");
-		Response response = resourceTarget.request(MediaType.APPLICATION_JSON)
-				.get();
+		WebTarget resourceTarget = target.path("settings/getobservable/testuser");
+		Response response = resourceTarget.request(MediaType.APPLICATION_JSON).get();
 		return response;
 	}
 
@@ -59,35 +84,29 @@ public class TestRestService {
 		map.put("username", "manuel123");
 		map.put("password", "manuel123");
 		map.put("observable", true);
-		Response response = resourceTarget.request(MediaType.APPLICATION_JSON)
-				.put(Entity.entity(MarshallingService.toJSON(map),
-						MediaType.APPLICATION_JSON));
+		Response response = resourceTarget.request(MediaType.APPLICATION_JSON).put(
+				Entity.entity(MarshallingService.toJSON(map), MediaType.APPLICATION_JSON));
 		return response;
 	}
 
 	private static Response testGetUserList(WebTarget target) {
 		// get
-		WebTarget resourceTarget = target
-				.path("user/getuserlist/testuser/true/");
-		Response response = resourceTarget.request(MediaType.APPLICATION_JSON)
-				.get();
+		WebTarget resourceTarget = target.path("user/getuserlist/testuser/true/");
+		Response response = resourceTarget.request(MediaType.APPLICATION_JSON).get();
 		return response;
 	}
 
 	private static Response testGetSessionList(WebTarget target) {
 		// get
-		WebTarget resourceTarget = target
-				.path("session/getsessionlist/testuser");
-		Response response = resourceTarget.request(MediaType.APPLICATION_JSON)
-				.get();
+		WebTarget resourceTarget = target.path("session/getsessionlist/testuser");
+		Response response = resourceTarget.request(MediaType.APPLICATION_JSON).get();
 		return response;
 	}
 
 	private static Response testGetSessionPoints(WebTarget target) {
 		// get
 		WebTarget resourceTarget = target.path("session/getsessionpoints/100");
-		Response response = resourceTarget.request(MediaType.APPLICATION_JSON)
-				.get();
+		Response response = resourceTarget.request(MediaType.APPLICATION_JSON).get();
 		return response;
 	}
 
@@ -102,8 +121,8 @@ public class TestRestService {
 
 		String json = MarshallingService.toJSON(map);
 
-		Response response = resourceTarget.request(MediaType.APPLICATION_JSON)
-				.post(Entity.entity(json, MediaType.APPLICATION_JSON));
+		Response response = resourceTarget.request(MediaType.APPLICATION_JSON).post(
+				Entity.entity(json, MediaType.APPLICATION_JSON));
 		return response;
 	}
 
@@ -118,8 +137,8 @@ public class TestRestService {
 
 		String json = MarshallingService.toJSON(map);
 
-		Response response = resourceTarget.request(MediaType.APPLICATION_JSON)
-				.post(Entity.entity(json, MediaType.APPLICATION_JSON));
+		Response response = resourceTarget.request(MediaType.APPLICATION_JSON).post(
+				Entity.entity(json, MediaType.APPLICATION_JSON));
 		return response;
 	}
 
@@ -135,8 +154,8 @@ public class TestRestService {
 
 		String json = MarshallingService.toJSON(map);
 
-		Response response = resourceTarget.request(MediaType.APPLICATION_JSON)
-				.put(Entity.entity(json, MediaType.APPLICATION_JSON));
+		Response response = resourceTarget.request(MediaType.APPLICATION_JSON).put(
+				Entity.entity(json, MediaType.APPLICATION_JSON));
 		return response;
 	}
 }

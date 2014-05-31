@@ -2,9 +2,10 @@ package at.jku.geotracker.activity;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Color;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
@@ -14,6 +15,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import at.jku.geotracker.R;
+import at.jku.geotracker.application.Globals;
 import at.jku.geotracker.rest.RegisterRequest;
 import at.jku.geotracker.rest.interfaces.ResponseListener;
 import at.jku.geotracker.rest.model.RegisterModel;
@@ -116,8 +118,6 @@ public class RegisterActivity extends Activity {
 
 		if (cancel) {
 			Toast incorrectToast = Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG);
-			TextView toastview = (TextView) incorrectToast.getView().findViewById(android.R.id.message);
-			// toastview.setTextColor(Color.RED);
 			incorrectToast.setGravity(Gravity.CENTER | Gravity.CENTER, 0, 0);
 			incorrectToast.show();
 			focusView.requestFocus();
@@ -138,13 +138,18 @@ public class RegisterActivity extends Activity {
 								Toast toast = Toast.makeText(getApplicationContext(), "Erfolgreich registriert",
 										Toast.LENGTH_LONG);
 								toast.show();
+								// go to main menu
+								Globals.password = mPassword;
+								Globals.username = mEmail;
+								Globals.sessionToken = response.getResponse();
+								Log.d("GeoTracker", "session-token=" + Globals.sessionToken);
+								Intent mainIntent = new Intent(RegisterActivity.this, MainActivity.class);
+								startActivity(mainIntent);
+								// --
 								finish();
 							} else {
 								Toast incorrectToast = Toast.makeText(getApplicationContext(), "Fehler aufgetreten",
 										Toast.LENGTH_LONG);
-								TextView toastview = (TextView) incorrectToast.getView().findViewById(
-										android.R.id.message);
-								// toastview.setTextColor(Color.RED);
 								incorrectToast.setGravity(Gravity.CENTER | Gravity.CENTER, 0, 0);
 								incorrectToast.show();
 							}

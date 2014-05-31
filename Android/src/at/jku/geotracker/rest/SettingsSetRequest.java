@@ -12,9 +12,7 @@ public class SettingsSetRequest extends AsyncTask<SettingsModel, ResponseObject,
 	@Override
 	protected ResponseObject doInBackground(SettingsModel... params) {
 		JSONObject data = new JSONObject();
-		try {
-			data.put("username", params[0].getUsername());
-			data.put("password", params[0].getPassword());
+		try {	
 			data.put("observable", params[0].isObservable());
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block

@@ -9,7 +9,7 @@ public class SessionListRequest extends AsyncTask<ResponseListener, ResponseObje
 
 	@Override
 	protected ResponseObject doInBackground(ResponseListener... params) {
-		ResponseObject response = RESTUtils.get(Globals.restUrl + "/session/getsessionlist/" + Globals.username);
+		ResponseObject response = RESTUtils.get(Globals.restUrl + "/session/list");
 		// --
 		response.setListener(params[0]);
 		return response;

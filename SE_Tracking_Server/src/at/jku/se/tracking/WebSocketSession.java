@@ -114,12 +114,12 @@ public class WebSocketSession {
 				MsgRequestSettings requestSettings = (MsgRequestSettings) m;
 				handleGetSettings(requestSettings);
 				break;
-				
+
 			case SET_SETTINGS:
 				MsgRequestSetSettings requestSetSettings = (MsgRequestSetSettings) m;
 				handleSetSettings(requestSetSettings);
 				break;
-			
+
 			default:
 				break;
 			}
@@ -185,13 +185,15 @@ public class WebSocketSession {
 			}
 		} catch (GeneralSecurityException e) {
 			e.printStackTrace();
-			sendMessage(new MsgError(registration.getConversationId(), "Something went terribly wrong, try again if you dare..."));
+			sendMessage(new MsgError(registration.getConversationId(),
+					"Something went terribly wrong, try again if you dare..."));
 		} catch (SQLException e) {
 			e.printStackTrace();
-			sendMessage(new MsgError(registration.getConversationId(), "Well, something went wrong. Go pester your admin!"));
+			sendMessage(new MsgError(registration.getConversationId(),
+					"Well, something went wrong. Go pester your admin!"));
 		}
 	}
-	
+
 	// ------------------------------------------------------------------------
 
 	private void handleGetSettings(MsgRequestSettings settings) throws IOException {
@@ -200,16 +202,17 @@ public class WebSocketSession {
 			UserObject user = DatabaseService.queryUser(username);
 			if (user != null) {
 				boolean settingObservable = user.isObservable();
-					sendMessage(new MsgOk(settings.getConversationId(), String.valueOf(settingObservable)));
+				sendMessage(new MsgOk(settings.getConversationId(), String.valueOf(settingObservable)));
 			} else {
 				sendMessage(new MsgError(settings.getConversationId(), "invalid username"));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			sendMessage(new MsgError(settings.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
+			sendMessage(new MsgError(settings.getConversationId(),
+					"Well, something went wrong. Go pester the site admin!"));
 		}
 	}
-	
+
 	private void handleSetSettings(MsgRequestSetSettings settings) throws IOException {
 		try {
 			String username = settings.getUsername().trim();
@@ -223,7 +226,8 @@ public class WebSocketSession {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			sendMessage(new MsgError(settings.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
+			sendMessage(new MsgError(settings.getConversationId(),
+					"Well, something went wrong. Go pester the site admin!"));
 		}
 	}
 
@@ -236,7 +240,8 @@ public class WebSocketSession {
 			// --
 			UserObject user = DatabaseService.queryUser(username);
 			if (user != null) {
-				boolean authenticated = PasswordEncryptionService.authenticate(password, user.getEncryptedPassword(), user.getSalt());
+				boolean authenticated = PasswordEncryptionService.authenticate(password, user.getEncryptedPassword(),
+						user.getSalt());
 				// --
 				if (authenticated) {
 					String sessionId = UUID.randomUUID().toString();
@@ -246,7 +251,7 @@ public class WebSocketSession {
 					SessionObserver.registerSession(this.session, this);
 					// --
 					sendMessage(new MsgOk(login.getConversationId(), sessionId));
-				}else{
+				} else {
 					sendMessage(new MsgError(login.getConversationId(), "invalid credentials"));
 				}
 			} else {
@@ -254,7 +259,8 @@ public class WebSocketSession {
 			}
 		} catch (GeneralSecurityException e) {
 			e.printStackTrace();
-			sendMessage(new MsgError(login.getConversationId(), "Something went terribly wrong, try again if you dare..."));
+			sendMessage(new MsgError(login.getConversationId(),
+					"Something went terribly wrong, try again if you dare..."));
 		} catch (SQLException e) {
 			e.printStackTrace();
 			sendMessage(new MsgError(login.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
@@ -285,17 +291,19 @@ public class WebSocketSession {
 																// issues
 				GeolocationObject geoObject = new GeolocationObject(session.getUserId(), timestamp, location);
 				// --
+
 				if (DatabaseService.insertLocation(geoObject)) {
 					sendMessage(new MsgOk(location.getConversationId()));
+					// --
+					SessionObserver.pushLocationUpdate(timestamp, session.getUserId(), session.getUsername(),
+							location.getLongitude(), location.getLatitude(), location.getAccuracy());
 				} else {
 					sendMessage(new MsgError(location.getConversationId(), "We have a problem storing your location..."));
 				}
-				// TODO: push update
-				SessionObserver.pushLocationUpdate(timestamp, session.getUserId(), session.getUsername(), location.getLongitude(),
-						location.getLatitude(), location.getAccuracy());
 			} catch (SQLException e) {
 				e.printStackTrace();
-				sendMessage(new MsgError(location.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
+				sendMessage(new MsgError(location.getConversationId(),
+						"Well, something went wrong. Go pester the site admin!"));
 			}
 		}
 	}
@@ -305,14 +313,16 @@ public class WebSocketSession {
 	private void handleUserList(MsgRequestUserList request) throws IOException {
 		if (checkSession(request)) {
 			try {
-			List<Map<String, Object>> userList = HandleRequestHelper.getUserList(session.getUserId(), request.getOnlyObservable());
-			// --
-			sendMessage(new MsgResponseList(request.getConversationId(), userList));
+				List<Map<String, Object>> userList = HandleRequestHelper.getUserList(session.getUserId(),
+						request.getOnlyObservable());
+				// --
+				sendMessage(new MsgResponseList(request.getConversationId(), userList));
 			} catch (SQLException e) {
-			e.printStackTrace();
-			sendMessage(new MsgError(request.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
+				e.printStackTrace();
+				sendMessage(new MsgError(request.getConversationId(),
+						"Well, something went wrong. Go pester the site admin!"));
 			}
-			}
+		}
 	}
 
 	// ------------------------------------------------------------------------
@@ -325,7 +335,8 @@ public class WebSocketSession {
 				sendMessage(new MsgResponseList(request.getConversationId(), sessionList));
 			} catch (SQLException e) {
 				e.printStackTrace();
-				sendMessage(new MsgError(request.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
+				sendMessage(new MsgError(request.getConversationId(),
+						"Well, something went wrong. Go pester the site admin!"));
 			}
 		}
 	}
@@ -339,7 +350,8 @@ public class WebSocketSession {
 				sendMessage(new MsgResponseList(request.getConversationId(), pointList));
 			} catch (SQLException e) {
 				e.printStackTrace();
-				sendMessage(new MsgError(request.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
+				sendMessage(new MsgError(request.getConversationId(),
+						"Well, something went wrong. Go pester the site admin!"));
 			}
 		}
 	}
@@ -356,15 +368,17 @@ public class WebSocketSession {
 						return;
 					}
 					// check if this user already observes the requested user
-					List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(session.getUserId(), observed.getId(), true);
+					List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(session.getUserId(),
+							observed.getId(), true);
 					if (sessions.size() > 0) {
-						
-						
-						sendMessage(new MsgError(request.getConversationId(), "You stopped observing " + observed.getName()));
-						//return;
+
+						sendMessage(new MsgError(request.getConversationId(), "You stopped observing "
+								+ observed.getName()));
+						// return;
 					}
 					// --
-					DatabaseService.startTrackingSession(session.getUserId(), observed.getId(), System.currentTimeMillis());
+					DatabaseService.startTrackingSession(session.getUserId(), observed.getId(),
+							System.currentTimeMillis());
 					// --
 					sendMessage(new MsgOk(request.getConversationId(), observed.getName()));
 					// --
@@ -374,7 +388,8 @@ public class WebSocketSession {
 				}
 			} catch (SQLException e) {
 				e.printStackTrace();
-				sendMessage(new MsgError(request.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
+				sendMessage(new MsgError(request.getConversationId(),
+						"Well, something went wrong. Go pester the site admin!"));
 			}
 		}
 	}
@@ -395,14 +410,17 @@ public class WebSocketSession {
 					// --
 					if (observationId == -1) {
 						// check if this observer observes the requested user
-						List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(observer, observed, true);
+						List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(observer,
+								observed, true);
 						if (sessions.size() == 1) {
 							observationId = sessions.get(0).getId();
 						} else {
 							if (request.userIsObserver()) {
-								sendMessage(new MsgError(request.getConversationId(), "You are not being observed by " + user.getName()));
+								sendMessage(new MsgError(request.getConversationId(), "You are not being observed by "
+										+ user.getName()));
 							} else {
-								sendMessage(new MsgError(request.getConversationId(), "You are not observing " + user.getName()));
+								sendMessage(new MsgError(request.getConversationId(), "You are not observing "
+										+ user.getName()));
 							}
 							return;
 						}
@@ -421,7 +439,8 @@ public class WebSocketSession {
 				}
 			} catch (SQLException e) {
 				e.printStackTrace();
-				sendMessage(new MsgError(request.getConversationId(), "Well, something went wrong. Go pester the site admin!"));
+				sendMessage(new MsgError(request.getConversationId(),
+						"Well, something went wrong. Go pester the site admin!"));
 			}
 		}
 	}

@@ -9,8 +9,7 @@ public class SessionPointListRequest extends AsyncTask<SessionModel, ResponseObj
 
 	@Override
 	protected ResponseObject doInBackground(SessionModel... params) {
-		ResponseObject response = RESTUtils.get(Globals.restUrl + "/session/getsessionpoints/"
-				+ params[0].getSessionId());
+		ResponseObject response = RESTUtils.get(Globals.restUrl + "/session/points/" + params[0].getSessionId());
 		// --
 		response.setListener(params[0].getListener());
 		return response;

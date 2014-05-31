@@ -16,6 +16,7 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 
 import android.util.Log;
+import at.jku.geotracker.application.Globals;
 import at.jku.geotracker.rest.model.ResponseObject;
 
 public class RESTUtils {
@@ -45,6 +46,7 @@ public class RESTUtils {
 		HttpPost post = new HttpPost(url);
 		post.setHeader("content-type", "application/json; charset=UTF-8");
 		post.setHeader("Accept", "application/json");
+
 		// --
 		StringEntity entity = null;
 		try {
@@ -59,6 +61,10 @@ public class RESTUtils {
 
 	public static ResponseObject send(HttpRequestBase request) {
 		HttpClient httpclient = HTTPSClient.getNewHttpClient();
+		// --
+		if (Globals.sessionToken != null) {
+			request.setHeader("Cookie", "session-token=" + Globals.sessionToken);
+		}
 		// --
 		int responseStatus = 500;
 		String responseContent = null;

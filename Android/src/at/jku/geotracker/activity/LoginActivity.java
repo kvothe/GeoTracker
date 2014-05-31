@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
@@ -129,8 +130,6 @@ public class LoginActivity extends Activity {
 
 		if (cancel) {
 			Toast incorrectToast = Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG);
-			TextView toastview = (TextView) incorrectToast.getView().findViewById(android.R.id.message);
-			// toastview.setTextColor(Color.RED);
 			incorrectToast.setGravity(Gravity.CENTER | Gravity.CENTER, 0, 0);
 			incorrectToast.show();
 			focusView.requestFocus();
@@ -149,13 +148,13 @@ public class LoginActivity extends Activity {
 						// go to main menu
 						Globals.password = mPassword;
 						Globals.username = mEmail;
+						Globals.sessionToken = response.getResponse();
+						Log.d("GeoTracker", "session-token=" + Globals.sessionToken);
 						Intent mainIntent = new Intent(LoginActivity.this, MainActivity.class);
 						startActivity(mainIntent);
 					} else {
 						Toast incorrectToast = Toast.makeText(getApplicationContext(),
 								"Die Benutzerdaten sind nicht korrekt", Toast.LENGTH_LONG);
-						TextView toastview = (TextView) incorrectToast.getView().findViewById(android.R.id.message);
-						// toastview.setTextColor(Color.RED);
 						incorrectToast.setGravity(Gravity.CENTER | Gravity.CENTER, 0, 0);
 						incorrectToast.show();
 					}
@@ -165,7 +164,6 @@ public class LoginActivity extends Activity {
 			new LoginRequest().execute(loginModel);
 		}
 	}
-
 	/**
 	 * Show progress.
 	 * 

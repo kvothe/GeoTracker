@@ -98,7 +98,23 @@ public class SessionObserver {
 
 	// ------------------------------------------------------------------------
 
-	public static void pushLocationUpdate(long timestamp, long userId, String username, double newLong, double newLat, double newAccuracy) {
+	public static boolean isUserOnline(long id) {
+		synchronized (SESSIONS) {
+			if (SESSIONS != null) {
+				for (UserSession session : SESSIONS.keySet()) {
+					if (session.getUserId() == id) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	// ------------------------------------------------------------------------
+
+	public static void pushLocationUpdate(long timestamp, long userId, String username, double newLong, double newLat,
+			double newAccuracy) {
 		try {
 			MsgLocationUpdate locationUpdate = new MsgLocationUpdate(username, newLat, newLong, newAccuracy, timestamp); // TODO:
 																															// support

@@ -9,7 +9,7 @@ public class SettingsGetRequest extends AsyncTask<ResponseListener, ResponseObje
 
 	@Override
 	protected ResponseObject doInBackground(ResponseListener... params) {
-		ResponseObject response = RESTUtils.get(Globals.restUrl + "/settings/getobservable/" + Globals.username);
+		ResponseObject response = RESTUtils.get(Globals.restUrl + "/settings/isobservable/" + Globals.username);
 		// --
 		response.setListener(params[0]);
 		return response;

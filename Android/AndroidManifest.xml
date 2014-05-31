@@ -48,13 +48,13 @@
         <activity
             android:name="at.jku.geotracker.activity.MainActivity"
             android:screenOrientation="portrait"
-            android:theme="@android:style/Theme.Holo.Light.NoActionBar"
+            android:theme="@android:style/Theme.Holo.Light.DarkActionBar"
             android:windowSoftInputMode="stateHidden" >
         </activity>
         <activity
             android:name="at.jku.geotracker.activity.LoginActivity"
             android:screenOrientation="portrait"
-            android:theme="@android:style/Theme.Holo.Light.DarkActionBar"
+            android:theme="@android:style/Theme.Holo.Light.NoActionBar"
             android:windowSoftInputMode="stateHidden" >
         </activity>
         <activity
@@ -67,7 +67,7 @@
         <activity
             android:name="at.jku.geotracker.activity.MapActivity"
             android:screenOrientation="portrait"
-            android:theme="@android:style/Theme.Holo.Light.NoActionBar"
+            android:theme="@android:style/Theme.Holo.Light.DarkActionBar"
             android:windowSoftInputMode="stateHidden" >
         </activity>
 

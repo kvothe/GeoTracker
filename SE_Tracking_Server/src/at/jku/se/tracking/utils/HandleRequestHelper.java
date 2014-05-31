@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import at.jku.se.tracking.SessionObserver;
 import at.jku.se.tracking.database.DatabaseService;
 import at.jku.se.tracking.database.GeolocationObject;
 import at.jku.se.tracking.database.TrackingSessionObject;
@@ -15,6 +16,7 @@ public class HandleRequestHelper {
 
 	/**
 	 * returns all users except for the user with given userId
+	 * 
 	 * @param userId
 	 * @param observableOnly
 	 * @return
@@ -24,40 +26,31 @@ public class HandleRequestHelper {
 		List<Map<String, Object>> userList = new ArrayList<Map<String, Object>>();
 		// --
 		List<UserObject> users = DatabaseService.queryUsers(observableOnly);
-
 		// --
 		for (UserObject u : users) {
 			if (u.getId() != userId) {
-				// crude implementation due to workaround for quick-json bug
-				// with trailing commas
+				// crude implementation due to workaround for quick-json bug with trailing commas
 				Map<String, Object> user = new HashMap<String, Object>();
 				user.put("name", u.getName());
 				user.put("observable", u.isObservable());
-				user.put("online", false);
-				UserObject observed = DatabaseService.queryUser(u.getName());
-
-				// check if this user already observes the requested user
-				List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(userId, observed.getId(), true);
-				if (sessions.size() > 0) {
-					user.put("isObserved", true);
-				} else {
-					user.put("isObserved", false);
-				}
-
+				user.put("online", SessionObserver.isUserOnline(u.getId()));
+				// --
+				List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(userId, false, true, true);
+				user.put("isObserved", sessions.size() > 0);
 				// --
 				userList.add(user);
 			}
 		}
 		return userList;
 	}
-	
 	/**
 	 * returns a list of sessions of a user
+	 * 
 	 * @param userId
 	 * @return
 	 * @throws SQLException
 	 */
-	public static List<Map<String, Object>> getSessionList(long userId) throws SQLException{
+	public static List<Map<String, Object>> getSessionList(long userId) throws SQLException {
 		List<Map<String, Object>> sessionList = new ArrayList<Map<String, Object>>();
 		// --
 		List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(userId, true, false, false);
@@ -77,8 +70,8 @@ public class HandleRequestHelper {
 		}
 		return sessionList;
 	}
-	
-	public static List<Map<String, Object>> getSessionPoints(long observationId) throws SQLException{
+
+	public static List<Map<String, Object>> getSessionPoints(long observationId) throws SQLException {
 		List<Map<String, Object>> pointList = new ArrayList<Map<String, Object>>();
 		// --
 		List<GeolocationObject> points = DatabaseService.getTrackingSessionPoints(observationId);
@@ -91,11 +84,13 @@ public class HandleRequestHelper {
 			point.put("latitude", p.getLatitude());
 			point.put("accuracy", p.getAccuracy());
 			// --
-			
 			pointList.add(point);
 		}
 		// --
-		//System.out.println("pushing session points - " + pointList.size() + " reduced from " + points.size() + " points");
+		// System.out.println("pushing session points - " + pointList.size() + " reduced from " + points.size() +
+		// " points");
 		return pointList;
 	}
+	
+	
 }
