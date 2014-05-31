@@ -35,7 +35,7 @@ public class HandleRequestHelper {
 				user.put("observable", u.isObservable());
 				user.put("online", SessionObserver.isUserOnline(u.getId()));
 				// --
-				List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(userId, false, true, true);
+				List<TrackingSessionObject> sessions = DatabaseService.queryTrackingSessions(userId, u.getId(), true);
 				user.put("isObserved", sessions.size() > 0);
 				// --
 				userList.add(user);
@@ -91,6 +91,5 @@ public class HandleRequestHelper {
 		// " points");
 		return pointList;
 	}
-	
-	
+
 }
