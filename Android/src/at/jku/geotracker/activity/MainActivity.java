@@ -2,7 +2,6 @@ package at.jku.geotracker.activity;
 
 import android.app.Activity;
 import android.app.FragmentTransaction;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
@@ -19,7 +18,6 @@ import at.jku.geotracker.fragment.UserListFragment;
 import at.jku.geotracker.rest.LogoutRequest;
 import at.jku.geotracker.rest.interfaces.ResponseListener;
 import at.jku.geotracker.rest.model.ResponseObject;
-import at.jku.geotracker.service.GPSTrackerService;
 
 public class MainActivity extends Activity {
 

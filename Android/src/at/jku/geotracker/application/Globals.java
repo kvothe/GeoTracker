@@ -28,9 +28,12 @@ import at.jku.geotracker.ws.ssl.MySSLSocketFactory;
 
 public class Globals extends Application {
 
-	public static String restUrl = "https://192.168.1.149:8443/rest";
-	public static String wssUrl = "wss://192.168.1.149:8443";
+	// public static String restUrl = "https://192.168.1.149:8443/rest";
+	// public static String wssUrl = "wss://192.168.1.149:8443";
 	// public static String wssUrl = "wss://schnelleflitzer.at";
+
+	public static String restUrl = "https://schnelleflitzer.at/rest";
+	public static String wssUrl = "wss://schnelleflitzer.at";
 
 	public static int LOCATION_UPDATE_INTERVAL = 5000;
 

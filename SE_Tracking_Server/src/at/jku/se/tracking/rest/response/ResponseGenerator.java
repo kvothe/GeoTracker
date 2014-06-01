@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 
 import at.jku.se.tracking.messages.serialization.MarshallingService;
 

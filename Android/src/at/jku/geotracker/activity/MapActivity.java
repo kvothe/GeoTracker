@@ -108,7 +108,7 @@ public class MapActivity extends Activity {
 		// --
 		map.clear();
 		map.addPolyline((new PolylineOptions()).add(points).width(5).color(Color.MAGENTA).geodesic(false));
-		map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 2));
+		map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 20));
 	}
 
 	public void addPoint(LatLng point) {
