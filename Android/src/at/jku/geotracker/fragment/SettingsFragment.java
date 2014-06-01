@@ -22,7 +22,6 @@ import at.jku.geotracker.rest.model.ResponseObject;
 import at.jku.geotracker.rest.model.SettingsModel;
 
 public class SettingsFragment extends Fragment {
-
 	private CheckBox settingsObservable;
 	private Button saveButton;
 

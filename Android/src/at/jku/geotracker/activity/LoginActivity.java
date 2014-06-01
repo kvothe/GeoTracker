@@ -148,14 +148,16 @@ public class LoginActivity extends Activity {
 						// go to main menu
 						Globals.password = mPassword;
 						Globals.username = mEmail;
-						Globals.sessionToken = response.getResponse(); // TODO: renew session when it expires
-						Log.d("GeoTracker", "session-token=" + Globals.sessionToken);
+						Globals.setSessionId(response.getResponse()); // TODO: renew session when it expires
+						Log.d("GeoTracker", "session-token=" + Globals.getSessionId());
+						// --
+						((Globals) getApplication()).initWSS();
+						// --
 						Intent mainIntent = new Intent(LoginActivity.this, MainActivity.class);
 						startActivity(mainIntent);
 					} else {
-						Globals.password = null;
-						Globals.username = null;
-						Globals.sessionToken = null;
+						Globals.setSessionId(null);
+						((Globals) getApplication()).closeWSS();
 						// --
 						Toast incorrectToast = Toast.makeText(getApplicationContext(),
 								"Die Benutzerdaten sind nicht korrekt", Toast.LENGTH_LONG);

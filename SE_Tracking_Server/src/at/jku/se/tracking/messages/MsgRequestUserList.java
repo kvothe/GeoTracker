@@ -13,7 +13,7 @@ public class MsgRequestUserList extends AMessage {
 	public MsgRequestUserList(Map<?, ?> map) {
 		setMap(map);
 	}
-	public MsgRequestUserList(String username, String password, boolean observable) {
+	public MsgRequestUserList(String username, boolean observable) {
 		setType(MessageType.USER_LIST);
 		setValue(FIELD_OBSERVABLE_ONLY, observable);
 		setValue(FIELD_CURRENT_USERNAME, username);
@@ -27,7 +27,7 @@ public class MsgRequestUserList extends AMessage {
 		}
 		return Boolean.parseBoolean(getValue(FIELD_OBSERVABLE_ONLY).toString());
 	}
-	
+
 	public String getUsername() {
 		return getValue(FIELD_CURRENT_USERNAME).toString();
 	}

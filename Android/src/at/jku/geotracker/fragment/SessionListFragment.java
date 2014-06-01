@@ -78,7 +78,8 @@ public class SessionListFragment extends Fragment {
 				ObservationItem clickedItem = (ObservationItem) listAdapter.getItem(position);
 
 				Intent mapIntent = new Intent(getActivity(), MapActivity.class);
-				mapIntent.putExtra("id", clickedItem.getId());
+				mapIntent.putExtra("observation-id", clickedItem.getId());
+				mapIntent.putExtra("observed-user", clickedItem.getObserved());
 				startActivity(mapIntent);
 			}
 		});

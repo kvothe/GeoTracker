@@ -157,7 +157,7 @@ public class UserResource {
 		}
 	}
 
-	@GET
+	@PUT
 	@Path("/logout")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response logout(@Context HttpServletRequest request) {

@@ -4,18 +4,18 @@ import at.jku.geotracker.rest.interfaces.ResponseListener;
 
 public class SessionModel extends AbstractModel {
 
-	private String sessionId;
+	private long sessionId;
 
-	public SessionModel(String sessionId, ResponseListener listener) {
+	public SessionModel(long sessionId, ResponseListener listener) {
 		super(listener);
 		this.sessionId = sessionId;
 	}
 
-	public String getSessionId() {
+	public long getSessionId() {
 		return sessionId;
 	}
 
-	public void setSessionId(String sessionId) {
+	public void setSessionId(long sessionId) {
 		this.sessionId = sessionId;
 	}
 }

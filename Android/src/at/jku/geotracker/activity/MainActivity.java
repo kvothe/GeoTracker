@@ -16,6 +16,9 @@ import at.jku.geotracker.application.Globals;
 import at.jku.geotracker.fragment.SessionListFragment;
 import at.jku.geotracker.fragment.SettingsFragment;
 import at.jku.geotracker.fragment.UserListFragment;
+import at.jku.geotracker.rest.LogoutRequest;
+import at.jku.geotracker.rest.interfaces.ResponseListener;
+import at.jku.geotracker.rest.model.ResponseObject;
 import at.jku.geotracker.service.GPSTrackerService;
 
 public class MainActivity extends Activity {
@@ -35,8 +38,6 @@ public class MainActivity extends Activity {
 		final LinearLayout menuLayout = (LinearLayout) findViewById(R.id.left_drawer);
 		menuListView = (ListView) findViewById(R.id.menu_list);
 		menuListView.addFooterView(new View(getApplicationContext()), null, true);
-
-		((Globals) getApplication()).initWSS();
 
 		this.gspIntent = new Intent(this, GPSTrackerService.class);
 		startService(this.gspIntent);
@@ -67,28 +68,32 @@ public class MainActivity extends Activity {
 
 				if (position == 0) {
 					UserListFragment userListFragment = new UserListFragment();
-
 					FragmentTransaction transaction = getFragmentManager().beginTransaction();
 					transaction.replace(R.id.main_container, userListFragment, UserListFragment.class.getSimpleName());
 					transaction.commit();
 				} else if (position == 1) {
 					SettingsFragment settingsFragment = new SettingsFragment();
-
 					FragmentTransaction transaction = getFragmentManager().beginTransaction();
 					transaction.replace(R.id.main_container, settingsFragment, SettingsFragment.class.getSimpleName());
 					transaction.commit();
 				} else if (position == 2) {
 					SessionListFragment sessionListFragment = new SessionListFragment();
-
 					FragmentTransaction transaction = getFragmentManager().beginTransaction();
 					transaction.replace(R.id.main_container, sessionListFragment,
 							SessionListFragment.class.getSimpleName());
 					transaction.commit();
 				} else if (position == 3) {
-					// TODO: logout
+					new LogoutRequest().execute(new ResponseListener() {
+						@Override
+						public void receivedResponse(ResponseObject response) {
+							// TODO: check response but always perform logout
+							Globals.setSessionId(null);
+							((Globals) getApplication()).closeWSS();
+							finish();
+						}
+					});
 				}
 				((Globals) getApplication()).closeMenu();
-
 			}
 		});
 
@@ -99,12 +104,12 @@ public class MainActivity extends Activity {
 		FragmentTransaction transaction = getFragmentManager().beginTransaction();
 		transaction.replace(R.id.main_container, userListFragment, UserListFragment.class.getSimpleName());
 		transaction.commit();
-
 	}
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+		((Globals) getApplication()).closeWSS();
 		stopService(this.gspIntent);
 	}
 

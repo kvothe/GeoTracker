@@ -141,13 +141,14 @@ public class RegisterActivity extends Activity {
 								// go to main menu
 								Globals.password = mPassword;
 								Globals.username = mEmail;
-								Globals.sessionToken = response.getResponse();
-								Log.d("GeoTracker", "session-token=" + Globals.sessionToken);
+								Globals.setSessionId(response.getResponse()); // TODO: renew when expired
+								Log.d("GeoTracker", "session-token=" + Globals.getSessionId());
 								Intent mainIntent = new Intent(RegisterActivity.this, MainActivity.class);
 								startActivity(mainIntent);
 								// --
 								finish();
 							} else {
+								Globals.setSessionId(null);
 								Toast incorrectToast = Toast.makeText(getApplicationContext(), "Fehler aufgetreten",
 										Toast.LENGTH_LONG);
 								incorrectToast.setGravity(Gravity.CENTER | Gravity.CENTER, 0, 0);

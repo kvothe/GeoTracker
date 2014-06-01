@@ -12,6 +12,8 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import at.jku.geotracker.R;
+import at.jku.geotracker.application.Globals;
+import at.jku.geotracker.pushservice.PushServiceHandler;
 import at.jku.geotracker.rest.SessionPointListRequest;
 import at.jku.geotracker.rest.interfaces.ResponseListener;
 import at.jku.geotracker.rest.model.ResponseObject;
@@ -27,23 +29,39 @@ import com.google.android.gms.maps.model.PolylineOptions;
 
 public class MapActivity extends Activity {
 	private GoogleMap map;
+	private long currentObservationId;
+	private String currentObservedUser;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.map_view);
+		// --
+		this.currentObservationId = getIntent().getLongExtra("observation-id", 0);
+		this.currentObservedUser = getIntent().getStringExtra("observed-user");
+		// --
+		PushServiceHandler pushservice = ((Globals) getApplication()).getPushServiceHandler();
+		if (pushservice != null) {
+			pushservice.setMapActivity(this);
+		}
 		// Initialize map
 		map = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
 		// Request session points
-		SessionModel session = new SessionModel(String.valueOf(getIntent().getIntExtra("id", 0)),
-				new ResponseHandlerSessionPoints());
+		SessionModel session = new SessionModel(currentObservationId, new ResponseHandlerSessionPoints());
 		new SessionPointListRequest().execute(session);
 	}
-
 	@Override
 	protected void onResume() {
 		super.onResume();
 		setUpMapIfNeeded();
+	}
+
+	public long getCurrentObservationId() {
+		return this.currentObservationId;
+	}
+
+	public String getCurrentlyObservedUser() {
+		return this.currentObservedUser;
 	}
 
 	/**
@@ -81,6 +99,34 @@ public class MapActivity extends Activity {
 		map.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
 	}
 
+	private LatLng[] currentPoints;
+	private LatLngBounds currentBounds;
+
+	public void drawPolyLine(LatLng[] points, LatLngBounds bounds) {
+		currentPoints = points;
+		currentBounds = bounds;
+		// --
+		map.clear();
+		map.addPolyline((new PolylineOptions()).add(points).width(5).color(Color.MAGENTA).geodesic(false));
+		map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 2));
+	}
+
+	public void addPoint(LatLng point) {
+		if (currentPoints != null && currentBounds != null) {
+			LatLng[] points = new LatLng[currentPoints.length + 1];
+			LatLngBounds.Builder boundsBuilder = LatLngBounds.builder();
+			// --
+			for (int i = 0; i < currentPoints.length; i++) {
+				points[i] = currentPoints[i];
+				boundsBuilder.include(points[i]);
+			}
+			points[points.length - 1] = point;
+			boundsBuilder.include(point);
+			// --
+			drawPolyLine(points, boundsBuilder.build());
+		}
+	}
+
 	private class ResponseHandlerSessionPoints implements ResponseListener {
 
 		@Override
@@ -110,15 +156,11 @@ public class MapActivity extends Activity {
 						}
 						Log.d("GeoTracker", "received " + mapPoints.size() + " points");
 						// Draw line and zoom to bounds
-						map.addPolyline((new PolylineOptions()).add(mapPoints.toArray(new LatLng[0])).width(5)
-								.color(Color.MAGENTA).geodesic(false));
-						map.moveCamera(CameraUpdateFactory.newLatLngBounds(mapBoundsBuilder.build(), 5));
+						drawPolyLine(mapPoints.toArray(new LatLng[0]), mapBoundsBuilder.build());
 					} catch (JSONException e) {
 						e.printStackTrace();
 					}
-
 				}
-
 			}
 		}
 	}

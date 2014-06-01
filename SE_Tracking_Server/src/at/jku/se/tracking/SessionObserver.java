@@ -12,6 +12,7 @@ import at.jku.se.tracking.database.DatabaseService;
 import at.jku.se.tracking.database.TrackingSessionObject;
 import at.jku.se.tracking.messages.MsgLocationUpdate;
 import at.jku.se.tracking.messages.MsgNotification;
+import at.jku.se.tracking.messages.MsgNotificationUserAdded;
 import at.jku.se.tracking.messages.serialization.AMessage;
 
 public class SessionObserver {
@@ -152,6 +153,24 @@ public class SessionObserver {
 
 	public static void pushNotifyStopObservation(long observedId, String observerName) {
 		sendMessageTo(new MsgNotification(observerName + " has stopped observing you"), observedId);
+	}
+
+	// ------------------------------------------------------------------------
+
+	public static void pushNotifyUserAdded(long id, String name, boolean observable, boolean online) {
+		List<Long> notifyUsers = new ArrayList<Long>();
+		synchronized (SESSIONS) {
+			for (UserSession s : SESSIONS.keySet()) {
+				if (s.getUserId() != id) {
+					notifyUsers.add(s.getUserId());
+				}
+			}
+		}
+		long[] tmp = new long[notifyUsers.size()];
+		for (int i = 0; i < notifyUsers.size(); i++) {
+			tmp[i] = notifyUsers.get(i);
+		}
+		sendMessageTo(new MsgNotificationUserAdded(name, observable, online), tmp);
 	}
 
 	// ------------------------------------------------------------------------

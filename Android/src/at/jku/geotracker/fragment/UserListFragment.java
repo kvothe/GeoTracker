@@ -20,6 +20,7 @@ import at.jku.geotracker.R;
 import at.jku.geotracker.activity.userlist.UserItem;
 import at.jku.geotracker.activity.userlist.UserListAdapter;
 import at.jku.geotracker.application.Globals;
+import at.jku.geotracker.pushservice.PushServiceHandler;
 import at.jku.geotracker.rest.ObservationStartRequest;
 import at.jku.geotracker.rest.ObservationStopRequest;
 import at.jku.geotracker.rest.UserListRequest;
@@ -45,6 +46,11 @@ public class UserListFragment extends Fragment {
 		userListView.setAdapter(listAdapter);
 		userListView.setClickable(true);
 		userListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+
+		PushServiceHandler pushservice = ((Globals) getActivity().getApplication()).getPushServiceHandler();
+		if (pushservice != null) {
+			pushservice.setUserList(listAdapter);
+		}
 
 		new UserListRequest().execute(new ResponseHandlerUserList());
 

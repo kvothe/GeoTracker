@@ -179,6 +179,8 @@ public class WebSocketSession {
 					SessionObserver.registerSession(this.session, this);
 					// --
 					sendMessage(new MsgOk(registration.getConversationId(), sessionId));
+					// --
+					SessionObserver.pushNotifyUserAdded(userId, user.getName(), registration.isObservable(), true);
 				} else {
 					sendMessage(new MsgError(registration.getConversationId(), "problem adding new user"));
 				}

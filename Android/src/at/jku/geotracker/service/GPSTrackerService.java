@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.os.IBinder;
 import at.jku.geotracker.application.Globals;
 import at.jku.geotracker.rest.LocationUpdate;
-import at.jku.geotracker.rest.RESTUtils;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
@@ -20,8 +19,6 @@ import com.google.android.gms.location.LocationRequest;
 
 public class GPSTrackerService extends Service implements GooglePlayServicesClient.ConnectionCallbacks,
 		GooglePlayServicesClient.OnConnectionFailedListener, LocationListener {
-
-	public static final int UPDATE_INTERVAL = 5000;
 
 	private LocationRequest mLocationRequest;
 	private LocationClient mLocationClient;
@@ -34,7 +31,7 @@ public class GPSTrackerService extends Service implements GooglePlayServicesClie
 	@Override
 	public void onCreate() {
 		mLocationRequest = LocationRequest.create();
-		mLocationRequest.setInterval(UPDATE_INTERVAL);
+		mLocationRequest.setInterval(Globals.LOCATION_UPDATE_INTERVAL);
 		mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 		mLocationClient = new LocationClient(getApplicationContext(), this, this);
 
@@ -84,30 +81,27 @@ public class GPSTrackerService extends Service implements GooglePlayServicesClie
 	 */
 	@Override
 	public void onLocationChanged(Location location) {
-		if (Globals.sessionToken != null && location.getAccuracy() <= 40) {
-			if (Globals.getSessionId() != null) {
-				JSONObject data = new JSONObject();
-				try {
-					data.put("message-type", "location-update");
-					data.put("session-id", Globals.getSessionId());
-					data.put("latitude", location.getLatitude());
-					data.put("longitude", location.getLongitude());
-					data.put("accuracy", location.getAccuracy());
-					data.put("altitude", location.getAltitude());
-					data.put("altitude-accuracy", "0");
-					data.put("heading", "0");
-					data.put("speed", location.getSpeed());
-					data.put("timestamp", location.getTime());
-					// --
-					new LocationUpdate().execute(data); // TODO: add callback
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-				// ((Globals) getApplication()).getWsClient().send(data.toString());
+		if (Globals.getSessionId() != null && location.getAccuracy() <= 40) {
+			JSONObject data = new JSONObject();
+			try {
+				data.put("message-type", "location-update");
+				data.put("session-id", Globals.getSessionId());
+				data.put("latitude", location.getLatitude());
+				data.put("longitude", location.getLongitude());
+				data.put("accuracy", location.getAccuracy());
+				data.put("altitude", location.getAltitude());
+				data.put("altitude-accuracy", "0");
+				data.put("heading", "0");
+				data.put("speed", location.getSpeed());
+				data.put("timestamp", location.getTime());
+				// --
+				new LocationUpdate().execute(data); // TODO: add callback
+			} catch (JSONException e) {
+				e.printStackTrace();
 			}
+			// ((Globals) getApplication()).getWsClient().send(data.toString());
 		}
 	}
-
 	/*
 	 * Called when Sevice running in backgroung is stopped. Remove location upadate to stop receiving gps reading
 	 */

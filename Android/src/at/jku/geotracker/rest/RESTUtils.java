@@ -3,10 +3,12 @@ package at.jku.geotracker.rest;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.ParseException;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
@@ -23,47 +25,41 @@ public class RESTUtils {
 	private static final String TAG = "GeoTracker";
 
 	public static ResponseObject get(String url) {
-		return send(new HttpGet(url));
+		return send(new HttpGet(url), null);
 	}
 
 	public static ResponseObject put(String url, JSONObject data) {
-		HttpPut put = new HttpPut(url);
-		put.setHeader("content-type", "application/json; charset=UTF-8");
-		put.setHeader("Accept", "application/json");
-		// --
-		StringEntity entity = null;
-		try {
-			entity = new StringEntity(data.toString());
-		} catch (UnsupportedEncodingException e) {
-			Log.e(TAG, e.getMessage(), e);
-		}
-		put.setEntity(entity);
-		// --
-		return send(put);
+		return send(new HttpPut(url), data);
 	}
 
 	public static ResponseObject post(String url, JSONObject data) {
-		HttpPost post = new HttpPost(url);
-		post.setHeader("content-type", "application/json; charset=UTF-8");
-		post.setHeader("Accept", "application/json");
-
-		// --
-		StringEntity entity = null;
-		try {
-			entity = new StringEntity(data.toString());
-		} catch (UnsupportedEncodingException e) {
-			Log.e(TAG, e.getMessage(), e);
-		}
-		post.setEntity(entity);
-		// --
-		return send(post);
+		return send(new HttpPost(url), data);
 	}
 
-	public static ResponseObject send(HttpRequestBase request) {
+	private static ResponseObject send(HttpRequestBase request, JSONObject data) {
 		HttpClient httpclient = HTTPSClient.getNewHttpClient();
 		// --
-		if (Globals.sessionToken != null) {
-			request.setHeader("Cookie", "session-token=" + Globals.sessionToken);
+		request.setHeader("content-type", "application/json; charset=UTF-8");
+		request.setHeader("Accept", "application/json");
+		// --
+		if (data != null && request instanceof HttpEntityEnclosingRequestBase) {
+			try {
+				((HttpEntityEnclosingRequestBase) request).setEntity(new StringEntity(data.toString()));
+			} catch (UnsupportedEncodingException e) {
+				Log.e(TAG, e.getMessage(), e);
+			}
+		}
+		// --
+		if (Globals.getSessionId() != null) {
+			if (request.containsHeader("Cookie")) {
+				Header[] cookies = request.getHeaders("Cookie");
+				if (cookies.length > 0) {
+					Log.d("GeoTracker", "cookie: " + cookies[0].getValue());
+					request.setHeader("Cookie", cookies[0].getValue() + ";" + "session-token=" + Globals.getSessionId());
+				}
+			} else {
+				request.setHeader("Cookie", "session-token=" + Globals.getSessionId());
+			}
 		}
 		// --
 		int responseStatus = 500;

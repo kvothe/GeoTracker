@@ -4,13 +4,13 @@ public class ObservationItem {
 	private long endTime;
 	private long startTime;
 	private String observed;
-	private int id;
+	private long id;
 
 	public ObservationItem() {
 		super();
 	}
 
-	public ObservationItem(long endTime, long startTime, String observed, int id) {
+	public ObservationItem(long endTime, long startTime, String observed, long id) {
 		super();
 		this.endTime = endTime;
 		this.startTime = startTime;
@@ -42,7 +42,7 @@ public class ObservationItem {
 		this.observed = observed;
 	}
 
-	public int getId() {
+	public long getId() {
 		return id;
 	}
 

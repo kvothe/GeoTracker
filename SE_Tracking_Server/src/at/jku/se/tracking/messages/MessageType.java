@@ -14,6 +14,7 @@ public enum MessageType {
 	SESSION_POINTS("request-session-points"),
 	LOCATION_UPDATE("location-update"),
 	NOTIFICATION("notification"),
+	NOTIFICATION_USER_ADDED("notification-user-added"),
 	OK("response-ok"),
 	ERROR("response-error"),
 	LOGOUT("request-logout"),
