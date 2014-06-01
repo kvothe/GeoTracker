@@ -28,7 +28,6 @@ public class MainActivity extends Activity {
 	private DrawerLayout drawerLayout;
 	private ActionBarDrawerToggle drawerToggle;
 	private ListView menuListView;
-	private Intent gspIntent;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -39,8 +38,7 @@ public class MainActivity extends Activity {
 		menuListView = (ListView) findViewById(R.id.menu_list);
 		menuListView.addFooterView(new View(getApplicationContext()), null, true);
 
-		this.gspIntent = new Intent(this, GPSTrackerService.class);
-		startService(this.gspIntent);
+		((Globals) getApplication()).startLocationUpdateService();
 
 		drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 		drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.drawable.menu, R.string.drawer_open,
@@ -110,7 +108,7 @@ public class MainActivity extends Activity {
 	public void onDestroy() {
 		super.onDestroy();
 		((Globals) getApplication()).closeWSS();
-		stopService(this.gspIntent);
+		((Globals) getApplication()).stopLocationUpdateService();
 	}
 
 }

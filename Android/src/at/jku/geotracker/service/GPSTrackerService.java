@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 import at.jku.geotracker.application.Globals;
 import at.jku.geotracker.rest.LocationUpdate;
 
@@ -30,11 +31,11 @@ public class GPSTrackerService extends Service implements GooglePlayServicesClie
 	 */
 	@Override
 	public void onCreate() {
+		Log.d("GeoTracker", "GPSTrackerService.oncreate: " + Globals.LOCATION_UPDATE_INTERVAL);
 		mLocationRequest = LocationRequest.create();
 		mLocationRequest.setInterval(Globals.LOCATION_UPDATE_INTERVAL);
 		mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 		mLocationClient = new LocationClient(getApplicationContext(), this, this);
-
 		mLocationClient.connect();
 	}
 
@@ -73,7 +74,9 @@ public class GPSTrackerService extends Service implements GooglePlayServicesClie
 	}
 
 	@Override
-	public void onDisconnected() {}
+	public void onDisconnected() {
+		mLocationClient.removeLocationUpdates(this);
+	}
 
 	/*
 	 * Overriden method of interface LocationListener called when location of gps device is changed. Location Object is
@@ -107,7 +110,9 @@ public class GPSTrackerService extends Service implements GooglePlayServicesClie
 	 */
 	@Override
 	public void onDestroy() {
-		mLocationClient.removeLocationUpdates(this);
 		super.onDestroy();
+		if (mLocationClient != null && mLocationClient.isConnected()) {
+			mLocationClient.removeLocationUpdates(this);
+		}
 	}
 }

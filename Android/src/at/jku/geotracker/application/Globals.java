@@ -16,11 +16,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Application;
+import android.content.Intent;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.widget.LinearLayout;
 import at.jku.geotracker.activity.menu.MainMenuItem;
 import at.jku.geotracker.pushservice.PushServiceHandler;
+import at.jku.geotracker.service.GPSTrackerService;
 import at.jku.geotracker.ws.client.WSClient;
 import at.jku.geotracker.ws.ssl.MySSLSocketFactory;
 
@@ -192,5 +194,28 @@ public class Globals extends Application {
 			// --
 			c.close();
 		}
+	}
+
+	private Intent locationServiceIntent;
+
+	public void startLocationUpdateService() {
+		if (this.locationServiceIntent == null) {
+			this.locationServiceIntent = new Intent(this, GPSTrackerService.class);
+		}
+		startService(this.locationServiceIntent);
+
+	}
+
+	public void stopLocationUpdateService() {
+		if (locationServiceIntent != null) {
+			stopService(this.locationServiceIntent);
+		}
+	}
+
+	public void setLocationUpdateInterval(int interval) {
+		Log.d("GeoTracker", "Set Update Interval: " + interval);
+		Globals.LOCATION_UPDATE_INTERVAL = interval;
+		stopLocationUpdateService();
+		startLocationUpdateService();
 	}
 }

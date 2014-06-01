@@ -7,61 +7,74 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".UserListFragment" >
-    
+
     <FrameLayout
         android:id="@+id/headerLayout"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:paddingBottom="15dp" >
-        
+
         <ImageButton
             android:id="@+id/menu_button"
             android:layout_width="35dp"
             android:layout_height="30dp"
             android:layout_gravity="left"
-            android:padding="5dp"
-            android:background="@drawable/edit_button_border"
-            android:clickable="true"
             android:layout_marginLeft="15dp"
             android:layout_marginTop="10dp"
+            android:background="@drawable/edit_button_border"
+            android:clickable="true"
+            android:padding="5dp"
             android:scaleType="fitStart"
             android:src="@drawable/menu_button_state_selector" />
 
-       <TextView
+        <TextView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="GeoTracker"
+            android:text="Einstellungen"
             android:textSize="35dp" />
     </FrameLayout>
-    
-    <TextView
-        android:id="@+id/textView1"
-        android:layout_below="@id/headerLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/user_list_view"
-        android:layout_marginBottom="3dp"
-        android:text="Einstellungen"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <CheckBox
         android:id="@+id/settingsObservable"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/textView1"
+        android:layout_alignLeft="@+id/headerLayout"
         android:layout_alignRight="@+id/headerLayout"
-        android:layout_below="@+id/textView1"
+        android:layout_below="@+id/headerLayout"
         android:text="Position sichtbar für andere" />
+
+    <TextView
+        android:id="@+id/labelUpdateInterval"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/settingsObservable"
+        android:layout_below="@id/settingsObservable"
+        android:layout_marginBottom="3dp"
+        android:layout_marginTop="15dp"
+        android:text="Update Intervall"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <SeekBar
+        android:id="@+id/seekUpdateInterval"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/labelUpdateInterval"
+        android:layout_below="@+id/labelUpdateInterval"
+        android:layout_margin="5dp"
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="10dp"
+        android:max="3600"
+               
+        />
 
     <Button
         android:id="@+id/saveButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/settingsObservable"
-        android:layout_alignRight="@+id/settingsObservable"
-        android:layout_below="@+id/settingsObservable"
+        android:layout_below="@+id/seekUpdateInterval"
+        android:layout_centerHorizontal="true"
         android:text="Einstellungen speichern" />
 
 </RelativeLayout>
