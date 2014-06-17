@@ -31,5 +31,6 @@
 	<classpathentry kind="lib" path="libs/javax.inject-2.2.0.jar"/>
 	<classpathentry kind="lib" path="libs/javax.annotation-api-1.2.jar"/>
 	<classpathentry kind="lib" path="libs/validation-api-1.1.0.Final.jar"/>
+	<classpathentry kind="lib" path="libs/mysql-connector-java-5.1.31-bin.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -11,12 +11,14 @@ import java.util.concurrent.TimeUnit;
 public class ConnectionPool {
 	private final Semaphore sem;
 	private final Queue<Connection> resources = new ConcurrentLinkedQueue<Connection>();
+	private String dbms;
 	private String connectionString;
 
 	// ------------------------------------------------------------------------
 
-	public ConnectionPool(int maxConnections, String connectionString) {
+	public ConnectionPool(int maxConnections, String dbms, String connectionString) {
 		this.sem = new Semaphore(maxConnections, true);
+		this.dbms = dbms;
 		this.connectionString = connectionString;
 	}
 
@@ -69,7 +71,14 @@ public class ConnectionPool {
 
 	private Connection openConnection() throws SQLException {
 		try {
-			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+			switch (dbms) {
+			case "sqlserver":
+				Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+				break;
+			case "mysql":
+				Class.forName("com.mysql.jdbc.Driver");
+				break;
+			}
 			Connection con = DriverManager.getConnection(connectionString);
 			return con;
 		} catch (ClassNotFoundException e) {

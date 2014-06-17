@@ -24,12 +24,6 @@ public class ConfigLoader {
 
 				// load a properties file
 				prop.load(input);
-
-				// get the property value and print it out
-				System.out.println(prop.getProperty("dbhost"));
-				System.out.println(prop.getProperty("dbname"));
-				System.out.println(prop.getProperty("dbuser"));
-				System.out.println(prop.getProperty("dbpassword"));
 			} else {
 				System.err.println("no config file");
 			}
