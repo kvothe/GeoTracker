@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import at.jku.se.tracking.utils.PasswordEncryptionService;
+
 public class DatabaseService {
 	private static final int MAX_RESOURCES = 16; // Number of concurrent connections
 	private static final int POOL_WAIT_TIME = 60000; // Wait at most one minute for a database connection
@@ -17,20 +19,67 @@ public class DatabaseService {
 
 	// ------------------------------------------------------------------------
 
+	private static IQueryStrings QUERY_STRINGS;
+
+	// ------------------------------------------------------------------------
+
+	public static void main(String[] args) {
+		System.out.println("Connecting...");
+
+		try {
+			Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
+			System.out.println("Connected!");
+
+			System.out.println("insert user");
+			UserObject user = null;
+			byte[] salt = PasswordEncryptionService.generateSalt();
+			byte[] encryptedPassword = PasswordEncryptionService.getEncryptedPassword("password", salt);
+			// Instantiate User Object
+			user = new UserObject("testuser", encryptedPassword, salt, true);
+			// Store user
+			long userId = DatabaseService.insertUser(user);
+			System.out.println("userid=" + userId);
+
+			CONNECTION_POOL.returnResource(con);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
 	static {
 		// Initialize DB connection with settings from config file
 		Properties prop = ConfigLoader.loadConfig();
 		if (prop != null) {
+			String dbms = prop.getProperty("dbms");
 			String host = prop.getProperty("dbhost");
 			String dbname = prop.getProperty("dbname");
 			String user = prop.getProperty("dbuser");
 			String pass = prop.getProperty("dbpassword");
 			// --
+			if (dbms == null) {
+				dbms = "sqlserver";
+			}
+			// --
 			if (!host.equals("test")) { // setting for testing purpose when no database is present
-				CONNECTION_STRING = "jdbc:sqlserver://" + host + ";";
-				CONNECTION_STRING += "database=" + dbname + ";user=" + user + ";password=" + pass;
+				switch (dbms) {
+				case "sqlserver":
+					CONNECTION_STRING = "jdbc:sqlserver://" + host + ";";
+					CONNECTION_STRING += "database=" + dbname + ";user=" + user + ";password=" + pass;
+					QUERY_STRINGS = new QueryStringsSQLServer();
+					break;
+				case "mysql":
+					CONNECTION_STRING = "jdbc:mysql://" + host + "/" + dbname;
+					CONNECTION_STRING += "?user=" + user + "&password=" + pass;
+					QUERY_STRINGS = new QueryStringsMySQL();
+					break;
+				default:
+					throw new RuntimeException("invalid dbms type");
+				}
+
 				// --
-				CONNECTION_POOL = new ConnectionPool(MAX_RESOURCES, CONNECTION_STRING);
+				CONNECTION_POOL = new ConnectionPool(MAX_RESOURCES, dbms, CONNECTION_STRING);
 			}
 		} else {
 			// TODO
@@ -55,7 +104,7 @@ public class DatabaseService {
 		UserObject user = null;
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
 		// --
-		PreparedStatement query = con.prepareStatement("SELECT * FROM [" + UserObject.TABLE_NAME + "] WHERE " + UserObject.COLUMN_ID + "=?");
+		PreparedStatement query = con.prepareStatement(QUERY_STRINGS.getQueryUserById(id));
 		query.setDouble(1, id);
 		ResultSet rs = query.executeQuery();
 		// --
@@ -89,7 +138,7 @@ public class DatabaseService {
 		UserObject user = null;
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
 		// --
-		PreparedStatement query = con.prepareStatement("SELECT * FROM [" + UserObject.TABLE_NAME + "] WHERE " + UserObject.COLUMN_USERNAME + "=?");
+		PreparedStatement query = con.prepareStatement(QUERY_STRINGS.getQueryUserByName(username));
 		query.setString(1, username);
 		ResultSet rs = query.executeQuery();
 		// --
@@ -124,14 +173,9 @@ public class DatabaseService {
 		List<UserObject> users = new ArrayList<UserObject>();
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
 		// --
-		PreparedStatement query = null;
+		PreparedStatement query = con.prepareStatement(QUERY_STRINGS.getQueryUsers(onlyObservable));
 		if (onlyObservable) {
-			query = con.prepareStatement("SELECT [" + UserObject.COLUMN_ID + "],[" + UserObject.COLUMN_USERNAME + "],["
-					+ UserObject.COLUMN_OBSERVABLE + "] FROM [" + UserObject.TABLE_NAME + "] WHERE " + UserObject.COLUMN_OBSERVABLE + "=?");
 			query.setBoolean(1, true);
-		} else {
-			query = con.prepareStatement("SELECT [" + UserObject.COLUMN_ID + "],[" + UserObject.COLUMN_USERNAME + "],["
-					+ UserObject.COLUMN_OBSERVABLE + "] FROM [" + UserObject.TABLE_NAME + "]");
 		}
 		// --
 		ResultSet rs = query.executeQuery();
@@ -164,9 +208,7 @@ public class DatabaseService {
 		// --
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
 		// --
-		PreparedStatement insert = con.prepareStatement("INSERT INTO [" + UserObject.TABLE_NAME + "] ([" + UserObject.COLUMN_USERNAME + "],["
-				+ UserObject.COLUMN_PASSWORD + "],[" + UserObject.COLUMN_SALT + "],[" + UserObject.COLUMN_OBSERVABLE + "]) VALUES(?,?,?,?)",
-				Statement.RETURN_GENERATED_KEYS);
+		PreparedStatement insert = con.prepareStatement(QUERY_STRINGS.getInsertUser(), Statement.RETURN_GENERATED_KEYS);
 		// --
 		insert.setString(1, user.getName());
 		insert.setBytes(2, user.getEncryptedPassword());
@@ -200,18 +242,9 @@ public class DatabaseService {
 	public static boolean insertLocation(GeolocationObject location) throws SQLException {
 		boolean result = false;
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
-
-		//@formatter:off
-		PreparedStatement insert = 
-			con.prepareStatement("INSERT INTO [" + GeolocationObject.TABLE_NAME + "] "
-			+ "([" + GeolocationObject.COLUMN_USER_FK + "],[" + GeolocationObject.COLUMN_TIMESTAMP + "],"
-			+ "[" + GeolocationObject.COLUMN_LONGITUDE + "],[" + GeolocationObject.COLUMN_LATITUDE + "],"
-			+ "[" + GeolocationObject.COLUMN_ACCURACY + "],[" + GeolocationObject.COLUMN_ALTITUDE + "],"
-			+ "[" + GeolocationObject.COLUMN_ALTITUDE_ACCURACCY + "],[" + GeolocationObject.COLUMN_HEADING + "],"
-			+ "[" + GeolocationObject.COLUMN_SPEED + "]) "
-			+ "VALUES(?,?,?,?,?,?,?,?,?)");
-		//@formatter:on
-
+		// --
+		PreparedStatement insert = con.prepareStatement(QUERY_STRINGS.getInsertLocation());
+		// --
 		insert.setLong(1, location.getUserFK());
 		insert.setLong(2, location.getTimestamp());
 		// --
@@ -240,15 +273,9 @@ public class DatabaseService {
 	public static boolean startTrackingSession(long observer, long observed, long starttime) throws SQLException {
 		boolean result = false;
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
-
-		//@formatter:off
-		PreparedStatement insert = 
-			con.prepareStatement("INSERT INTO [" + TrackingSessionObject.TABLE_NAME + "] "
-			+ "([" + TrackingSessionObject.COLUMN_OBSERVER + "],[" + TrackingSessionObject.COLUMN_OBSERVED  + "],"
-			+ "[" + TrackingSessionObject.COLUMN_STARTTIME + "]) "
-			+ "VALUES(?,?,?)");
-		//@formatter:on
-
+		// --
+		PreparedStatement insert = con.prepareStatement(QUERY_STRINGS.getInsertSession());
+		// --
 		insert.setLong(1, observer);
 		insert.setLong(2, observed);
 		insert.setLong(3, starttime);
@@ -269,14 +296,9 @@ public class DatabaseService {
 	public static boolean stopTrackingSession(long id, long endtime, long canceledBy) throws SQLException {
 		boolean result = false;
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
-
-		//@formatter:off
-		PreparedStatement insert = 
-			con.prepareStatement("UPDATE [" + TrackingSessionObject.TABLE_NAME + "] SET "
-			+ "[" + TrackingSessionObject.COLUMN_ENDTIME + "] = ?,[" + TrackingSessionObject.COLUMN_CANCELED_BY  + "] = ? "
-			+ "WHERE " + TrackingSessionObject.COLUMN_ID + " = ?");			
-		//@formatter:on
-
+		// --
+		PreparedStatement insert = con.prepareStatement(QUERY_STRINGS.getUpdateSession());
+		// --
 		insert.setLong(1, endtime);
 		insert.setLong(2, canceledBy);
 		insert.setLong(3, id);
@@ -319,8 +341,8 @@ public class DatabaseService {
 
 	// ------------------------------------------------------------------------
 
-	public static List<TrackingSessionObject> queryTrackingSessions(long userId, boolean listObservedByUser, boolean listObserversOfUser, boolean activeOnly)
-			throws SQLException {
+	public static List<TrackingSessionObject> queryTrackingSessions(long userId, boolean listObservedByUser, boolean listObserversOfUser,
+			boolean activeOnly) throws SQLException {
 		List<TrackingSessionObject> sessions = new ArrayList<TrackingSessionObject>();
 		if (CONNECTION_POOL == null || !listObservedByUser && !listObserversOfUser) {
 			return sessions;
@@ -329,28 +351,13 @@ public class DatabaseService {
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
 		// --
 		PreparedStatement query = null;
-		String stmt = "SELECT * FROM [" + TrackingSessionObject.TABLE_NAME + "] WHERE ";
+		String stmt = QUERY_STRINGS.getQuerySessions(listObservedByUser, listObserversOfUser, activeOnly);
+		query = con.prepareStatement(stmt);
+		// --
 		if (listObservedByUser && listObserversOfUser) {
-			stmt += "[" + TrackingSessionObject.COLUMN_OBSERVER + "] = ? OR [" + TrackingSessionObject.COLUMN_OBSERVED + "] = ?";
-			if (activeOnly) {
-				stmt += " AND [" + TrackingSessionObject.COLUMN_ENDTIME + "] IS NULL";
-			}
-			query = con.prepareStatement(stmt);
 			query.setLong(1, userId);
 			query.setLong(2, userId);
-		} else if (listObservedByUser) {
-			stmt += "[" + TrackingSessionObject.COLUMN_OBSERVER + "] = ?";
-			if (activeOnly) {
-				stmt += " AND [" + TrackingSessionObject.COLUMN_ENDTIME + "] IS NULL";
-			}
-			query = con.prepareStatement(stmt);
-			query.setLong(1, userId);
-		} else if (listObserversOfUser) {
-			stmt += "[" + TrackingSessionObject.COLUMN_OBSERVED + "] = ?";
-			if (activeOnly) {
-				stmt += " AND [" + TrackingSessionObject.COLUMN_ENDTIME + "] IS NULL";
-			}
-			query = con.prepareStatement(stmt);
+		} else {
 			query.setLong(1, userId);
 		}
 		// --
@@ -388,27 +395,13 @@ public class DatabaseService {
 		// --
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
 
-		
 		//@formatter:off
-		String stmt = "SELECT l.[" + GeolocationObject.COLUMN_TIMESTAMP + "], "
-			+ "l.["	+ GeolocationObject.COLUMN_LONGITUDE + "], "
-			+ "l.[" + GeolocationObject.COLUMN_LATITUDE + "], "
-			+ "l.[" + GeolocationObject.COLUMN_ACCURACY	+ "] "
-			+ "FROM [" + TrackingSessionObject.TABLE_NAME + "] s, [" + GeolocationObject.TABLE_NAME + "] l "
-			+ "WHERE s.[" + TrackingSessionObject.COLUMN_ID + "] = ? " 
-			+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] >= s.[" + TrackingSessionObject.COLUMN_STARTTIME + "] "
-			+ "AND l.[" + GeolocationObject.COLUMN_ACCURACY + "] <= 70 " //tests mit Bestandsdaten zeigen gute Ergebnisse
-			+ "AND (s.[" + TrackingSessionObject.COLUMN_ENDTIME + "] IS NULL OR l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] <= s.[" + TrackingSessionObject.COLUMN_ENDTIME + "])"
-			+ "AND s.[" + TrackingSessionObject.COLUMN_OBSERVED + "] = l.[" + GeolocationObject.COLUMN_USER_FK + "] " // ?? die einschr√§nkung sollte schon davor beim ermitteln der session ID erfolgen, so kann man nicht nach sessions wo man OBSERVER ist abfragen
-			//die Einschr‰nkung kann nicht weggelassen werden, sonst w¸rde ja observer-egal abgefragt. Man kˆnnte den Observer vorher ermitteln, aber wenn hier schon ein Join ist dann kˆnnen wir den auch verwenden.
-			//+ "AND l.[" + GeolocationObject.COLUMN_TIMESTAMP + "] >= ( "
-			//+ "SELECT MAX("+GeolocationObject.COLUMN_TIMESTAMP+")-86400000 FROM [" + GeolocationObject.TABLE_NAME + "]) " // ?? max 24h vom letzten eintrag in der tabelle? eine session sollten wir schon komplett anzeigen, wenn dann die l√§nge einer session beschr√§nken
-			+ "ORDER BY l.[" + GeolocationObject.COLUMN_TIMESTAMP + "]";
+		String stmt = QUERY_STRINGS.getQuerySessionPoints();
 		//@formatter:on
 		PreparedStatement query = con.prepareStatement(stmt);
-		//System.out.println("stmt: " + stmt + " for session id " + sessionId);
+		// System.out.println("stmt: " + stmt + " for session id " + sessionId);
 		query.setLong(1, sessionId);
-		
+
 		// --
 		ResultSet rs = query.executeQuery();
 		// --
@@ -441,12 +434,7 @@ public class DatabaseService {
 		List<TrackingSessionObject> sessions = new ArrayList<TrackingSessionObject>();
 		Connection con = CONNECTION_POOL.getConnection(POOL_WAIT_TIME);
 		// --
-		String stmt = "SELECT * FROM [" + TrackingSessionObject.TABLE_NAME + "] WHERE [" + TrackingSessionObject.COLUMN_OBSERVER + "] = ? AND ["
-				+ TrackingSessionObject.COLUMN_OBSERVED + "] = ?";
-		// --
-		if (activeOnly) {
-			stmt += " AND [" + TrackingSessionObject.COLUMN_ENDTIME + "] IS NULL";
-		}
+		String stmt = QUERY_STRINGS.getQuerySessions(activeOnly);
 		// --
 		PreparedStatement query = con.prepareStatement(stmt);
 		// --
