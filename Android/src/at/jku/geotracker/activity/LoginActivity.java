@@ -1,7 +1,9 @@
 package at.jku.geotracker.activity;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -13,6 +15,7 @@ import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -60,42 +63,71 @@ public class LoginActivity extends Activity {
 		registerButton = (Button) findViewById(R.id.register_button);
 
 		mPasswordView = (EditText) findViewById(R.id.password);
-		mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-			@Override
-			public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-				if (id == R.id.login || id == EditorInfo.IME_NULL) {
-					attemptLogin();
-					return true;
-				}
-				return false;
-			}
-		});
+		mPasswordView
+				.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+					@Override
+					public boolean onEditorAction(TextView textView, int id,
+							KeyEvent keyEvent) {
+						if (id == R.id.login || id == EditorInfo.IME_NULL) {
+							attemptLogin();
+							return true;
+						}
+						return false;
+					}
+				});
 
 		mLoginFormView = findViewById(R.id.login_form);
 		mLoginStatusView = findViewById(R.id.login_status);
 		mLoginStatusMessageView = (TextView) findViewById(R.id.login_status_message);
 
-		findViewById(R.id.sign_in_button).setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				attemptLogin();
-			}
-		});
+		findViewById(R.id.sign_in_button).setOnClickListener(
+				new View.OnClickListener() {
+					@Override
+					public void onClick(View view) {
+						attemptLogin();
+					}
+				});
 		showProgress(false);
 
 		registerButton.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
-				Intent registerIntent = new Intent(LoginActivity.this, RegisterActivity.class);
+				Intent registerIntent = new Intent(LoginActivity.this,
+						RegisterActivity.class);
 				startActivity(registerIntent);
 			}
 		});
+
+		AlertDialog.Builder builderSingle = new AlertDialog.Builder(
+				LoginActivity.this);
+		builderSingle.setTitle("Select Server-Type");
+		final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
+				LoginActivity.this, android.R.layout.select_dialog_singlechoice);
+		arrayAdapter.add("Jetty - schnelleflitzer.at");
+		arrayAdapter.add("Google Clound - morerelations.com");
+
+		builderSingle.setAdapter(arrayAdapter,
+				new DialogInterface.OnClickListener() {
+
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						if (arrayAdapter.getItem(which).contains("Jetty")) {
+							Globals.setServerType(false);
+						} else {
+							Globals.setServerType(true);
+						}
+
+					}
+				});
+		builderSingle.show();
+
 	}
 
 	/**
-	 * Attempts to sign in or register the account specified by the login form. If there are form errors (invalid email,
-	 * missing fields, etc.), the errors are presented and no actual login attempt is made.
+	 * Attempts to sign in or register the account specified by the login form.
+	 * If there are form errors (invalid email, missing fields, etc.), the
+	 * errors are presented and no actual login attempt is made.
 	 */
 	public void attemptLogin() {
 		// Reset errors.
@@ -129,7 +161,8 @@ public class LoginActivity extends Activity {
 		}
 
 		if (cancel) {
-			Toast incorrectToast = Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG);
+			Toast incorrectToast = Toast.makeText(getApplicationContext(),
+					errorMessage, Toast.LENGTH_LONG);
 			incorrectToast.setGravity(Gravity.CENTER | Gravity.CENTER, 0, 0);
 			incorrectToast.show();
 			focusView.requestFocus();
@@ -139,37 +172,50 @@ public class LoginActivity extends Activity {
 			mLoginStatusMessageView.setText("Log in...");
 			showProgress(true);
 
-			LoginModel loginModel = new LoginModel(this.mEmail, this.mPassword, new ResponseListener() {
+			LoginModel loginModel = new LoginModel(this.mEmail, this.mPassword,
+					new ResponseListener() {
 
-				@Override
-				public void receivedResponse(ResponseObject response) {
-					showProgress(false);
-					if (response.getStatusCode() == 200) {
-						// go to main menu
-						Globals.password = mPassword;
-						Globals.username = mEmail;
-						Globals.setSessionId(response.getResponse()); // TODO: renew session when it expires
-						Log.d("GeoTracker", "session-token=" + Globals.getSessionId());
-						// --
-						((Globals) getApplication()).initWSS();
-						// --
-						Intent mainIntent = new Intent(LoginActivity.this, MainActivity.class);
-						startActivity(mainIntent);
-					} else {
-						Globals.setSessionId(null);
-						((Globals) getApplication()).closeWSS();
-						// --
-						Toast incorrectToast = Toast.makeText(getApplicationContext(),
-								"Die Benutzerdaten sind nicht korrekt", Toast.LENGTH_LONG);
-						incorrectToast.setGravity(Gravity.CENTER | Gravity.CENTER, 0, 0);
-						incorrectToast.show();
-					}
+						@Override
+						public void receivedResponse(ResponseObject response) {
+							showProgress(false);
+							if (response.getStatusCode() == 200) {
+								// go to main menu
+								Globals.password = mPassword;
+								Globals.username = mEmail;
+								Globals.setSessionId(response.getResponse()); // TODO:
+																				// renew
+																				// session
+																				// when
+																				// it
+																				// expires
+								Log.d("GeoTracker",
+										"session-token="
+												+ Globals.getSessionId());
+								// --
+								((Globals) getApplication()).initWSS();
+								// --
+								Intent mainIntent = new Intent(
+										LoginActivity.this, MainActivity.class);
+								startActivity(mainIntent);
+							} else {
+								Globals.setSessionId(null);
+								((Globals) getApplication()).closeWSS();
+								// --
+								Toast incorrectToast = Toast.makeText(
+										getApplicationContext(),
+										"Die Benutzerdaten sind nicht korrekt",
+										Toast.LENGTH_LONG);
+								incorrectToast.setGravity(Gravity.CENTER
+										| Gravity.CENTER, 0, 0);
+								incorrectToast.show();
+							}
 
-				}
-			});
+						}
+					});
 			new LoginRequest().execute(loginModel);
 		}
 	}
+
 	/**
 	 * Show progress.
 	 * 
@@ -178,7 +224,8 @@ public class LoginActivity extends Activity {
 	 */
 	private void showProgress(final boolean show) {
 		InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-		inputMethodManager.hideSoftInputFromWindow(mEmailView.getApplicationWindowToken(), 0);
+		inputMethodManager.hideSoftInputFromWindow(
+				mEmailView.getApplicationWindowToken(), 0);
 
 		mLoginStatusView.setVisibility(show ? View.VISIBLE : View.GONE);
 		mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);

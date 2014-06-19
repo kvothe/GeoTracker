@@ -34,7 +34,9 @@ public class Globals extends Application {
 
 	public static String restUrl = "https://schnelleflitzer.at/rest";
 	public static String wssUrl = "wss://schnelleflitzer.at";
-
+	public static String wssCloudUrl = "wss://morerelations.com";
+	public static String wssJettyUrl = "wss://schnelleflitzer.at";
+	
 	public static int LOCATION_UPDATE_INTERVAL = 5000;
 
 	public static String username = null;
@@ -54,6 +56,14 @@ public class Globals extends Application {
 
 	public static String getSessionId() {
 		return sessionId;
+	}
+	
+	public static void setServerType(boolean cloud) {
+		if(cloud) {
+			Globals.wssUrl = Globals.wssCloudUrl;
+		} else  {
+			Globals.wssUrl = Globals.wssJettyUrl;
+		}
 	}
 
 	public static void setSessionId(String sessionId) {
